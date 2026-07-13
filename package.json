@@ -1,0 +1,16 @@
+{
+  "name": "waft",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --workspace=packages/api",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:mobile": "npm run start --workspace=apps/mobile"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
