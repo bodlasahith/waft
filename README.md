@@ -191,7 +191,7 @@ Social links are added progressively through contextual prompts:
 - [x] Fix `apps/web` install — removed unused `@sigma/react` dep (doesn't exist on npm); workspace-wide `npm install` works again
 - [ ] Supabase project setup + schema deployment
 - [ ] Neo4j Aura instance provisioning
-- [ ] Mobile app scaffold (Expo — QR display, scanner, basic graph)
+- [x] Mobile app scaffold (Expo SDK 57 — QR card display, camera scanner wired to connect/check-in, network list grouped by degree; graph *visualization* still list-based pending a native renderer)
 - [ ] Auth flow (Apple/Google sign-in)
 - [ ] Deploy web + API (Vercel + Railway)
 - [ ] Live demo at YC AI Startup School

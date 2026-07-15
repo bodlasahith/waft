@@ -4,25 +4,7 @@ import { supabase } from "../lib/supabase.js";
 import { createPersonNode } from "../services/graph.js";
 import { requireAuth } from "../lib/auth.js";
 import { nanoid } from "nanoid";
-
-const PLATFORMS = [
-  "instagram",
-  "linkedin",
-  "github",
-  "x",
-  "discord",
-  "spotify",
-  "tiktok",
-  "reddit",
-  "snapchat",
-  "facebook",
-  // Reachability platforms — used for group creation (see routes/groups.ts),
-  // not just display. "phone" backs both iMessage and WhatsApp, which have
-  // no separate handle concept.
-  "telegram",
-  "slack",
-  "phone",
-] as const;
+import { PLATFORMS } from "@waft/shared";
 
 const addSocialSchema = z.object({
   platform: z.enum(PLATFORMS),

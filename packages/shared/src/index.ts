@@ -9,6 +9,12 @@ export const PLATFORMS = [
   "reddit",
   "snapchat",
   "facebook",
+  // Reachability platforms — used for group creation, not just display.
+  // "phone" backs both iMessage and WhatsApp, which have no separate
+  // handle concept.
+  "telegram",
+  "slack",
+  "phone",
 ] as const;
 
 export type Platform = (typeof PLATFORMS)[number];
