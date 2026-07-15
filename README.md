@@ -187,8 +187,8 @@ Social links are added progressively through contextual prompts:
 - [x] Live event graph visualization (Sigma.js + WebSocket)
 - [x] Group creation (Discord, Telegram, iMessage, WhatsApp, Slack)
 - [x] API hardening pass — verified boot end-to-end (fixed ESM config, Node 20 WebSocket crash), clean 400s on invalid bodies, `card_code`/event-`code` lookup routes, live WebSocket broadcasts actually wired to connections/check-ins, Telegram rewritten around real Bot API limits, cumulative connection strength
-- [ ] Auth verification middleware (Supabase JWT) — **currently any caller can mutate any user's data; must land before public deploy**
-- [ ] Fix `apps/web` install (`@sigma/react@^0.1.0` doesn't exist in the npm registry — blocks workspace-wide `npm install`)
+- [x] Auth verification middleware — Supabase JWTs verified locally (HS256, `SUPABASE_JWT_SECRET`); identity fields derive from the token, self-scoped routes moved to `/users/me` + `/connections/me/graph`, and group endpoints only accept users the caller has connected with (blocks handle/phone harvesting)
+- [x] Fix `apps/web` install — removed unused `@sigma/react` dep (doesn't exist on npm); workspace-wide `npm install` works again
 - [ ] Supabase project setup + schema deployment
 - [ ] Neo4j Aura instance provisioning
 - [ ] Mobile app scaffold (Expo — QR display, scanner, basic graph)
@@ -202,14 +202,18 @@ Social links are added progressively through contextual prompts:
 - [ ] NFC tag support (stickers/cards encoding the `waft.app/c/<card_code>` URL — same infra as QR, native tap-to-open on iOS/Android)
 - [ ] BLE tap-to-connect (AirDrop-style phone-to-phone gesture; NameDrop has no public API and NFC P2P is dead, so this requires both users to have the app open — separate design effort)
 - [ ] Push notifications ("X just joined Waft")
+- [ ] SMS nudges for phone-only profiles — event-driven only (someone viewed your card with no socials to tap; post-event digest with platform coverage), hard-capped (1/week, ~3 lifetime), stops permanently once one social is added, magic-link deep link to add-social screen. Requires explicit opt-in at signup + A2P 10DLC campaign registration (takes weeks — start early)
 - [ ] Graph analytics (centrality, clustering, shortest path)
 - [ ] Gamification badges
+- [ ] Node avatars v1 — simple customization (color, shape, accent) so your node is recognizably *you* in the graph; stored as a small JSON blob on the user, rendered client-side
 
 ### Phase 3: Growth
 - [ ] Contact import (hashed phone number matching)
 - [ ] Linktree import (parse existing link pages)
 - [ ] Event organizer partnerships (branded event rooms + analytics)
 - [ ] AI recommendations
+- [ ] Avatar system v2 — Mii/Reddit-style composable avatars (face, hair, accessories — thousands of permutations); avatar becomes the node rendering everywhere your profile appears
+- [ ] Network visualization themes — same graph data, swappable renderers/layouts: solar system (you as the sun, orbits by connection strength), cosmic constellation, protein structure, neurons + synapses, houses in a neighborhood, classic network graph. Ties into the Premium "custom graph themes" tier and shareable graph cards
 - [ ] Premium tier (unlimited event history, advanced graph analytics, export)
 
 ## Revenue Model (Future)

@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyReply } from "fastify";
 import { z } from "zod";
 import { supabase } from "../lib/supabase.js";
 import { createPersonNode } from "../services/graph.js";
+import { requireAuth } from "../lib/auth.js";
 import { nanoid } from "nanoid";
 
 const PLATFORMS = [
@@ -55,12 +56,13 @@ async function sendPublicCard(
 }
 
 export async function userRoutes(app: FastifyInstance) {
-  app.get("/users/:userId", async (req, reply) => {
-    const { userId } = req.params as { userId: string };
+  // Full profile including non-public socials — self only. Other people's
+  // profiles are only visible through the public card endpoints below.
+  app.get("/users/me", { preHandler: requireAuth }, async (req, reply) => {
     const { data, error } = await supabase
       .from("users")
       .select("*, social_links(*)")
-      .eq("id", userId)
+      .eq("id", req.userId)
       .single();
 
     if (error) return reply.status(404).send({ error: "User not found" });
@@ -80,15 +82,14 @@ export async function userRoutes(app: FastifyInstance) {
     return sendPublicCard(reply, "card_code", cardCode);
   });
 
-  app.post("/users/:userId/socials", async (req, reply) => {
-    const { userId } = req.params as { userId: string };
+  app.post("/users/me/socials", { preHandler: requireAuth }, async (req, reply) => {
     const body = addSocialSchema.parse(req.body);
 
     const { data, error } = await supabase
       .from("social_links")
       .upsert(
         {
-          user_id: userId,
+          user_id: req.userId,
           platform: body.platform,
           handle: body.handle,
           url: body.url,
@@ -103,45 +104,59 @@ export async function userRoutes(app: FastifyInstance) {
     return reply.send(data);
   });
 
-  app.delete("/users/:userId/socials/:platform", async (req, reply) => {
-    const { userId, platform } = req.params as { userId: string; platform: string };
-    await supabase
-      .from("social_links")
-      .delete()
-      .eq("user_id", userId)
-      .eq("platform", platform);
+  app.delete(
+    "/users/me/socials/:platform",
+    { preHandler: requireAuth },
+    async (req, reply) => {
+      const { platform } = req.params as { platform: string };
+      await supabase
+        .from("social_links")
+        .delete()
+        .eq("user_id", req.userId)
+        .eq("platform", platform);
 
-    return reply.status(204).send();
-  });
+      return reply.status(204).send();
+    }
+  );
 
-  // Register user after OAuth sign-in
-  app.post("/users", async (req, reply) => {
+  // Register (or refresh) the profile after OAuth sign-in. Identity comes
+  // entirely from the verified token — id from sub, email from the email
+  // claim — so callers can't register as someone else.
+  app.post("/users", { preHandler: requireAuth }, async (req, reply) => {
     const body = z
       .object({
-        id: z.string().uuid(),
         name: z.string().min(1),
-        email: z.string().email(),
         photoUrl: z.string().url().optional(),
       })
       .parse(req.body);
 
-    const cardCode = nanoid(10);
+    if (!req.userEmail) {
+      return reply.status(400).send({ error: "token_missing_email" });
+    }
+
+    // Preserve card_code across re-registrations — a blind upsert would
+    // regenerate it and invalidate already-shared/printed QR codes.
+    const { data: existing } = await supabase
+      .from("users")
+      .select("card_code")
+      .eq("id", req.userId)
+      .single();
 
     const { data, error } = await supabase
       .from("users")
       .upsert({
-        id: body.id,
+        id: req.userId,
         name: body.name,
-        email: body.email,
+        email: req.userEmail,
         photo_url: body.photoUrl,
-        card_code: cardCode,
+        card_code: existing?.card_code ?? nanoid(10),
       })
       .select()
       .single();
 
     if (error) return reply.status(500).send({ error: error.message });
 
-    await createPersonNode(body.id, body.name, body.photoUrl);
+    await createPersonNode(req.userId, body.name, body.photoUrl);
     return reply.status(201).send(data);
   });
 }

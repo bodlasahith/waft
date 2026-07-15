@@ -90,6 +90,29 @@ export async function getEventGraph(eventId: string) {
   }
 }
 
+/**
+ * Returns the subset of candidateIds directly connected to userId.
+ * Group routes use this so callers can't harvest handles/phone numbers of
+ * arbitrary users — you can only group people you've actually wafted.
+ */
+export async function filterConnectedUsers(
+  userId: string,
+  candidateIds: string[]
+): Promise<string[]> {
+  const session = getDriver().session();
+  try {
+    const result = await session.run(
+      `MATCH (me:Person {id: $userId})-[:WAFT]-(other:Person)
+       WHERE other.id IN $candidateIds
+       RETURN other.id AS id`,
+      { userId, candidateIds }
+    );
+    return result.records.map((r) => r.get("id"));
+  } finally {
+    await session.close();
+  }
+}
+
 export async function checkinToEvent(userId: string, eventId: string) {
   const session = getDriver().session();
   try {

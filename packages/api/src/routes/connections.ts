@@ -2,17 +2,23 @@ import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { createConnection, getEventGraph, getNetworkGraph } from "../services/graph.js";
 import { broadcast } from "../lib/liveEvents.js";
+import { requireAuth } from "../lib/auth.js";
 
 const connectSchema = z.object({
-  fromUserId: z.string().uuid(),
   toUserId: z.string().uuid(),
   eventId: z.string().uuid().optional(),
 });
 
 export async function connectionRoutes(app: FastifyInstance) {
-  app.post("/connections", async (req, reply) => {
+  // The connecting user is always the authenticated caller — accepting a
+  // fromUserId in the body would let anyone forge edges for other people.
+  app.post("/connections", { preHandler: requireAuth }, async (req, reply) => {
     const body = connectSchema.parse(req.body);
-    const created = await createConnection(body.fromUserId, body.toUserId, body.eventId);
+    if (body.toUserId === req.userId) {
+      return reply.status(400).send({ error: "cannot_connect_to_self" });
+    }
+
+    const created = await createConnection(req.userId, body.toUserId, body.eventId);
     if (!created) {
       return reply.status(404).send({ error: "One or both users not found" });
     }
@@ -25,10 +31,10 @@ export async function connectionRoutes(app: FastifyInstance) {
     return reply.status(201).send({ status: "connected" });
   });
 
-  app.get("/connections/:userId/graph", async (req, reply) => {
-    const { userId } = req.params as { userId: string };
+  // Your network graph is yours alone — it reveals who you know and how.
+  app.get("/connections/me/graph", { preHandler: requireAuth }, async (req, reply) => {
     const depth = Number((req.query as any).depth) || 2;
-    const graph = await getNetworkGraph(userId, Math.min(depth, 4));
+    const graph = await getNetworkGraph(req.userId, Math.min(depth, 4));
     return reply.send(graph);
   });
 }

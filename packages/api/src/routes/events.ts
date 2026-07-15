@@ -3,6 +3,7 @@ import { z } from "zod";
 import { checkinToEvent, getEventGraph } from "../services/graph.js";
 import { supabase } from "../lib/supabase.js";
 import { broadcast } from "../lib/liveEvents.js";
+import { requireAuth } from "../lib/auth.js";
 import { nanoid } from "nanoid";
 
 const createEventSchema = z.object({
@@ -10,15 +11,11 @@ const createEventSchema = z.object({
   location: z.string().optional(),
   startsAt: z.string().datetime(),
   endsAt: z.string().datetime().optional(),
-  createdBy: z.string().uuid(),
-});
-
-const checkinSchema = z.object({
-  userId: z.string().uuid(),
 });
 
 export async function eventRoutes(app: FastifyInstance) {
-  app.post("/events", async (req, reply) => {
+  // The organizer is the authenticated caller, not a body field.
+  app.post("/events", { preHandler: requireAuth }, async (req, reply) => {
     const body = createEventSchema.parse(req.body);
     const code = nanoid(8);
 
@@ -30,7 +27,7 @@ export async function eventRoutes(app: FastifyInstance) {
         location: body.location,
         starts_at: body.startsAt,
         ends_at: body.endsAt,
-        created_by: body.createdBy,
+        created_by: req.userId,
       })
       .select()
       .single();
@@ -53,13 +50,17 @@ export async function eventRoutes(app: FastifyInstance) {
     return reply.send(data);
   });
 
-  app.post("/events/:eventId/checkin", async (req, reply) => {
-    const { eventId } = req.params as { eventId: string };
-    const body = checkinSchema.parse(req.body);
-    await checkinToEvent(body.userId, eventId);
-    broadcast(eventId, { type: "checkin", eventId, userId: body.userId });
-    return reply.status(200).send({ status: "checked_in" });
-  });
+  // You can only check yourself in — the user comes from the token.
+  app.post(
+    "/events/:eventId/checkin",
+    { preHandler: requireAuth },
+    async (req, reply) => {
+      const { eventId } = req.params as { eventId: string };
+      await checkinToEvent(req.userId, eventId);
+      broadcast(eventId, { type: "checkin", eventId, userId: req.userId });
+      return reply.status(200).send({ status: "checked_in" });
+    }
+  );
 
   app.get("/events/:eventId/graph", async (req, reply) => {
     const { eventId } = req.params as { eventId: string };

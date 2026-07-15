@@ -1,6 +1,8 @@
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { supabase } from "../lib/supabase.js";
+import { requireAuth } from "../lib/auth.js";
+import { filterConnectedUsers } from "../services/graph.js";
 import {
   createDiscordGroup,
   createTelegramGroup,
@@ -40,8 +42,18 @@ const PLATFORM_TO_SOCIAL_FIELD: Record<(typeof SUPPORTED_PLATFORMS)[number], str
 
 export async function groupRoutes(app: FastifyInstance) {
   // Suggest the best platform for a group based on what members have linked
-  app.post("/groups/suggest-platform", async (req, reply) => {
-    const { userIds } = suggestPlatformSchema.parse(req.body);
+  app.post("/groups/suggest-platform", { preHandler: requireAuth }, async (req, reply) => {
+    const { userIds: requestedIds } = suggestPlatformSchema.parse(req.body);
+
+    // Only people the caller has actually connected with — otherwise this
+    // endpoint would let anyone enumerate handles for arbitrary user ids.
+    const userIds = await filterConnectedUsers(req.userId, requestedIds);
+    if (userIds.length < 2) {
+      return reply.status(403).send({
+        error: "not_connected",
+        message: "You can only create groups with people you've connected with.",
+      });
+    }
 
     const socialFields = [...new Set(Object.values(PLATFORM_TO_SOCIAL_FIELD))];
     const { data: socials } = await supabase
@@ -83,8 +95,19 @@ export async function groupRoutes(app: FastifyInstance) {
   });
 
   // Create a group on the specified platform
-  app.post("/groups/create", async (req, reply) => {
-    const body = createGroupSchema.parse(req.body);
+  app.post("/groups/create", { preHandler: requireAuth }, async (req, reply) => {
+    const parsed = createGroupSchema.parse(req.body);
+
+    // Same connection gate as suggest-platform (see comment there). The
+    // caller is always part of their own group.
+    const connectedIds = await filterConnectedUsers(req.userId, parsed.userIds);
+    if (connectedIds.length < 2) {
+      return reply.status(403).send({
+        error: "not_connected",
+        message: "You can only create groups with people you've connected with.",
+      });
+    }
+    const body = { ...parsed, userIds: [...new Set([...connectedIds, req.userId])] };
 
     // Resolve group name (from event or user-provided)
     let groupName = body.name;
