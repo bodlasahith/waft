@@ -1,0 +1,189 @@
+import { FastifyInstance } from "fastify";
+import { z } from "zod";
+import { supabase } from "../lib/supabase.js";
+import {
+  createDiscordGroup,
+  createTelegramGroup,
+  generateIMessageLink,
+  generateWhatsAppLink,
+  generateSlackLink,
+} from "../services/platforms/index.js";
+
+const SUPPORTED_PLATFORMS = [
+  "discord",
+  "telegram",
+  "imessage",
+  "whatsapp",
+  "slack",
+] as const;
+
+const createGroupSchema = z.object({
+  userIds: z.array(z.string().uuid()).min(2).max(50),
+  platform: z.enum(SUPPORTED_PLATFORMS),
+  name: z.string().min(1).max(100).optional(),
+  eventId: z.string().uuid().optional(),
+});
+
+const suggestPlatformSchema = z.object({
+  userIds: z.array(z.string().uuid()).min(2),
+});
+
+export async function groupRoutes(app: FastifyInstance) {
+  // Suggest the best platform for a group based on what members have linked
+  app.post("/groups/suggest-platform", async (req, reply) => {
+    const { userIds } = suggestPlatformSchema.parse(req.body);
+
+    const { data: socials } = await supabase
+      .from("social_links")
+      .select("user_id, platform, handle")
+      .in("user_id", userIds)
+      .in("platform", ["discord", "telegram", "whatsapp", "slack"]);
+
+    if (!socials || socials.length === 0) {
+      return reply.send({ suggestions: [], coverage: {} });
+    }
+
+    // Count how many of the selected users have each platform
+    const platformCoverage: Record<string, { count: number; total: number; handles: string[] }> = {};
+    for (const platform of SUPPORTED_PLATFORMS) {
+      const usersWithPlatform = socials.filter((s) => s.platform === platform);
+      platformCoverage[platform] = {
+        count: usersWithPlatform.length,
+        total: userIds.length,
+        handles: usersWithPlatform.map((s) => s.handle),
+      };
+    }
+
+    // Rank by coverage (most members on that platform first)
+    const suggestions = Object.entries(platformCoverage)
+      .filter(([_, v]) => v.count > 0)
+      .sort((a, b) => b[1].count - a[1].count)
+      .map(([platform, data]) => ({
+        platform,
+        coverage: data.count / data.total,
+        memberCount: data.count,
+        totalMembers: data.total,
+      }));
+
+    return reply.send({ suggestions, coverage: platformCoverage });
+  });
+
+  // Create a group on the specified platform
+  app.post("/groups/create", async (req, reply) => {
+    const body = createGroupSchema.parse(req.body);
+
+    // Resolve group name (from event or user-provided)
+    let groupName = body.name;
+    if (!groupName && body.eventId) {
+      const { data: event } = await supabase
+        .from("events")
+        .select("name")
+        .eq("id", body.eventId)
+        .single();
+      groupName = event?.name ? `${event.name} — Waft` : "Waft Group";
+    }
+    groupName = groupName ?? "Waft Group";
+
+    // Fetch relevant social handles for the target platform
+    const platformToSocialField = {
+      discord: "discord",
+      telegram: "telegram",
+      imessage: "phone",
+      whatsapp: "phone",
+      slack: "slack",
+    } as const;
+
+    const socialPlatform = platformToSocialField[body.platform];
+
+    // For iMessage/WhatsApp we need phone numbers from user profiles
+    let memberHandles: string[] = [];
+
+    if (body.platform === "imessage" || body.platform === "whatsapp") {
+      const { data: phoneSocials } = await supabase
+        .from("social_links")
+        .select("user_id, handle")
+        .in("user_id", body.userIds)
+        .eq("platform", "phone");
+
+      memberHandles = (phoneSocials ?? []).map((s) => s.handle);
+    } else {
+      const { data: socials } = await supabase
+        .from("social_links")
+        .select("user_id, handle")
+        .in("user_id", body.userIds)
+        .eq("platform", socialPlatform);
+
+      memberHandles = (socials ?? []).map((s) => s.handle);
+    }
+
+    if (memberHandles.length < 2) {
+      return reply.status(400).send({
+        error: "insufficient_members",
+        message: `Only ${memberHandles.length} of ${body.userIds.length} members have ${body.platform} linked.`,
+        linkedCount: memberHandles.length,
+        totalRequested: body.userIds.length,
+      });
+    }
+
+    // Dispatch to the appropriate platform handler
+    switch (body.platform) {
+      case "discord": {
+        const result = await createDiscordGroup(groupName, memberHandles);
+        return reply.status(201).send({
+          platform: "discord",
+          type: "automated",
+          inviteUrl: result.inviteUrl,
+          guildId: result.guildId,
+          memberCount: memberHandles.length,
+        });
+      }
+
+      case "telegram": {
+        const telegramIds = memberHandles.map((h) => parseInt(h, 10));
+        const result = await createTelegramGroup(groupName, telegramIds);
+        return reply.status(201).send({
+          platform: "telegram",
+          type: "automated",
+          inviteLink: result.inviteLink,
+          chatId: result.chatId,
+          memberCount: memberHandles.length,
+        });
+      }
+
+      case "imessage": {
+        const result = generateIMessageLink(memberHandles, groupName);
+        return reply.send({
+          platform: "imessage",
+          type: "deeplink",
+          deepLink: result.deepLink,
+          memberCount: memberHandles.length,
+          instructions: "Tap to open Messages with all members pre-filled.",
+        });
+      }
+
+      case "whatsapp": {
+        const result = generateWhatsAppLink(memberHandles, groupName);
+        return reply.send({
+          platform: "whatsapp",
+          type: "deeplink",
+          deepLink: result.deepLink,
+          memberCount: memberHandles.length,
+          members: result.members,
+          instructions:
+            "Open WhatsApp, create a new group, and add the listed members. We've copied them to your clipboard.",
+        });
+      }
+
+      case "slack": {
+        const result = generateSlackLink(memberHandles);
+        return reply.send({
+          platform: "slack",
+          type: "deeplink",
+          deepLink: result.deepLink,
+          memberCount: memberHandles.length,
+          instructions: "Tap to open a multi-person DM in Slack.",
+        });
+      }
+    }
+  });
+}
