@@ -13,19 +13,28 @@ export async function createPersonNode(userId: string, name: string, photoUrl?: 
   }
 }
 
+/**
+ * Returns false (and creates nothing) if either person doesn't exist yet.
+ * Reconnecting an existing edge increments strength instead of resetting it
+ * to 1, per the "Waft strength" model in the README.
+ */
 export async function createConnection(
   fromUserId: string,
   toUserId: string,
   eventId?: string
-) {
+): Promise<boolean> {
   const session = getDriver().session();
   try {
-    await session.run(
+    const result = await session.run(
       `MATCH (a:Person {id: $fromUserId}), (b:Person {id: $toUserId})
        MERGE (a)-[r:WAFT]-(b)
-       SET r.createdAt = datetime(), r.eventId = $eventId, r.strength = 1`,
+       ON CREATE SET r.createdAt = datetime(), r.strength = 1
+       ON MATCH SET r.strength = coalesce(r.strength, 0) + 1
+       SET r.eventId = $eventId
+       RETURN a.id AS a`,
       { fromUserId, toUserId, eventId: eventId ?? null }
     );
+    return result.records.length > 0;
   } finally {
     await session.close();
   }

@@ -27,7 +27,10 @@ export async function createDiscordGroup(
   name: string,
   memberDiscordIds: string[]
 ): Promise<DiscordGuildResult> {
-  // Create a new guild (server)
+  // NOTE: POST /guilds is restricted to bots in fewer than 10 guilds total
+  // (Discord API limitation, not configurable). Fine for demo volume; will
+  // need a different flow (e.g. channel-per-event in one guild) before
+  // real usage.
   const guild = await discordFetch("/guilds", {
     method: "POST",
     body: JSON.stringify({ name }),

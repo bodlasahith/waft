@@ -1,4 +1,4 @@
-import { FastifyInstance } from "fastify";
+import { FastifyInstance, FastifyReply } from "fastify";
 import { z } from "zod";
 import { supabase } from "../lib/supabase.js";
 import { createPersonNode } from "../services/graph.js";
@@ -15,6 +15,12 @@ const PLATFORMS = [
   "reddit",
   "snapchat",
   "facebook",
+  // Reachability platforms — used for group creation (see routes/groups.ts),
+  // not just display. "phone" backs both iMessage and WhatsApp, which have
+  // no separate handle concept.
+  "telegram",
+  "slack",
+  "phone",
 ] as const;
 
 const addSocialSchema = z.object({
@@ -23,6 +29,30 @@ const addSocialSchema = z.object({
   url: z.string().url().optional(),
   visibility: z.enum(["public", "event_only", "mutual_only"]).default("public"),
 });
+
+// Shared by both card lookup routes — resolves a user's public card by
+// whichever column identifies them (id or card_code).
+async function sendPublicCard(
+  reply: FastifyReply,
+  column: "id" | "card_code",
+  value: string
+) {
+  const { data: user } = await supabase
+    .from("users")
+    .select("id, name, photo_url, card_code")
+    .eq(column, value)
+    .single();
+
+  if (!user) return reply.status(404).send({ error: "Card not found" });
+
+  const { data: socials } = await supabase
+    .from("social_links")
+    .select("platform, handle, url")
+    .eq("user_id", user.id)
+    .eq("visibility", "public");
+
+  return reply.send({ ...user, socials: socials ?? [] });
+}
 
 export async function userRoutes(app: FastifyInstance) {
   app.get("/users/:userId", async (req, reply) => {
@@ -40,21 +70,14 @@ export async function userRoutes(app: FastifyInstance) {
   // Public card endpoint — no auth required (for QR scan fallback)
   app.get("/users/:userId/card", async (req, reply) => {
     const { userId } = req.params as { userId: string };
-    const { data: user } = await supabase
-      .from("users")
-      .select("id, name, photo_url, card_code")
-      .eq("id", userId)
-      .single();
+    return sendPublicCard(reply, "id", userId);
+  });
 
-    if (!user) return reply.status(404).send({ error: "User not found" });
-
-    const { data: socials } = await supabase
-      .from("social_links")
-      .select("platform, handle, url")
-      .eq("user_id", userId)
-      .eq("visibility", "public");
-
-    return reply.send({ ...user, socials: socials ?? [] });
+  // QR codes encode the opaque card_code (not the internal user id), so it
+  // can be rotated independently if it ever leaks or gets shared too widely.
+  app.get("/cards/:cardCode", async (req, reply) => {
+    const { cardCode } = req.params as { cardCode: string };
+    return sendPublicCard(reply, "card_code", cardCode);
   });
 
   app.post("/users/:userId/socials", async (req, reply) => {

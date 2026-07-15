@@ -103,7 +103,7 @@ events (id, name, code, location, starts_at, ends_at, created_by)
 
 ### QR Scan → Connect
 
-1. Person B scans Person A's QR code (native camera — no app needed)
+1. Person B scans Person A's QR code (native camera — no app needed). The QR encodes the opaque `card_code` (resolved via `GET /cards/:cardCode`), not the internal user id, so it can be rotated if it leaks.
 2. Universal link resolves:
    - **Has app?** → Deep link, instant mutual connection
    - **No app?** → Web card showing name, photo, socials as tappable icons + "Get Waft" CTA
@@ -112,27 +112,31 @@ events (id, name, code, location, starts_at, ends_at, created_by)
 
 ### Event Check-In
 
-1. Organizer creates event room → gets a shareable QR code
+1. Organizer creates event room → gets a shareable QR code encoding the event `code` (resolved via `GET /events/by-code/:code`)
 2. Attendees scan event QR → checked into that event's subgraph
-3. Live event graph dashboard shows connections forming in real-time
+3. Live event graph dashboard shows connections forming in real-time — the `/events/:eventId/live` WebSocket sends the current graph on connect, then pushes fresh snapshots on every connection and check-in
 
 ### Group Creation
 
 1. User selects nodes in their graph (or app suggests a cluster)
 2. `POST /groups/suggest-platform` identifies which platform has best coverage
 3. User picks platform → one tap:
-   - **Discord/Telegram**: Bot automatically creates server/group, sends invite links
+   - **Discord**: Bot automatically creates server, sends invite links
+   - **Telegram**: Deep link prompts user to create the group with the Waft bot added; members who've started the bot get notified
    - **iMessage/WhatsApp/Slack**: Deep link opens native app with recipients pre-filled
 
 ## Platform Integration Matrix
 
 | Platform | Integration type | Capabilities |
 |----------|-----------------|-------------|
-| Discord | Automated (Bot API) | Create server, generate invite, DM all members |
-| Telegram | Automated (Bot API) | Create supergroup, generate invite link, add members |
+| Discord | Automated (Bot API) | Create server, generate invite, DM all members¹ |
+| Telegram | Deep link (`startgroup`) | Prompt user to create group with Waft bot added; bot pre-notifies members who've started it² |
 | iMessage | Deep link | Open Messages with all phone numbers in "To:" field |
 | WhatsApp | Deep link | Open compose with member list (manual group creation) |
 | Slack | Deep link | Open multi-party DM |
+
+¹ Discord's `POST /guilds` only works for bots in fewer than 10 guilds — fine for demos, needs a channel-per-event model in one guild before real usage.
+² Telegram's Bot API cannot create groups or add members directly; the `startgroup` deep link is the only supported flow.
 
 ## Onboarding (The 20-Second Signup)
 
@@ -182,6 +186,9 @@ Social links are added progressively through contextual prompts:
 - [x] Web card page (QR scan fallback for non-app users)
 - [x] Live event graph visualization (Sigma.js + WebSocket)
 - [x] Group creation (Discord, Telegram, iMessage, WhatsApp, Slack)
+- [x] API hardening pass — verified boot end-to-end (fixed ESM config, Node 20 WebSocket crash), clean 400s on invalid bodies, `card_code`/event-`code` lookup routes, live WebSocket broadcasts actually wired to connections/check-ins, Telegram rewritten around real Bot API limits, cumulative connection strength
+- [ ] Auth verification middleware (Supabase JWT) — **currently any caller can mutate any user's data; must land before public deploy**
+- [ ] Fix `apps/web` install (`@sigma/react@^0.1.0` doesn't exist in the npm registry — blocks workspace-wide `npm install`)
 - [ ] Supabase project setup + schema deployment
 - [ ] Neo4j Aura instance provisioning
 - [ ] Mobile app scaffold (Expo — QR display, scanner, basic graph)
@@ -192,7 +199,8 @@ Social links are added progressively through contextual prompts:
 ### Phase 2: Post-Demo Polish
 - [ ] OAuth connect for Discord, LinkedIn, GitHub, Spotify
 - [ ] Event-context profiles (different card per event type)
-- [ ] NFC support
+- [ ] NFC tag support (stickers/cards encoding the `waft.app/c/<card_code>` URL — same infra as QR, native tap-to-open on iOS/Android)
+- [ ] BLE tap-to-connect (AirDrop-style phone-to-phone gesture; NameDrop has no public API and NFC P2P is dead, so this requires both users to have the app open — separate design effort)
 - [ ] Push notifications ("X just joined Waft")
 - [ ] Graph analytics (centrality, clustering, shortest path)
 - [ ] Gamification badges
@@ -227,7 +235,7 @@ npm run dev:web
 npm run dev:mobile
 ```
 
-Copy `.env.example` to `.env` and fill in your credentials for Supabase, Neo4j Aura, Discord bot token, and Telegram bot token.
+Copy `.env.example` to `.env` and fill in your credentials for Supabase, Neo4j Aura, Discord bot token, and Telegram bot token + username (`TELEGRAM_BOT_USERNAME`, used for the `startgroup` deep link).
 
 ## License
 

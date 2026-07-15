@@ -1,13 +1,30 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import websocket from "@fastify/websocket";
+import { ZodError } from "zod";
 import { connectionRoutes } from "./routes/connections.js";
 import { eventRoutes } from "./routes/events.js";
 import { userRoutes } from "./routes/users.js";
 import { groupRoutes } from "./routes/groups.js";
 import { closeDriver } from "./lib/neo4j.js";
+import { subscribe } from "./lib/liveEvents.js";
+import { getEventGraph } from "./services/graph.js";
 
 const app = Fastify({ logger: true });
+
+// Every route validates its body with schema.parse(), which throws a raw
+// ZodError — without this handler Fastify's default surfaces that as a 500
+// with the full validation dump in the response instead of a 400.
+app.setErrorHandler((err, _req, reply) => {
+  if (err instanceof ZodError) {
+    return reply.status(400).send({
+      error: "invalid_request",
+      issues: err.issues.map((i) => ({ path: i.path.join("."), message: i.message })),
+    });
+  }
+  app.log.error(err);
+  return reply.status(500).send({ error: "internal_error" });
+});
 
 await app.register(cors, { origin: true });
 await app.register(websocket);
@@ -17,10 +34,14 @@ await app.register(eventRoutes);
 await app.register(userRoutes);
 await app.register(groupRoutes);
 
-// WebSocket for live event graph updates
-app.get("/events/:eventId/live", { websocket: true }, (socket, req) => {
+// WebSocket for live event graph updates. Sends the current graph on
+// connect, then pushes fresh snapshots whenever a connection or check-in
+// happens within this event (see routes/connections.ts, routes/events.ts).
+app.get("/events/:eventId/live", { websocket: true }, async (socket, req) => {
   const { eventId } = req.params as { eventId: string };
-  socket.send(JSON.stringify({ type: "connected", eventId }));
+  subscribe(eventId, socket);
+  const graph = await getEventGraph(eventId);
+  socket.send(JSON.stringify({ type: "graph", eventId, ...graph }));
 });
 
 app.get("/health", async () => ({ status: "ok" }));

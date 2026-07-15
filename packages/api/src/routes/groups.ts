@@ -28,25 +28,39 @@ const suggestPlatformSchema = z.object({
   userIds: z.array(z.string().uuid()).min(2),
 });
 
+// iMessage and WhatsApp have no separate "handle" — both are reached via
+// the phone number stored under the "phone" social link.
+const PLATFORM_TO_SOCIAL_FIELD: Record<(typeof SUPPORTED_PLATFORMS)[number], string> = {
+  discord: "discord",
+  telegram: "telegram",
+  imessage: "phone",
+  whatsapp: "phone",
+  slack: "slack",
+};
+
 export async function groupRoutes(app: FastifyInstance) {
   // Suggest the best platform for a group based on what members have linked
   app.post("/groups/suggest-platform", async (req, reply) => {
     const { userIds } = suggestPlatformSchema.parse(req.body);
 
+    const socialFields = [...new Set(Object.values(PLATFORM_TO_SOCIAL_FIELD))];
     const { data: socials } = await supabase
       .from("social_links")
       .select("user_id, platform, handle")
       .in("user_id", userIds)
-      .in("platform", ["discord", "telegram", "whatsapp", "slack"]);
+      .in("platform", socialFields);
 
     if (!socials || socials.length === 0) {
       return reply.send({ suggestions: [], coverage: {} });
     }
 
-    // Count how many of the selected users have each platform
+    // Count how many of the selected users have each platform. iMessage and
+    // WhatsApp both draw from the same "phone" social field, so the same
+    // rows count toward both.
     const platformCoverage: Record<string, { count: number; total: number; handles: string[] }> = {};
     for (const platform of SUPPORTED_PLATFORMS) {
-      const usersWithPlatform = socials.filter((s) => s.platform === platform);
+      const socialField = PLATFORM_TO_SOCIAL_FIELD[platform];
+      const usersWithPlatform = socials.filter((s) => s.platform === socialField);
       platformCoverage[platform] = {
         count: usersWithPlatform.length,
         total: userIds.length,
@@ -85,15 +99,7 @@ export async function groupRoutes(app: FastifyInstance) {
     groupName = groupName ?? "Waft Group";
 
     // Fetch relevant social handles for the target platform
-    const platformToSocialField = {
-      discord: "discord",
-      telegram: "telegram",
-      imessage: "phone",
-      whatsapp: "phone",
-      slack: "slack",
-    } as const;
-
-    const socialPlatform = platformToSocialField[body.platform];
+    const socialPlatform = PLATFORM_TO_SOCIAL_FIELD[body.platform];
 
     // For iMessage/WhatsApp we need phone numbers from user profiles
     let memberHandles: string[] = [];
@@ -139,14 +145,19 @@ export async function groupRoutes(app: FastifyInstance) {
       }
 
       case "telegram": {
+        // Bots can't create groups via the API — this hands back a deep
+        // link that prompts the initiating user to create the group and
+        // add the bot. See services/platforms/telegram.ts for why.
         const telegramIds = memberHandles.map((h) => parseInt(h, 10));
         const result = await createTelegramGroup(groupName, telegramIds);
-        return reply.status(201).send({
+        return reply.send({
           platform: "telegram",
-          type: "automated",
-          inviteLink: result.inviteLink,
-          chatId: result.chatId,
+          type: "deeplink",
+          deepLink: result.deepLink,
           memberCount: memberHandles.length,
+          notifiedCount: result.notifiedCount,
+          instructions:
+            "Tap to create the group in Telegram and add the Waft bot. Members who've started the bot were notified to expect an invite.",
         });
       }
 
