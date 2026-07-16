@@ -189,8 +189,8 @@ Social links are added progressively through contextual prompts:
 - [x] API hardening pass — verified boot end-to-end (fixed ESM config, Node 20 WebSocket crash), clean 400s on invalid bodies, `card_code`/event-`code` lookup routes, live WebSocket broadcasts actually wired to connections/check-ins, Telegram rewritten around real Bot API limits, cumulative connection strength
 - [x] Auth verification middleware — Supabase JWTs verified locally (HS256, `SUPABASE_JWT_SECRET`); identity fields derive from the token, self-scoped routes moved to `/users/me` + `/connections/me/graph`, and group endpoints only accept users the caller has connected with (blocks handle/phone harvesting)
 - [x] Fix `apps/web` install — removed unused `@sigma/react` dep (doesn't exist on npm); workspace-wide `npm install` works again
-- [ ] Supabase project setup + schema deployment
-- [ ] Neo4j Aura instance provisioning
+- [x] Supabase project setup + schema deployment (ES256 signing keys — API verifies tokens via the project JWKS endpoint, no shared secret)
+- [x] Neo4j Aura instance provisioning (uniqueness constraints on `Person.id` / `Event.id`; full register→connect→graph smoke test passed against live infra)
 - [x] Mobile app scaffold (Expo SDK 57 — QR card display, camera scanner wired to connect/check-in, network list grouped by degree; graph *visualization* still list-based pending a native renderer)
 - [ ] Auth flow (Apple/Google sign-in)
 - [ ] Deploy web + API (Vercel + Railway)
