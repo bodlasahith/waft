@@ -28,7 +28,8 @@
         {
           "cameraPermission": "Waft uses the camera to scan QR codes and connect with people you meet."
         }
-      ]
+      ],
+      "expo-web-browser"
     ]
   }
 }

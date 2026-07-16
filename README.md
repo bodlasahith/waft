@@ -192,7 +192,7 @@ Social links are added progressively through contextual prompts:
 - [x] Supabase project setup + schema deployment (ES256 signing keys — API verifies tokens via the project JWKS endpoint, no shared secret)
 - [x] Neo4j Aura instance provisioning (uniqueness constraints on `Person.id` / `Event.id`; full register→connect→graph smoke test passed against live infra)
 - [x] Mobile app scaffold (Expo SDK 57 — QR card display, camera scanner wired to connect/check-in, network list grouped by degree; graph *visualization* still list-based pending a native renderer)
-- [ ] Auth flow (Apple/Google sign-in)
+- [x] Auth flow — email OTP code (zero-config baseline) + Google OAuth (PKCE via expo-web-browser); silent profile registration from OAuth metadata, one-field onboarding for email sign-ins. Apple sign-in deferred until an Apple Developer account exists (one more button in the same flow)
 - [ ] Deploy web + API (Vercel + Railway)
 - [ ] Live demo at YC AI Startup School
 

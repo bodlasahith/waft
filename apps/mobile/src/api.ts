@@ -1,18 +1,11 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_URL } from "./config";
+import { supabase } from "./supabase";
 
-const TOKEN_KEY = "waft.session_token";
-
-// Placeholder until the Supabase Apple/Google sign-in flow lands — the
-// auth screen will call setSessionToken with the Supabase access token,
-// and everything below already sends it.
-export async function getSessionToken(): Promise<string | null> {
-  return AsyncStorage.getItem(TOKEN_KEY);
-}
-
-export async function setSessionToken(token: string | null): Promise<void> {
-  if (token === null) await AsyncStorage.removeItem(TOKEN_KEY);
-  else await AsyncStorage.setItem(TOKEN_KEY, token);
+// Token comes from the live Supabase session — supabase-js persists it
+// in AsyncStorage and refreshes it automatically.
+async function getSessionToken(): Promise<string | null> {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token ?? null;
 }
 
 export class ApiError extends Error {
@@ -57,6 +50,11 @@ export interface PublicCard {
 
 export const api = {
   me: () => request<MyProfile>("/users/me"),
+  register: (name: string, photoUrl?: string) =>
+    request<MyProfile>("/users", {
+      method: "POST",
+      body: JSON.stringify({ name, photoUrl }),
+    }),
   card: (cardCode: string) => request<PublicCard>(`/cards/${cardCode}`),
   connect: (toUserId: string, eventId?: string) =>
     request<{ status: string }>("/connections", {
