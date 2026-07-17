@@ -202,6 +202,7 @@ Social links are added progressively through contextual prompts:
 - [ ] NFC tag support (stickers/cards encoding the `waft.app/c/<card_code>` URL — same infra as QR, native tap-to-open on iOS/Android)
 - [ ] BLE tap-to-connect (AirDrop-style phone-to-phone gesture; NameDrop has no public API and NFC P2P is dead, so this requires both users to have the app open — separate design effort)
 - [ ] Push notifications ("X just joined Waft")
+- [ ] Phone sign-up (SMS OTP) — Supabase phone provider + Twilio; pairs with iOS one-time-code autofill from Messages (the input hint is already in place). Blocked on a paid Twilio account + US A2P/toll-free verification (takes days–weeks — start alongside the SMS-nudges registration below)
 - [ ] SMS nudges for phone-only profiles — event-driven only (someone viewed your card with no socials to tap; post-event digest with platform coverage), hard-capped (1/week, ~3 lifetime), stops permanently once one social is added, magic-link deep link to add-social screen. Requires explicit opt-in at signup + A2P 10DLC campaign registration (takes weeks — start early)
 - [ ] Graph analytics (centrality, clustering, shortest path)
 - [ ] Gamification badges

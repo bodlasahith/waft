@@ -102,6 +102,8 @@ export function SignInScreen() {
             style={styles.input}
             placeholder="123456"
             keyboardType="number-pad"
+            textContentType="oneTimeCode"
+            autoComplete="one-time-code"
             maxLength={8}
             value={code}
             onChangeText={setCode}
