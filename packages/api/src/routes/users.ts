@@ -116,6 +116,11 @@ export async function userRoutes(app: FastifyInstance) {
       return reply.status(400).send({ error: "token_missing_email" });
     }
 
+    // Graph node first: if it fails, no row is written and the client's next
+    // /users/me still 404s, so registration retries cleanly. (Row first would
+    // strand a profile with no graph node — connections to it 404 forever.)
+    await createPersonNode(req.userId, body.name, body.photoUrl);
+
     // Preserve card_code across re-registrations — a blind upsert would
     // regenerate it and invalidate already-shared/printed QR codes.
     const { data: existing } = await supabase
@@ -137,8 +142,6 @@ export async function userRoutes(app: FastifyInstance) {
       .single();
 
     if (error) return reply.status(500).send({ error: error.message });
-
-    await createPersonNode(req.userId, body.name, body.photoUrl);
     return reply.status(201).send(data);
   });
 }

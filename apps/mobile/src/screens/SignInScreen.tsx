@@ -97,16 +97,16 @@ export function SignInScreen() {
         </>
       ) : (
         <>
-          <Text style={styles.muted}>We emailed a 6-digit code to {email.trim()}</Text>
+          <Text style={styles.muted}>We emailed a sign-in code to {email.trim()}</Text>
           <TextInput
             style={styles.input}
             placeholder="123456"
             keyboardType="number-pad"
-            maxLength={6}
+            maxLength={8}
             value={code}
             onChangeText={setCode}
           />
-          <Button title="Verify" onPress={verifyCode} disabled={busy || code.length !== 6} />
+          <Button title="Verify" onPress={verifyCode} disabled={busy || code.length < 6} />
           <Pressable onPress={() => setStep("email")}>
             <Text style={styles.link}>Use a different email</Text>
           </Pressable>
