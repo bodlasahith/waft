@@ -12,6 +12,12 @@ Waft replaces the awkward "What's your Instagram?" exchange at events with a sin
 
 Every connection forms an edge in a live graph visualization. Over time, users see their network topology — clusters, bridges, mutual connections — rather than a flat contact list.
 
+**Positioning direction** (slogan TBD): Waft is *the new phonebook* — the
+rolodex reinvented for people whose contacts live across a dozen platforms.
+Candidate framings to workshop: "your people, one graph" / "the phonebook,
+rebuilt for how you actually keep in touch" / "scan once, never lose anyone
+again".
+
 ## Problem
 
 1. **Platform fragmentation** — Young people share Instagram/TikTok/Snapchat, professionals share LinkedIn/X, gamers share Discord. At events with mixed demographics, there's no single "connect" action that works for everyone.
@@ -158,8 +164,48 @@ Social links are added progressively through contextual prompts:
 - **Network role badges** — Connector (bridges clusters), Hub (high degree), Bridge (high betweenness)
 - **Event graph memories** — "You met 15 people at PyCon across 3 distinct groups"
 - **Weekly graph digest** — "Your network grew 12% this week. 3 new people joined from your contacts."
-- **Waft strength** — edge weight increases with mutual connections, shared events, and interactions
+- **Waft strength** — edge weight grows with real engagement (canonical spec below)
 - **Shareable graph cards** — abstract, beautiful network snapshots for stories/social posts
+
+### Waft Strength — canonical spec
+
+Strength measures **ongoing, intentional engagement between two specific people**.
+Scanning is a one-time handshake that creates the edge; it never adds strength,
+and rescanning is a no-op (`POST /connections` returns `already_connected`).
+Each signal is weighted by how deliberate it is:
+
+| Signal | Weight | Rationale |
+|---|---|---|
+| Base handshake (the scan) | 1, once | Existence of the edge; never repeats |
+| Explicitly sharing a non-public social with this person | +3 per platform | Strongest trust signal — granting access the public card doesn't give |
+| Checked into the same event | +2 per distinct event | Automatic tie evidence — you keep ending up in the same rooms |
+| Creating/joining a group together | +2 per group | Deliberate "let's keep talking" action |
+| Opening their profile from your network | +log₂(1 + taps), capped at +2 total | Weak interest signal — log-scaled so it can't be farmed |
+
+Structural rules (these matter more than the exact numbers):
+
+- **Store raw counters, derive strength.** The `WAFT` edge carries
+  `sharedSocials`, `sharedEvents`, `groupsTogether`, `profileTaps`,
+  `lastInteractedAt`; `strength` is materialized from them on each write so
+  graph reads stay a single property lookup. Weights can be retuned later
+  without corrupting history — a bare accumulating integer can't.
+- **Diminishing returns on anything repeatable.** Spammable signals (taps) are
+  log-scaled and capped; naturally rare ones (social shares — ~10 platforms
+  exist) stay linear. That's the entire anti-gaming story at this scale.
+- **Symmetric display, private inputs.** Taps and shares are one-directional
+  but the edge is symmetric: both directions sum into one strength, and the
+  breakdown is never exposed — both people see "strength 7", neither sees who
+  viewed whom how often.
+- **Decay (post-demo).** Displayed strength gets multiplied by
+  `exp(-months_since_last_interaction / 6)` at render time; counters are never
+  destroyed, so one interaction fully reignites a dormant tie. This is what
+  makes the visualization themes physically meaningful — stale connections
+  literally drift outward.
+
+Implementation order follows the missing surfaces, each feeding counters as it
+lands: shared-event counting (check-ins already exist), tap tracking (needs a
+tappable profile view in the Network tab), explicit social sharing (needs the
+`mutual_only` visibility UI), groups (endpoints exist, untested).
 
 ## Privacy Model
 
