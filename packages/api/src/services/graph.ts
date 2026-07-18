@@ -14,29 +14,31 @@ export async function createPersonNode(userId: string, name: string, photoUrl?: 
 }
 
 /**
- * Returns the edge's strength after connecting, or null if either person
- * doesn't exist yet. Strength 1 means this waft created the connection;
- * higher means it already existed and was reinforced (the "Waft strength"
- * model in the README).
+ * Returns null if either person doesn't exist yet. Rescanning an existing
+ * connection is a no-op on strength — scanning is a one-time handshake;
+ * strength will grow from real interactions (profile taps, explicit social
+ * shares — see roadmap), not repeat scans.
  */
 export async function createConnection(
   fromUserId: string,
   toUserId: string,
   eventId?: string
-): Promise<number | null> {
+): Promise<{ already: boolean; strength: number } | null> {
   const session = getDriver().session();
   try {
     const result = await session.run(
       `MATCH (a:Person {id: $fromUserId}), (b:Person {id: $toUserId})
+       OPTIONAL MATCH (a)-[existing:WAFT]-(b)
+       WITH a, b, existing IS NOT NULL AS already
        MERGE (a)-[r:WAFT]-(b)
        ON CREATE SET r.createdAt = datetime(), r.strength = 1
-       ON MATCH SET r.strength = coalesce(r.strength, 0) + 1
-       SET r.eventId = $eventId
-       RETURN r.strength AS strength`,
+       SET r.eventId = coalesce($eventId, r.eventId)
+       RETURN already, r.strength AS strength`,
       { fromUserId, toUserId, eventId: eventId ?? null }
     );
     if (result.records.length === 0) return null;
-    return result.records[0].get("strength").toNumber();
+    const record = result.records[0];
+    return { already: record.get("already"), strength: record.get("strength").toNumber() };
   } finally {
     await session.close();
   }

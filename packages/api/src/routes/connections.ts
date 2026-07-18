@@ -18,8 +18,8 @@ export async function connectionRoutes(app: FastifyInstance) {
       return reply.status(400).send({ error: "cannot_connect_to_self" });
     }
 
-    const strength = await createConnection(req.userId, body.toUserId, body.eventId);
-    if (strength === null) {
+    const result = await createConnection(req.userId, body.toUserId, body.eventId);
+    if (result === null) {
       return reply.status(404).send({ error: "One or both users not found" });
     }
 
@@ -28,11 +28,9 @@ export async function connectionRoutes(app: FastifyInstance) {
       broadcast(body.eventId, { type: "graph", eventId: body.eventId, ...graph });
     }
 
-    // strength 1 = this scan created the edge; >1 = they were already
-    // connected and this waft reinforced it. Clients word the two differently.
     return reply
       .status(201)
-      .send({ status: strength > 1 ? "already_connected" : "connected", strength });
+      .send({ status: result.already ? "already_connected" : "connected", strength: result.strength });
   });
 
   // Your network graph is yours alone — it reveals who you know and how.

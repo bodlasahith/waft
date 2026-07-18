@@ -53,7 +53,7 @@ export function ScanScreen() {
           kind: "done",
           message:
             result.status === "already_connected"
-              ? `You already share a waft with ${card.name} — this makes ${result.strength}!`
+              ? `You already share a waft with ${card.name}!`
               : `Connected with ${card.name}!`,
         });
       } else {

@@ -204,6 +204,7 @@ Social links are added progressively through contextual prompts:
 - [ ] Push notifications ("X just joined Waft")
 - [ ] Phone sign-up (SMS OTP) — Supabase phone provider + Twilio; pairs with iOS one-time-code autofill from Messages (the input hint is already in place). Blocked on a paid Twilio account + US A2P/toll-free verification (takes days–weeks — start alongside the SMS-nudges registration below)
 - [ ] SMS nudges for phone-only profiles — event-driven only (someone viewed your card with no socials to tap; post-event digest with platform coverage), hard-capped (1/week, ~3 lifetime), stops permanently once one social is added, magic-link deep link to add-social screen. Requires explicit opt-in at signup + A2P 10DLC campaign registration (takes weeks — start early)
+- [ ] Interaction-based waft strength — strength grows from real engagement (opening/tapping a connection's profile, explicitly sharing a non-public social with that person), not rescans (a rescan is a no-op handshake; the API already returns `already_connected`). Needs per-connection interaction tracking + the mutual/event-only social-sharing UI
 - [ ] Graph analytics (centrality, clustering, shortest path)
 - [ ] Gamification badges
 - [ ] Node avatars v1 — simple customization (color, shape, accent) so your node is recognizably *you* in the graph; stored as a small JSON blob on the user, rendered client-side
