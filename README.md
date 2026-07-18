@@ -239,7 +239,7 @@ tappable profile view in the Network tab), explicit social sharing (needs the
 - [x] Neo4j Aura instance provisioning (uniqueness constraints on `Person.id` / `Event.id`; full register→connect→graph smoke test passed against live infra)
 - [x] Mobile app scaffold (Expo SDK 57 — QR card display, camera scanner wired to connect/check-in, network list grouped by degree; graph *visualization* still list-based pending a native renderer)
 - [x] Auth flow — email OTP code (zero-config baseline) + Google OAuth (PKCE via expo-web-browser); silent profile registration from OAuth metadata, one-field onboarding for email sign-ins. Apple sign-in deferred until an Apple Developer account exists (one more button in the same flow)
-- [x] Deploy web + API (Vercel + Railway) — API at `waft-production.up.railway.app` (health-checked, `railway.json` config), web at `waft-web.vercel.app` (card pages live)
+- [x] Deploy web + API (Vercel + Railway) — API at `waft-production.up.railway.app` (health-checked, `railway.json` config), web at **`getwaft.app`** (Vercel, card pages live; `waft-web.vercel.app` still aliases). Email via Resend on the verified domain (`auth@getwaft.app`) — sign-in codes deliver to any address
 - [ ] Live demo at YC AI Startup School
 
 ### Phase 2: Post-Demo Polish
