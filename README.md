@@ -245,6 +245,8 @@ tappable profile view in the Network tab), explicit social sharing (needs the
 ### Phase 2: Post-Demo Polish
 - [ ] OAuth connect for Discord, LinkedIn, GitHub, Spotify
 - [ ] Event-context profiles (different card per event type)
+- [ ] Event icebreakers — when two people connect at an event, briefly surface a conversation prompt tied to the event's content; host-authored (a few prompts at event creation) or AI-generated from the event name/description. Delivery: included in the connect response when `eventId` is present, shown on the post-scan confirmation screen
+- [ ] Styled scan codes — colored/emoji-branded QR codes (logo center, rounded modules, event-themed palettes — QR tolerates ~30% styling via error correction, stays camera-app-scannable), and longer-term a signature Waft code format à la Spotify's waveform codes (custom aesthetic, but only our scanner reads it — so always paired with a fallback QR/link)
 - [ ] NFC tag support (stickers/cards encoding the `waft.app/c/<card_code>` URL — same infra as QR, native tap-to-open on iOS/Android)
 - [ ] BLE tap-to-connect (AirDrop-style phone-to-phone gesture; NameDrop has no public API and NFC P2P is dead, so this requires both users to have the app open — separate design effort)
 - [ ] Push notifications ("X just joined Waft")
