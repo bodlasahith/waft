@@ -15,7 +15,7 @@ const PLATFORM_META: Record<string, { label: string; color: string; urlPrefix: s
 
 async function getUserCard(code: string) {
   const apiUrl = process.env.API_URL || "http://localhost:3001";
-  const res = await fetch(`${apiUrl}/users/${code}/card`, { cache: "no-store" });
+  const res = await fetch(`${apiUrl}/cards/${code}`, { cache: "no-store" });
   if (!res.ok) return null;
   return res.json();
 }
