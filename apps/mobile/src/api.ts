@@ -57,7 +57,7 @@ export const api = {
     }),
   card: (cardCode: string) => request<PublicCard>(`/cards/${cardCode}`),
   connect: (toUserId: string, eventId?: string) =>
-    request<{ status: string }>("/connections", {
+    request<{ status: "connected" | "already_connected"; strength: number }>("/connections", {
       method: "POST",
       body: JSON.stringify({ toUserId, eventId }),
     }),

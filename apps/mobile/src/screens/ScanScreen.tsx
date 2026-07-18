@@ -48,18 +48,27 @@ export function ScanScreen() {
     try {
       if (parsed.type === "card") {
         const card = await api.card(parsed.code);
-        await api.connect(card.id);
-        setState({ kind: "done", message: `Connected with ${card.name}!` });
+        const result = await api.connect(card.id);
+        setState({
+          kind: "done",
+          message:
+            result.status === "already_connected"
+              ? `You already share a waft with ${card.name} — this makes ${result.strength}!`
+              : `Connected with ${card.name}!`,
+        });
       } else {
         const event = await api.eventByCode(parsed.code);
         await api.checkin(event.id);
         setState({ kind: "done", message: `Checked into ${event.name}!` });
       }
     } catch (e: any) {
-      setState({
-        kind: "error",
-        message: e?.status === 401 ? "Sign in to connect." : "Something went wrong.",
-      });
+      const message =
+        e?.status === 401
+          ? "Sign in to connect."
+          : e?.body?.error === "cannot_connect_to_self"
+            ? "That's your own card!"
+            : "Something went wrong.";
+      setState({ kind: "error", message });
     }
   }
 
