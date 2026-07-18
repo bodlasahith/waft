@@ -55,7 +55,13 @@ export function SignInScreen() {
       const redirectTo = makeRedirectUri();
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo, skipBrowserRedirect: true },
+        options: {
+          redirectTo,
+          skipBrowserRedirect: true,
+          // Always show Google's account chooser — the auth browser shares
+          // Safari cookies, so without this it silently reuses the last account.
+          queryParams: { prompt: "select_account" },
+        },
       });
       if (error) throw error;
 
