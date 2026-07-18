@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button, StyleSheet, Text, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { api } from "../api";
+import { api, ApiError } from "../api";
 import { CARD_ORIGIN } from "../config";
 
 type ScanState =
@@ -68,12 +68,15 @@ export function ScanScreen() {
         setState({ kind: "done", message: `Checked into ${event.name}!` });
       }
     } catch (e: any) {
-      const message =
-        e?.status === 401
-          ? "Sign in to connect."
-          : e?.body?.error === "cannot_connect_to_self"
-            ? "That's your own card!"
-            : "Something went wrong.";
+      let message: string;
+      if (e?.status === 401) message = "Sign in to connect.";
+      else if (e?.body?.error === "cannot_connect_to_self") message = "That's your own card!";
+      else if (e instanceof ApiError) {
+        const detail = (e.body as any)?.error ?? "";
+        message = `Something went wrong (${e.status}${detail ? ` ${detail}` : ""}).`;
+      } else {
+        message = `Something went wrong${e?.message ? ` (${e.message})` : ""}.`;
+      }
       setState({ kind: "error", message });
     }
   }
