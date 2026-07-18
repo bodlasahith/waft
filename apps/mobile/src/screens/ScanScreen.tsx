@@ -23,6 +23,10 @@ function parseWaftUrl(data: string): { type: "card" | "event"; code: string } | 
   return null;
 }
 
+// Survives tab switches (screens unmount): once you check into an event,
+// connections you scan are attributed to it so they appear on its live graph.
+let activeEvent: { id: string; name: string } | null = null;
+
 export function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [state, setState] = useState<ScanState>({ kind: "scanning" });
@@ -48,17 +52,19 @@ export function ScanScreen() {
     try {
       if (parsed.type === "card") {
         const card = await api.card(parsed.code);
-        const result = await api.connect(card.id);
+        const result = await api.connect(card.id, activeEvent?.id);
+        const suffix = activeEvent ? ` (at ${activeEvent.name})` : "";
         setState({
           kind: "done",
           message:
             result.status === "already_connected"
-              ? `You already share a waft with ${card.name}!`
-              : `Connected with ${card.name}!`,
+              ? `You already share a waft with ${card.name}!${suffix}`
+              : `Connected with ${card.name}!${suffix}`,
         });
       } else {
         const event = await api.eventByCode(parsed.code);
         await api.checkin(event.id);
+        activeEvent = { id: event.id, name: event.name };
         setState({ kind: "done", message: `Checked into ${event.name}!` });
       }
     } catch (e: any) {

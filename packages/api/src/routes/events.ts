@@ -58,6 +58,10 @@ export async function eventRoutes(app: FastifyInstance) {
       const { eventId } = req.params as { eventId: string };
       await checkinToEvent(req.userId, eventId);
       broadcast(eventId, { type: "checkin", eventId, userId: req.userId });
+      // Check-ins now add nodes to the event graph — push the fresh snapshot
+      // so live viewers see people appear as they arrive.
+      const graph = await getEventGraph(eventId);
+      broadcast(eventId, { type: "graph", eventId, ...graph });
       return reply.status(200).send({ status: "checked_in" });
     }
   );

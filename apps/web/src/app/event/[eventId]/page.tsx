@@ -45,13 +45,10 @@ export default function EventPage({ params }: { params: Promise<{ eventId: strin
 
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
-      if (msg.type === "new_connection") {
-        setGraphData((prev) => ({
-          nodes: [...prev.nodes, ...msg.nodes.filter(
-            (n: GraphNode) => !prev.nodes.some((existing) => existing.id === n.id)
-          )],
-          edges: [...prev.edges, msg.edge],
-        }));
+      // The API pushes a full graph snapshot on connect and after every
+      // check-in or connection at this event.
+      if (msg.type === "graph") {
+        setGraphData({ nodes: msg.nodes ?? [], edges: msg.edges ?? [] });
       }
     };
 

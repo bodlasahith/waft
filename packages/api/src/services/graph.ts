@@ -67,6 +67,13 @@ export async function getNetworkGraph(userId: string, depth: number = 2) {
 export async function getEventGraph(eventId: string) {
   const session = getDriver().session();
   try {
+    // Attendees are nodes the moment they check in — the live graph should
+    // show people arriving, not just people who've already connected there.
+    const attendees = await session.run(
+      `MATCH (p:Person)-[:ATTENDED]->(:Event {id: $eventId})
+       RETURN p.id AS id, p.name AS name`,
+      { eventId }
+    );
     const result = await session.run(
       `MATCH (a:Person)-[r:WAFT {eventId: $eventId}]-(b:Person)
        RETURN DISTINCT a.id AS source, a.name AS sourceName,
@@ -74,6 +81,9 @@ export async function getEventGraph(eventId: string) {
       { eventId }
     );
     const nodes = new Map<string, { id: string; name: string }>();
+    for (const record of attendees.records) {
+      nodes.set(record.get("id"), { id: record.get("id"), name: record.get("name") });
+    }
     const edges: { source: string; target: string; strength: number }[] = [];
 
     for (const record of result.records) {
