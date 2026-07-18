@@ -99,6 +99,19 @@ export default function App() {
     );
   }
 
+  // Still checking for (or silently creating) the profile — don't mount the
+  // tabs yet, or CardScreen fetches a profile that doesn't exist and shows
+  // an error until something re-renders it.
+  if (profile === "loading") {
+    return (
+      <SafeAreaView style={[styles.root, styles.center]}>
+        <StatusBar style="auto" />
+        <ActivityIndicator />
+        <Text style={styles.loadingHint}>Setting up your card…</Text>
+      </SafeAreaView>
+    );
+  }
+
   const Screen = TABS.find((t) => t.key === tab)!.screen;
 
   return (
@@ -135,6 +148,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   headerTitle: { fontSize: 17, fontWeight: "700" },
+  loadingHint: { color: "#888", marginTop: 12 },
   signOut: { color: "#888", fontSize: 13 },
   content: { flex: 1 },
   tabBar: {
