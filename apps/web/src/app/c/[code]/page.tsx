@@ -61,9 +61,12 @@ export default async function CardPage({ params }: { params: Promise<{ code: str
 
         <div className="mt-6 pt-4 border-t border-neutral-800 text-center">
           <p className="text-sm text-neutral-500 mb-2">Connect on Waft to see your shared network</p>
-          <button className="w-full py-2.5 bg-white text-black font-medium rounded-lg hover:bg-neutral-200 transition-colors">
+          <a
+            href="/"
+            className="block w-full py-2.5 bg-white text-black text-center font-medium rounded-lg hover:bg-neutral-200 transition-colors"
+          >
             Get Waft
-          </button>
+          </a>
         </div>
       </div>
     </main>
