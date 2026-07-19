@@ -168,6 +168,43 @@ export async function filterConnectedUsers(
   }
 }
 
+/** Event ids the user has checked into, most recent first. */
+export async function getAttendedEventIds(userId: string): Promise<string[]> {
+  const session = getDriver().session();
+  try {
+    const result = await session.run(
+      `MATCH (:Person {id: $userId})-[a:ATTENDED]->(e:Event)
+       RETURN e.id AS id ORDER BY a.checkedInAt DESC`,
+      { userId }
+    );
+    return result.records.map((r) => r.get("id"));
+  } finally {
+    await session.close();
+  }
+}
+
+/** People the user connected with at a specific event. */
+export async function getEventConnections(userId: string, eventId: string) {
+  const session = getDriver().session();
+  try {
+    const result = await session.run(
+      `MATCH (:Person {id: $userId})-[r:WAFT]-(other:Person)
+       WHERE r.eventId = $eventId
+       RETURN other.id AS id, other.name AS name,
+              other.avatarColor AS avatarColor, other.avatarShape AS avatarShape`,
+      { userId, eventId }
+    );
+    return result.records.map((r) => ({
+      id: r.get("id"),
+      name: r.get("name"),
+      avatarColor: r.get("avatarColor"),
+      avatarShape: r.get("avatarShape"),
+    }));
+  } finally {
+    await session.close();
+  }
+}
+
 export async function checkinToEvent(userId: string, eventId: string) {
   const session = getDriver().session();
   try {

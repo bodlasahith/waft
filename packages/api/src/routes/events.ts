@@ -1,6 +1,11 @@
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { checkinToEvent, getEventGraph } from "../services/graph.js";
+import {
+  checkinToEvent,
+  getAttendedEventIds,
+  getEventConnections,
+  getEventGraph,
+} from "../services/graph.js";
 import { generateIcebreakers, pickIcebreaker } from "../services/icebreakers.js";
 import { supabase } from "../lib/supabase.js";
 import { broadcast } from "../lib/liveEvents.js";
@@ -64,6 +69,26 @@ export async function eventRoutes(app: FastifyInstance) {
     if (error) return reply.status(500).send({ error: error.message });
     return reply.send(data ?? []);
   });
+
+  // Events the caller has checked into, most recent first — their history.
+  app.get("/events/attended", { preHandler: requireAuth }, async (req, reply) => {
+    const ids = await getAttendedEventIds(req.userId);
+    if (ids.length === 0) return reply.send([]);
+    const { data, error } = await supabase.from("events").select("*").in("id", ids);
+    if (error) return reply.status(500).send({ error: error.message });
+    const byId = new Map((data ?? []).map((e) => [e.id, e]));
+    return reply.send(ids.map((id) => byId.get(id)).filter(Boolean));
+  });
+
+  // Who the caller connected with at this event — their slice of the room.
+  app.get(
+    "/events/:eventId/connections",
+    { preHandler: requireAuth },
+    async (req, reply) => {
+      const { eventId } = req.params as { eventId: string };
+      return reply.send(await getEventConnections(req.userId, eventId));
+    }
+  );
 
   // Event QR codes encode the shareable `code`, not the internal id — the
   // client resolves it here before checking in or opening the live graph.
