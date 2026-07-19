@@ -19,15 +19,17 @@ const SUPPORTED_PLATFORMS = [
   "slack",
 ] as const;
 
+// userIds are the *other* members — the caller is always included
+// automatically, so one id (a two-person group) is the minimum.
 const createGroupSchema = z.object({
-  userIds: z.array(z.string().uuid()).min(2).max(50),
+  userIds: z.array(z.string().uuid()).min(1).max(50),
   platform: z.enum(SUPPORTED_PLATFORMS),
   name: z.string().min(1).max(100).optional(),
   eventId: z.string().uuid().optional(),
 });
 
 const suggestPlatformSchema = z.object({
-  userIds: z.array(z.string().uuid()).min(2),
+  userIds: z.array(z.string().uuid()).min(1),
 });
 
 // iMessage and WhatsApp have no separate "handle" — both are reached via
@@ -47,13 +49,19 @@ export async function groupRoutes(app: FastifyInstance) {
 
     // Only people the caller has actually connected with — otherwise this
     // endpoint would let anyone enumerate handles for arbitrary user ids.
-    const userIds = await filterConnectedUsers(req.userId, requestedIds);
-    if (userIds.length < 2) {
+    // The caller can't be connected to themselves, so strip their id before
+    // filtering and add it back after (a caller + 1 friend group is valid).
+    const others = await filterConnectedUsers(
+      req.userId,
+      requestedIds.filter((id) => id !== req.userId)
+    );
+    if (others.length < 1) {
       return reply.status(403).send({
         error: "not_connected",
         message: "You can only create groups with people you've connected with.",
       });
     }
+    const userIds = [req.userId, ...others];
 
     const socialFields = [...new Set(Object.values(PLATFORM_TO_SOCIAL_FIELD))];
     const { data: socials } = await supabase
@@ -100,14 +108,17 @@ export async function groupRoutes(app: FastifyInstance) {
 
     // Same connection gate as suggest-platform (see comment there). The
     // caller is always part of their own group.
-    const connectedIds = await filterConnectedUsers(req.userId, parsed.userIds);
-    if (connectedIds.length < 2) {
+    const connectedIds = await filterConnectedUsers(
+      req.userId,
+      parsed.userIds.filter((id) => id !== req.userId)
+    );
+    if (connectedIds.length < 1) {
       return reply.status(403).send({
         error: "not_connected",
         message: "You can only create groups with people you've connected with.",
       });
     }
-    const body = { ...parsed, userIds: [...new Set([...connectedIds, req.userId])] };
+    const body = { ...parsed, userIds: [req.userId, ...connectedIds] };
 
     // Resolve group name (from event or user-provided)
     let groupName = body.name;

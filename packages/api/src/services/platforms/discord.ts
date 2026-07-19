@@ -1,10 +1,15 @@
-interface DiscordGuildResult {
+interface DiscordGroupResult {
   guildId: string;
   inviteUrl: string;
   channelId: string;
 }
 
 const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN!;
+// The hub server all Waft groups live in. Discord no longer lets (new) bots
+// create guilds at all — POST /guilds returns "Bots cannot use this
+// endpoint" — so the bot must be invited to one pre-made server and each
+// group becomes a channel there.
+const DISCORD_GUILD_ID = process.env.DISCORD_GUILD_ID!;
 const DISCORD_API = "https://discord.com/api/v10";
 
 async function discordFetch(path: string, options: RequestInit = {}) {
@@ -23,31 +28,35 @@ async function discordFetch(path: string, options: RequestInit = {}) {
   return res.json();
 }
 
+// Discord channel names: lowercase, dashes, no spaces, max 100 chars.
+function toChannelName(name: string): string {
+  const slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 90);
+  return slug || "waft-group";
+}
+
 export async function createDiscordGroup(
   name: string,
   memberDiscordIds: string[]
-): Promise<DiscordGuildResult> {
-  // NOTE: POST /guilds is restricted to bots in fewer than 10 guilds total
-  // (Discord API limitation, not configurable). Fine for demo volume; will
-  // need a different flow (e.g. channel-per-event in one guild) before
-  // real usage.
-  const guild = await discordFetch("/guilds", {
+): Promise<DiscordGroupResult> {
+  const channel = await discordFetch(`/guilds/${DISCORD_GUILD_ID}/channels`, {
     method: "POST",
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name: toChannelName(name), type: 0, topic: name }),
   });
 
-  // Get the default #general channel
-  const channels = await discordFetch(`/guilds/${guild.id}/channels`);
-  const general = channels.find((c: any) => c.type === 0) ?? channels[0];
-
-  // Create an invite link (7 day expiry, unlimited uses)
-  const invite = await discordFetch(`/channels/${general.id}/invites`, {
+  // Channel-scoped invite (7 day expiry, unlimited uses)
+  const invite = await discordFetch(`/channels/${channel.id}/invites`, {
     method: "POST",
     body: JSON.stringify({ max_age: 604800, max_uses: 0 }),
   });
 
-  // Send DM invite to each member via the bot
+  // Best-effort DM to each member (works only for numeric Discord user ids
+  // of people who share a server with the bot — skip silently otherwise).
   for (const discordId of memberDiscordIds) {
+    if (!/^\d+$/.test(discordId)) continue;
     try {
       const dm = await discordFetch("/users/@me/channels", {
         method: "POST",
@@ -65,8 +74,8 @@ export async function createDiscordGroup(
   }
 
   return {
-    guildId: guild.id,
+    guildId: DISCORD_GUILD_ID,
     inviteUrl: `https://discord.gg/${invite.code}`,
-    channelId: general.id,
+    channelId: channel.id,
   };
 }
