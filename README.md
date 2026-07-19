@@ -245,7 +245,7 @@ tappable profile view in the Network tab), explicit social sharing (needs the
 ### Phase 2: Post-Demo Polish
 - [ ] OAuth connect for Discord, LinkedIn, GitHub, Spotify
 - [ ] Event-context profiles (different card per event type)
-- [ ] Event icebreakers — when two people connect at an event, briefly surface a conversation prompt tied to the event's content; host-authored (a few prompts at event creation) or AI-generated from the event name/description. Delivery: included in the connect response when `eventId` is present, shown on the post-scan confirmation screen
+- [x] Event icebreakers — host-authored at event creation or AI-generated (Claude API, `claude-opus-4-8`, structured outputs; generic fallback without a key); stored on the event, served randomly in the connect response, shown on the post-scan "Break the ice" card
 - [ ] Styled scan codes — colored/emoji-branded QR codes (logo center, rounded modules, event-themed palettes — QR tolerates ~30% styling via error correction, stays camera-app-scannable), and longer-term a signature Waft code format à la Spotify's waveform codes (custom aesthetic, but only our scanner reads it — so always paired with a fallback QR/link)
 - [ ] NFC tag support (stickers/cards encoding the `waft.app/c/<card_code>` URL — same infra as QR, native tap-to-open on iOS/Android)
 - [ ] BLE tap-to-connect (AirDrop-style phone-to-phone gesture; NameDrop has no public API and NFC P2P is dead, so this requires both users to have the app open — separate design effort)
@@ -253,9 +253,9 @@ tappable profile view in the Network tab), explicit social sharing (needs the
 - [ ] Phone sign-up (SMS OTP) — Supabase phone provider + Twilio; pairs with iOS one-time-code autofill from Messages (the input hint is already in place). Blocked on a paid Twilio account + US A2P/toll-free verification (takes days–weeks — start alongside the SMS-nudges registration below)
 - [ ] SMS nudges for phone-only profiles — event-driven only (someone viewed your card with no socials to tap; post-event digest with platform coverage), hard-capped (1/week, ~3 lifetime), stops permanently once one social is added, magic-link deep link to add-social screen. Requires explicit opt-in at signup + A2P 10DLC campaign registration (takes weeks — start early)
 - [ ] Interaction-based waft strength — strength grows from real engagement (opening/tapping a connection's profile, explicitly sharing a non-public social with that person), not rescans (a rescan is a no-op handshake; the API already returns `already_connected`). Needs per-connection interaction tracking + the mutual/event-only social-sharing UI
-- [ ] Graph analytics (centrality, clustering, shortest path)
+- [x] Graph analytics — `computeGraphStats` in `@waft/shared` (degree, Brandes betweenness, density) rendered as the live leaderboard on the event wall (top connectors + cluster bridges) and the mobile stats line. Clustering/shortest-path insights still open
 - [ ] Gamification badges
-- [ ] Node avatars v1 — simple customization (color, shape, accent) so your node is recognizably *you* in the graph; stored as a small JSON blob on the user, rendered client-side
+- [x] Node avatars v1 — color + shape picker on the card tab, stored on the profile and mirrored onto the Neo4j node, rendered in every graph (accent + more shapes still open)
 
 ### Phase 3: Growth
 - [ ] Contact import (hashed phone number matching)
