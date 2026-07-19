@@ -34,6 +34,15 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return body as T;
 }
 
+export interface WaftEvent {
+  id: string;
+  name: string;
+  code: string;
+  location: string | null;
+  starts_at: string;
+  icebreakers: string[] | null;
+}
+
 export interface Avatar {
   color: string;
   shape: "circle" | "square" | "diamond" | "hexagon";
@@ -101,6 +110,17 @@ export const api = {
   userCard: (userId: string) => request<PublicCard>(`/users/${userId}/card`),
   eventByCode: (code: string) =>
     request<{ id: string; name: string }>(`/events/by-code/${code}`),
+  createEvent: (name: string, location?: string, icebreakers?: string[]) =>
+    request<WaftEvent>("/events", {
+      method: "POST",
+      body: JSON.stringify({
+        name,
+        location: location || undefined,
+        startsAt: new Date().toISOString(),
+        icebreakers: icebreakers && icebreakers.length > 0 ? icebreakers : undefined,
+      }),
+    }),
+  myEvents: () => request<WaftEvent[]>("/events/mine"),
   checkin: (eventId: string) =>
     request<{ status: string }>(`/events/${eventId}/checkin`, { method: "POST" }),
 };

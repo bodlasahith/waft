@@ -45,6 +45,18 @@ export async function eventRoutes(app: FastifyInstance) {
     return reply.status(201).send(data);
   });
 
+  // Events the caller hosts — newest first, for the in-app host flow.
+  app.get("/events/mine", { preHandler: requireAuth }, async (req, reply) => {
+    const { data, error } = await supabase
+      .from("events")
+      .select("*")
+      .eq("created_by", req.userId)
+      .order("created_at", { ascending: false });
+
+    if (error) return reply.status(500).send({ error: error.message });
+    return reply.send(data ?? []);
+  });
+
   // Event QR codes encode the shareable `code`, not the internal id — the
   // client resolves it here before checking in or opening the live graph.
   app.get("/events/by-code/:code", async (req, reply) => {

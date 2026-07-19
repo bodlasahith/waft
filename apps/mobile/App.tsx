@@ -16,12 +16,14 @@ import { OnboardingScreen } from "./src/screens/OnboardingScreen";
 import { CardScreen } from "./src/screens/CardScreen";
 import { ScanScreen } from "./src/screens/ScanScreen";
 import { GraphScreen } from "./src/screens/GraphScreen";
+import { EventsScreen } from "./src/screens/EventsScreen";
 
 // Deliberately no navigation library yet — these screens don't earn one.
 const TABS = [
   { key: "card", label: "My Card", screen: CardScreen },
   { key: "scan", label: "Scan", screen: ScanScreen },
   { key: "graph", label: "Network", screen: GraphScreen },
+  { key: "events", label: "Events", screen: EventsScreen },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
