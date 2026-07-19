@@ -1,28 +1,127 @@
-import { useCallback, useEffect, useState } from "react";
-import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
-import { api } from "../api";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Dimensions,
+  Linking,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import Svg, { Circle, G, Line, Text as SvgText } from "react-native-svg";
+import { api, PublicCard } from "../api";
 
-interface GraphPerson {
+interface Node {
   id: string;
   name: string;
-  photoUrl: string | null;
-  distance: number;
+  distance: number; // 0 = you
+}
+interface Edge {
+  source: string;
+  target: string;
+  strength: number;
 }
 
+const SOCIAL_URLS: Record<string, string> = {
+  instagram: "https://instagram.com/",
+  linkedin: "https://linkedin.com/in/",
+  github: "https://github.com/",
+  x: "https://x.com/",
+  tiktok: "https://tiktok.com/@",
+  reddit: "https://reddit.com/u/",
+  spotify: "https://open.spotify.com/user/",
+  facebook: "https://facebook.com/",
+};
+
 /**
- * Placeholder for the real graph visualization (Sigma is web-only; the
- * native version will need react-native-svg or skia). For now: your
- * network as a list grouped by degrees of separation, so the data flow
- * is exercised end to end.
+ * Small force layout: radial seed by hop distance, then spring relaxation.
+ * Deterministic at demo scale (< ~80 nodes); "you" stays pinned center.
+ * Computed once per graph load — no animation loop.
  */
+function computeLayout(nodes: Node[], edges: Edge[], width: number, height: number) {
+  const cx = width / 2;
+  const cy = height / 2;
+  const pos = new Map<string, { x: number; y: number }>();
+  const ring = (Math.min(width, height) / 3.2) * 0.62;
+
+  const byDistance = new Map<number, Node[]>();
+  for (const n of nodes) {
+    const bucket = byDistance.get(n.distance) ?? [];
+    bucket.push(n);
+    byDistance.set(n.distance, bucket);
+  }
+  for (const [distance, bucket] of byDistance) {
+    bucket.forEach((n, i) => {
+      if (distance === 0) {
+        pos.set(n.id, { x: cx, y: cy });
+        return;
+      }
+      const angle = (2 * Math.PI * i) / bucket.length + distance;
+      pos.set(n.id, {
+        x: cx + ring * distance * Math.cos(angle),
+        y: cy + ring * distance * Math.sin(angle),
+      });
+    });
+  }
+
+  for (let iter = 0; iter < 120; iter++) {
+    const force = new Map<string, { x: number; y: number }>();
+    for (const n of nodes) force.set(n.id, { x: 0, y: 0 });
+
+    // pairwise repulsion
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = pos.get(nodes[i].id)!;
+        const b = pos.get(nodes[j].id)!;
+        const dx = a.x - b.x;
+        const dy = a.y - b.y;
+        const d2 = Math.max(dx * dx + dy * dy, 25);
+        const d = Math.sqrt(d2);
+        const f = ((ring * ring) / d2) * 4;
+        force.get(nodes[i].id)!.x += (dx / d) * f;
+        force.get(nodes[i].id)!.y += (dy / d) * f;
+        force.get(nodes[j].id)!.x -= (dx / d) * f;
+        force.get(nodes[j].id)!.y -= (dy / d) * f;
+      }
+    }
+    // spring attraction along edges
+    for (const e of edges) {
+      const a = pos.get(e.source);
+      const b = pos.get(e.target);
+      if (!a || !b) continue;
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const d = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
+      const f = (d - ring) * 0.05;
+      force.get(e.source)!.x += (dx / d) * f;
+      force.get(e.source)!.y += (dy / d) * f;
+      force.get(e.target)!.x -= (dx / d) * f;
+      force.get(e.target)!.y -= (dy / d) * f;
+    }
+    for (const n of nodes) {
+      if (n.distance === 0) continue; // you stay centered
+      const p = pos.get(n.id)!;
+      const f = force.get(n.id)!;
+      p.x = Math.min(width - 40, Math.max(40, p.x + f.x));
+      p.y = Math.min(height - 60, Math.max(40, p.y + f.y));
+    }
+  }
+  return pos;
+}
+
 export function GraphScreen() {
-  const [people, setPeople] = useState<GraphPerson[] | null>(null);
+  const [graph, setGraph] = useState<{ nodes: Node[]; edges: Edge[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const [selected, setSelected] = useState<PublicCard | null>(null);
+  const [selectedLoading, setSelectedLoading] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      setPeople(await api.myGraph());
+      const [me, g] = await Promise.all([api.me(), api.myGraph()]);
+      setGraph({
+        nodes: [{ id: me.id, name: me.name, distance: 0 }, ...g.nodes],
+        edges: g.edges,
+      });
       setError(null);
     } catch (e: any) {
       setError(e?.status === 401 ? "Sign in to see your network." : "Couldn't load your network.");
@@ -33,69 +132,172 @@ export function GraphScreen() {
     load();
   }, [load]);
 
-  if (error) {
+  async function openProfile(node: Node) {
+    if (node.distance === 0) return; // that's you
+    setSelectedLoading(true);
+    try {
+      setSelected(await api.userCard(node.id));
+    } finally {
+      setSelectedLoading(false);
+    }
+  }
+
+  const { width, height } = Dimensions.get("window");
+  const svgHeight = height - 230;
+
+  const positions = useMemo(
+    () => (graph ? computeLayout(graph.nodes, graph.edges, width, svgHeight) : null),
+    [graph, width, svgHeight]
+  );
+
+  if (error && !graph) {
     return (
       <View style={styles.center}>
         <Text style={styles.muted}>{error}</Text>
       </View>
     );
   }
-
-  if (people && people.length === 0) {
+  if (!graph || !positions) {
     return (
       <View style={styles.center}>
-        <Text style={styles.muted}>
-          Your network is empty — scan someone's Waft code to make your first connection.
-        </Text>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+  if (graph.nodes.length === 1) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.emptyTitle}>Just you so far</Text>
+        <Text style={styles.muted}>Scan someone's card and watch your network grow.</Text>
       </View>
     );
   }
 
-  const sorted = [...(people ?? [])].sort((a, b) => a.distance - b.distance);
-
   return (
-    <FlatList
-      data={sorted}
-      keyExtractor={(p) => p.id}
-      contentContainerStyle={styles.list}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={async () => {
-            setRefreshing(true);
-            await load();
-            setRefreshing(false);
-          }}
-        />
-      }
-      renderItem={({ item }) => (
-        <View style={styles.row}>
-          <View style={[styles.dot, item.distance === 1 ? styles.direct : styles.indirect]} />
-          <Text style={styles.name}>{item.name}</Text>
-          <Text style={styles.degree}>
-            {item.distance === 1 ? "connected" : `${item.distance}° away`}
-          </Text>
-        </View>
+    <View style={styles.container}>
+      <Svg width={width} height={svgHeight}>
+        {graph.edges.map((e) => {
+          const a = positions.get(e.source);
+          const b = positions.get(e.target);
+          if (!a || !b) return null;
+          return (
+            <Line
+              key={`${e.source}-${e.target}`}
+              x1={a.x}
+              y1={a.y}
+              x2={b.x}
+              y2={b.y}
+              stroke="#c9d4f2"
+              strokeWidth={Math.min(1 + e.strength, 5)}
+            />
+          );
+        })}
+        {graph.nodes.map((n) => {
+          const p = positions.get(n.id);
+          if (!p) return null;
+          const isMe = n.distance === 0;
+          const r = isMe ? 26 : n.distance === 1 ? 20 : 14;
+          return (
+            <G key={n.id} onPress={() => openProfile(n)}>
+              <Circle
+                cx={p.x}
+                cy={p.y}
+                r={r}
+                fill={isMe ? "#4a7dff" : n.distance === 1 ? "#7ba0ff" : "#b8c8f5"}
+              />
+              <SvgText
+                x={p.x}
+                y={p.y + r * 0.28}
+                fontSize={r * 0.8}
+                fontWeight="bold"
+                fill="#fff"
+                textAnchor="middle"
+              >
+                {n.name.charAt(0).toUpperCase()}
+              </SvgText>
+              <SvgText x={p.x} y={p.y + r + 14} fontSize={11} fill="#555" textAnchor="middle">
+                {isMe ? "You" : n.name.split(" ")[0]}
+              </SvgText>
+            </G>
+          );
+        })}
+      </Svg>
+
+      <Text style={styles.hint}>
+        {graph.nodes.length - 1} connection{graph.nodes.length === 2 ? "" : "s"} · tap a node to see
+        their card
+      </Text>
+
+      {(selected || selectedLoading) && (
+        <Pressable style={styles.overlay} onPress={() => setSelected(null)}>
+          <Pressable style={styles.sheet} onPress={() => {}}>
+            {selectedLoading || !selected ? (
+              <ActivityIndicator />
+            ) : (
+              <>
+                <Text style={styles.sheetName}>{selected.name}</Text>
+                {selected.socials.length === 0 && (
+                  <Text style={styles.muted}>No public links yet.</Text>
+                )}
+                {selected.socials.map((s) => (
+                  <Pressable
+                    key={s.platform}
+                    style={styles.socialRow}
+                    onPress={() => {
+                      const url =
+                        s.url ??
+                        (SOCIAL_URLS[s.platform] ? SOCIAL_URLS[s.platform] + s.handle : undefined);
+                      if (url) Linking.openURL(url);
+                    }}
+                  >
+                    <Text style={styles.socialPlatform}>{s.platform}</Text>
+                    <Text style={styles.socialHandle}>{s.handle}</Text>
+                  </Pressable>
+                ))}
+                <Pressable onPress={() => setSelected(null)}>
+                  <Text style={styles.close}>Close</Text>
+                </Pressable>
+              </>
+            )}
+          </Pressable>
+        </Pressable>
       )}
-    />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
-  list: { padding: 16 },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#ddd",
-  },
-  dot: { width: 12, height: 12, borderRadius: 6 },
-  direct: { backgroundColor: "#4a7dff" },
-  indirect: { backgroundColor: "#bbb" },
-  name: { fontSize: 16, flex: 1 },
-  degree: { color: "#888", fontSize: 13 },
+  container: { flex: 1 },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8, padding: 24 },
   muted: { color: "#888", textAlign: "center" },
+  emptyTitle: { fontSize: 20, fontWeight: "700" },
+  hint: { color: "#888", fontSize: 12, textAlign: "center", marginTop: 4 },
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    justifyContent: "flex-end",
+  },
+  sheet: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    gap: 10,
+    minHeight: 180,
+  },
+  sheetName: { fontSize: 20, fontWeight: "700", marginBottom: 4 },
+  socialRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#eee",
+  },
+  socialPlatform: { fontWeight: "600", textTransform: "capitalize" },
+  socialHandle: { color: "#4a7dff" },
+  close: { color: "#888", textAlign: "center", paddingTop: 12 },
 });

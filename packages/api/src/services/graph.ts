@@ -53,12 +53,29 @@ export async function getNetworkGraph(userId: string, depth: number = 2) {
               length(shortestPath((origin)-[:WAFT*]-(connected))) AS distance`,
       { userId }
     );
-    return result.records.map((r) => ({
+    const nodes = result.records.map((r) => ({
       id: r.get("id"),
       name: r.get("name"),
       photoUrl: r.get("photoUrl"),
       distance: r.get("distance").toNumber(),
     }));
+
+    // Edges among the visible set (self included) — what makes it a graph
+    // rather than a list. a.id < b.id dedupes the undirected pair.
+    const ids = [userId, ...nodes.map((n) => n.id)];
+    const edgeResult = await session.run(
+      `MATCH (a:Person)-[r:WAFT]-(b:Person)
+       WHERE a.id IN $ids AND b.id IN $ids AND a.id < b.id
+       RETURN a.id AS source, b.id AS target, coalesce(r.strength, 1) AS strength`,
+      { ids }
+    );
+    const edges = edgeResult.records.map((r) => ({
+      source: r.get("source"),
+      target: r.get("target"),
+      strength: r.get("strength").toNumber(),
+    }));
+
+    return { nodes, edges };
   } finally {
     await session.close();
   }

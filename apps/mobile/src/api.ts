@@ -71,9 +71,11 @@ export const api = {
       body: JSON.stringify({ toUserId, eventId }),
     }),
   myGraph: (depth = 2) =>
-    request<{ id: string; name: string; photoUrl: string | null; distance: number }[]>(
-      `/connections/me/graph?depth=${depth}`
-    ),
+    request<{
+      nodes: { id: string; name: string; photoUrl: string | null; distance: number }[];
+      edges: { source: string; target: string; strength: number }[];
+    }>(`/connections/me/graph?depth=${depth}`),
+  userCard: (userId: string) => request<PublicCard>(`/users/${userId}/card`),
   eventByCode: (code: string) =>
     request<{ id: string; name: string }>(`/events/by-code/${code}`),
   checkin: (eventId: string) =>
