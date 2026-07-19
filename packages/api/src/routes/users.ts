@@ -1,10 +1,10 @@
 import { FastifyInstance, FastifyReply } from "fastify";
 import { z } from "zod";
 import { supabase } from "../lib/supabase.js";
-import { createPersonNode } from "../services/graph.js";
+import { createPersonNode, setPersonAvatar } from "../services/graph.js";
 import { requireAuth } from "../lib/auth.js";
 import { nanoid } from "nanoid";
-import { PLATFORMS } from "@waft/shared";
+import { AVATAR_COLORS, AVATAR_SHAPES, PLATFORMS } from "@waft/shared";
 
 const addSocialSchema = z.object({
   platform: z.enum(PLATFORMS),
@@ -22,7 +22,7 @@ async function sendPublicCard(
 ) {
   const { data: user } = await supabase
     .from("users")
-    .select("id, name, photo_url, card_code")
+    .select("id, name, photo_url, card_code, avatar")
     .eq(column, value)
     .single();
 
@@ -62,6 +62,22 @@ export async function userRoutes(app: FastifyInstance) {
   app.get("/cards/:cardCode", async (req, reply) => {
     const { cardCode } = req.params as { cardCode: string };
     return sendPublicCard(reply, "card_code", cardCode);
+  });
+
+  // Node avatar — mirrored onto the Neo4j Person node so every graph
+  // response carries it without a Supabase join.
+  app.put("/users/me/avatar", { preHandler: requireAuth }, async (req, reply) => {
+    const avatar = z
+      .object({
+        color: z.enum(AVATAR_COLORS),
+        shape: z.enum(AVATAR_SHAPES),
+      })
+      .parse(req.body);
+
+    await setPersonAvatar(req.userId, avatar.color, avatar.shape);
+    const { error } = await supabase.from("users").update({ avatar }).eq("id", req.userId);
+    if (error) return reply.status(500).send({ error: error.message });
+    return reply.send({ avatar });
   });
 
   app.post("/users/me/socials", { preHandler: requireAuth }, async (req, reply) => {

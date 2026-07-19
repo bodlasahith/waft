@@ -8,13 +8,16 @@ import {
   Text,
   View,
 } from "react-native";
-import Svg, { Circle, G, Line, Text as SvgText } from "react-native-svg";
+import Svg, { G, Line, Text as SvgText } from "react-native-svg";
 import { api, PublicCard } from "../api";
+import { AvatarNode } from "../components/AvatarNode";
 
 interface Node {
   id: string;
   name: string;
   distance: number; // 0 = you
+  avatarColor?: string | null;
+  avatarShape?: string | null;
 }
 interface Edge {
   source: string;
@@ -119,7 +122,16 @@ export function GraphScreen() {
     try {
       const [me, g] = await Promise.all([api.me(), api.myGraph()]);
       setGraph({
-        nodes: [{ id: me.id, name: me.name, distance: 0 }, ...g.nodes],
+        nodes: [
+          {
+            id: me.id,
+            name: me.name,
+            distance: 0,
+            avatarColor: me.avatar?.color,
+            avatarShape: me.avatar?.shape,
+          },
+          ...g.nodes,
+        ],
         edges: g.edges,
       });
       setError(null);
@@ -197,25 +209,19 @@ export function GraphScreen() {
           if (!p) return null;
           const isMe = n.distance === 0;
           const r = isMe ? 26 : n.distance === 1 ? 20 : 14;
+          const fallback = isMe ? "#4a7dff" : n.distance === 1 ? "#7ba0ff" : "#b8c8f5";
           return (
-            <G key={n.id} onPress={() => openProfile(n)}>
-              <Circle
-                cx={p.x}
-                cy={p.y}
-                r={r}
-                fill={isMe ? "#4a7dff" : n.distance === 1 ? "#7ba0ff" : "#b8c8f5"}
-              />
-              <SvgText
+            <G key={n.id}>
+              <AvatarNode
                 x={p.x}
-                y={p.y + r * 0.28}
-                fontSize={r * 0.8}
-                fontWeight="bold"
-                fill="#fff"
-                textAnchor="middle"
-              >
-                {n.name.charAt(0).toUpperCase()}
-              </SvgText>
-              <SvgText x={p.x} y={p.y + r + 14} fontSize={11} fill="#555" textAnchor="middle">
+                y={p.y}
+                r={r}
+                color={n.avatarColor ?? fallback}
+                shape={n.avatarShape}
+                initial={n.name.charAt(0).toUpperCase()}
+                onPress={() => openProfile(n)}
+              />
+              <SvgText x={p.x} y={p.y + r + 16} fontSize={11} fill="#555" textAnchor="middle">
                 {isMe ? "You" : n.name.split(" ")[0]}
               </SvgText>
             </G>

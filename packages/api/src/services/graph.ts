@@ -13,6 +13,19 @@ export async function createPersonNode(userId: string, name: string, photoUrl?: 
   }
 }
 
+export async function setPersonAvatar(userId: string, color: string, shape: string) {
+  const session = getDriver().session();
+  try {
+    await session.run(
+      `MATCH (p:Person {id: $userId})
+       SET p.avatarColor = $color, p.avatarShape = $shape`,
+      { userId, color, shape }
+    );
+  } finally {
+    await session.close();
+  }
+}
+
 /**
  * Returns null if either person doesn't exist yet. Rescanning an existing
  * connection is a no-op on strength — scanning is a one-time handshake;
@@ -50,6 +63,7 @@ export async function getNetworkGraph(userId: string, depth: number = 2) {
     const result = await session.run(
       `MATCH path = (origin:Person {id: $userId})-[:WAFT*1..${depth}]-(connected:Person)
        RETURN DISTINCT connected.id AS id, connected.name AS name, connected.photoUrl AS photoUrl,
+              connected.avatarColor AS avatarColor, connected.avatarShape AS avatarShape,
               length(shortestPath((origin)-[:WAFT*]-(connected))) AS distance`,
       { userId }
     );
@@ -57,6 +71,8 @@ export async function getNetworkGraph(userId: string, depth: number = 2) {
       id: r.get("id"),
       name: r.get("name"),
       photoUrl: r.get("photoUrl"),
+      avatarColor: r.get("avatarColor"),
+      avatarShape: r.get("avatarShape"),
       distance: r.get("distance").toNumber(),
     }));
 
@@ -88,7 +104,7 @@ export async function getEventGraph(eventId: string) {
     // show people arriving, not just people who've already connected there.
     const attendees = await session.run(
       `MATCH (p:Person)-[:ATTENDED]->(:Event {id: $eventId})
-       RETURN p.id AS id, p.name AS name`,
+       RETURN p.id AS id, p.name AS name, p.avatarColor AS avatarColor, p.avatarShape AS avatarShape`,
       { eventId }
     );
     const result = await session.run(
@@ -97,9 +113,17 @@ export async function getEventGraph(eventId: string) {
               b.id AS target, b.name AS targetName, r.strength AS strength`,
       { eventId }
     );
-    const nodes = new Map<string, { id: string; name: string }>();
+    const nodes = new Map<
+      string,
+      { id: string; name: string; avatarColor?: string; avatarShape?: string }
+    >();
     for (const record of attendees.records) {
-      nodes.set(record.get("id"), { id: record.get("id"), name: record.get("name") });
+      nodes.set(record.get("id"), {
+        id: record.get("id"),
+        name: record.get("name"),
+        avatarColor: record.get("avatarColor"),
+        avatarShape: record.get("avatarShape"),
+      });
     }
     const edges: { source: string; target: string; strength: number }[] = [];
 

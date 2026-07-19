@@ -34,11 +34,17 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return body as T;
 }
 
+export interface Avatar {
+  color: string;
+  shape: "circle" | "square" | "diamond" | "hexagon";
+}
+
 export interface MyProfile {
   id: string;
   name: string;
   photo_url: string | null;
   card_code: string;
+  avatar: Avatar | null;
   social_links: { platform: string; handle: string; visibility: string }[];
 }
 
@@ -47,6 +53,7 @@ export interface PublicCard {
   name: string;
   photo_url: string | null;
   card_code: string;
+  avatar: Avatar | null;
   socials: { platform: string; handle: string; url?: string }[];
 }
 
@@ -70,9 +77,21 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ toUserId, eventId }),
     }),
+  setAvatar: (avatar: Avatar) =>
+    request<{ avatar: Avatar }>("/users/me/avatar", {
+      method: "PUT",
+      body: JSON.stringify(avatar),
+    }),
   myGraph: (depth = 2) =>
     request<{
-      nodes: { id: string; name: string; photoUrl: string | null; distance: number }[];
+      nodes: {
+        id: string;
+        name: string;
+        photoUrl: string | null;
+        avatarColor: string | null;
+        avatarShape: string | null;
+        distance: number;
+      }[];
       edges: { source: string; target: string; strength: number }[];
     }>(`/connections/me/graph?depth=${depth}`),
   userCard: (userId: string) => request<PublicCard>(`/users/${userId}/card`),
