@@ -160,8 +160,20 @@ function CreateEventForm({
 function EventDetail({ event: initial, onBack }: { event: WaftEvent; onBack: () => void }) {
   const [event, setEvent] = useState(initial);
   const [busy, setBusy] = useState(false);
+  const [attendees, setAttendees] = useState<{ id: string; name: string }[] | null>(null);
+  const [wallExpired, setWallExpired] = useState(false);
   const ended = !!event.ends_at && new Date(event.ends_at) <= new Date();
   const wallUrl = `${CARD_ORIGIN}/event/${event.id}`;
+
+  useEffect(() => {
+    api
+      .eventGraph(event.id)
+      .then((g) => setAttendees(g.nodes))
+      .catch((e) => {
+        if (e?.status === 410) setWallExpired(true);
+        setAttendees([]);
+      });
+  }, [event.id]);
 
   async function endEvent() {
     setBusy(true);
@@ -183,10 +195,31 @@ function EventDetail({ event: initial, onBack }: { event: WaftEvent; onBack: () 
       </View>
       <Text style={styles.muted}>Attendees scan this to check in</Text>
 
-      <Pressable style={styles.wallButton} onPress={() => Linking.openURL(wallUrl)}>
-        <Text style={styles.wallButtonText}>Open live wall</Text>
-      </Pressable>
-      <Text style={styles.wallUrl}>{wallUrl}</Text>
+      {!ended ? (
+        <>
+          <Pressable style={styles.wallButton} onPress={() => Linking.openURL(wallUrl)}>
+            <Text style={styles.wallButtonText}>Open live wall</Text>
+          </Pressable>
+          <Text style={styles.wallUrl}>{wallUrl}</Text>
+        </>
+      ) : (
+        <Text style={styles.muted}>
+          {wallExpired ? "The live wall has expired." : "The live wall stays up for 24 hours."}
+        </Text>
+      )}
+
+      {attendees && attendees.length > 0 && (
+        <View style={styles.iceList}>
+          <Text style={styles.iceLabel}>
+            {attendees.length} attendee{attendees.length === 1 ? "" : "s"}
+          </Text>
+          {attendees.map((a) => (
+            <Text key={a.id} style={styles.iceItem}>
+              • {a.name}
+            </Text>
+          ))}
+        </View>
+      )}
 
       {event.icebreakers && event.icebreakers.length > 0 && (
         <View style={styles.iceList}>

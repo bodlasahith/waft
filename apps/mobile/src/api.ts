@@ -124,6 +124,11 @@ export const api = {
   myEvents: () => request<WaftEvent[]>("/events/mine"),
   endEvent: (eventId: string) =>
     request<WaftEvent>(`/events/${eventId}/end`, { method: "POST" }),
+  eventGraph: (eventId: string) =>
+    request<{
+      nodes: { id: string; name: string; avatarColor?: string | null; avatarShape?: string | null }[];
+      edges: { source: string; target: string; strength: number }[];
+    }>(`/events/${eventId}/graph`),
   checkin: (eventId: string) =>
     request<{ status: string }>(`/events/${eventId}/checkin`, { method: "POST" }),
 };

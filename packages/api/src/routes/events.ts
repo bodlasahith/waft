@@ -7,6 +7,14 @@ import { broadcast } from "../lib/liveEvents.js";
 import { requireAuth } from "../lib/auth.js";
 import { nanoid } from "nanoid";
 
+// How long the live wall stays viewable after an event ends.
+const WALL_TTL_HOURS = 24;
+
+export function isWallExpired(endsAt: string | null): boolean {
+  if (!endsAt) return false;
+  return Date.now() > new Date(endsAt).getTime() + WALL_TTL_HOURS * 3600_000;
+}
+
 const createEventSchema = z.object({
   name: z.string().min(1).max(200),
   location: z.string().optional(),
@@ -112,8 +120,18 @@ export async function eventRoutes(app: FastifyInstance) {
     }
   );
 
+  // The wall stays viewable for a grace period after the event ends, then
+  // expires — an event page shouldn't be a permanent public attendee list.
   app.get("/events/:eventId/graph", async (req, reply) => {
     const { eventId } = req.params as { eventId: string };
+    const { data: event } = await supabase
+      .from("events")
+      .select("ends_at")
+      .eq("id", eventId)
+      .single();
+    if (event && isWallExpired(event.ends_at)) {
+      return reply.status(410).send({ error: "wall_expired" });
+    }
     const graph = await getEventGraph(eventId);
     return reply.send(graph);
   });

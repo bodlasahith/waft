@@ -25,6 +25,7 @@ interface GraphData {
 export default function EventPage({ params }: { params: Promise<{ eventId: string }> }) {
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], edges: [] });
   const [eventId, setEventId] = useState<string>("");
+  const [expired, setExpired] = useState(false);
 
   useEffect(() => {
     params.then(({ eventId }) => {
@@ -37,7 +38,8 @@ export default function EventPage({ params }: { params: Promise<{ eventId: strin
   async function fetchGraph(id: string) {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
     const res = await fetch(`${apiUrl}/events/${id}/graph`);
-    if (res.ok) setGraphData(await res.json());
+    if (res.status === 410) setExpired(true);
+    else if (res.ok) setGraphData(await res.json());
   }
 
   function connectWebSocket(id: string) {
@@ -50,6 +52,8 @@ export default function EventPage({ params }: { params: Promise<{ eventId: strin
       // check-in or connection at this event.
       if (msg.type === "graph") {
         setGraphData({ nodes: msg.nodes ?? [], edges: msg.edges ?? [] });
+      } else if (msg.type === "expired") {
+        setExpired(true);
       }
     };
 
@@ -60,6 +64,18 @@ export default function EventPage({ params }: { params: Promise<{ eventId: strin
     () => computeGraphStats(graphData.nodes, graphData.edges),
     [graphData]
   );
+
+  if (expired) {
+    return (
+      <main className="h-screen w-screen flex flex-col items-center justify-center gap-3 p-8">
+        <h1 className="text-3xl font-bold">This event has ended</h1>
+        <p className="text-neutral-400 text-center max-w-md">
+          The live wall is no longer available. The connections made here live on in
+          everyone&apos;s networks.
+        </p>
+      </main>
+    );
+  }
 
   return (
     <main className="h-screen w-screen relative">

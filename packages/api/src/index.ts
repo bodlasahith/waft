@@ -3,7 +3,8 @@ import cors from "@fastify/cors";
 import websocket from "@fastify/websocket";
 import { ZodError } from "zod";
 import { connectionRoutes } from "./routes/connections.js";
-import { eventRoutes } from "./routes/events.js";
+import { eventRoutes, isWallExpired } from "./routes/events.js";
+import { supabase } from "./lib/supabase.js";
 import { userRoutes } from "./routes/users.js";
 import { groupRoutes } from "./routes/groups.js";
 import { closeDriver } from "./lib/neo4j.js";
@@ -57,6 +58,16 @@ await app.register(groupRoutes);
 // happens within this event (see routes/connections.ts, routes/events.ts).
 app.get("/events/:eventId/live", { websocket: true }, async (socket, req) => {
   const { eventId } = req.params as { eventId: string };
+  const { data: event } = await supabase
+    .from("events")
+    .select("ends_at")
+    .eq("id", eventId)
+    .single();
+  if (event && isWallExpired(event.ends_at)) {
+    socket.send(JSON.stringify({ type: "expired", eventId }));
+    socket.close();
+    return;
+  }
   subscribe(eventId, socket);
   const graph = await getEventGraph(eventId);
   socket.send(JSON.stringify({ type: "graph", eventId, ...graph }));
