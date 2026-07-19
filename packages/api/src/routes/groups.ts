@@ -174,6 +174,7 @@ export async function groupRoutes(app: FastifyInstance) {
           type: "automated",
           inviteUrl: result.inviteUrl,
           guildId: result.guildId,
+          channelId: result.channelId,
           memberCount: memberHandles.length,
         });
       }
