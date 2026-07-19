@@ -1,6 +1,8 @@
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { createConnection, getEventGraph, getNetworkGraph } from "../services/graph.js";
+import { pickIcebreaker } from "../services/icebreakers.js";
+import { supabase } from "../lib/supabase.js";
 import { broadcast } from "../lib/liveEvents.js";
 import { requireAuth } from "../lib/auth.js";
 
@@ -23,14 +25,25 @@ export async function connectionRoutes(app: FastifyInstance) {
       return reply.status(404).send({ error: "One or both users not found" });
     }
 
+    // Connecting at an event: broadcast the fresh graph to live viewers and
+    // hand back one of the event's icebreakers for the post-scan screen.
+    let icebreaker: string | null = null;
     if (body.eventId) {
       const graph = await getEventGraph(body.eventId);
       broadcast(body.eventId, { type: "graph", eventId: body.eventId, ...graph });
+      const { data: event } = await supabase
+        .from("events")
+        .select("icebreakers")
+        .eq("id", body.eventId)
+        .single();
+      icebreaker = pickIcebreaker(event?.icebreakers);
     }
 
-    return reply
-      .status(201)
-      .send({ status: result.already ? "already_connected" : "connected", strength: result.strength });
+    return reply.status(201).send({
+      status: result.already ? "already_connected" : "connected",
+      strength: result.strength,
+      ...(icebreaker ? { icebreaker } : {}),
+    });
   });
 
   // Your network graph is yours alone — it reveals who you know and how.

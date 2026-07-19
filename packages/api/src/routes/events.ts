@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { checkinToEvent, getEventGraph } from "../services/graph.js";
+import { generateIcebreakers } from "../services/icebreakers.js";
 import { supabase } from "../lib/supabase.js";
 import { broadcast } from "../lib/liveEvents.js";
 import { requireAuth } from "../lib/auth.js";
@@ -11,6 +12,8 @@ const createEventSchema = z.object({
   location: z.string().optional(),
   startsAt: z.string().datetime(),
   endsAt: z.string().datetime().optional(),
+  // Host-authored icebreakers; omitted → AI-generated from the event context.
+  icebreakers: z.array(z.string().min(1).max(200)).max(20).optional(),
 });
 
 export async function eventRoutes(app: FastifyInstance) {
@@ -18,6 +21,11 @@ export async function eventRoutes(app: FastifyInstance) {
   app.post("/events", { preHandler: requireAuth }, async (req, reply) => {
     const body = createEventSchema.parse(req.body);
     const code = nanoid(8);
+
+    const icebreakers =
+      body.icebreakers && body.icebreakers.length > 0
+        ? body.icebreakers
+        : await generateIcebreakers(body.name, body.location);
 
     const { data, error } = await supabase
       .from("events")
@@ -28,6 +36,7 @@ export async function eventRoutes(app: FastifyInstance) {
         starts_at: body.startsAt,
         ends_at: body.endsAt,
         created_by: req.userId,
+        icebreakers,
       })
       .select()
       .single();

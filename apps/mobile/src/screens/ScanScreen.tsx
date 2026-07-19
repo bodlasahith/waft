@@ -7,7 +7,7 @@ import { CARD_ORIGIN } from "../config";
 type ScanState =
   | { kind: "scanning" }
   | { kind: "busy" }
-  | { kind: "done"; message: string }
+  | { kind: "done"; message: string; icebreaker?: string }
   | { kind: "error"; message: string };
 
 /**
@@ -60,6 +60,7 @@ export function ScanScreen() {
             result.status === "already_connected"
               ? `You already share a waft with ${card.name}!${suffix}`
               : `Connected with ${card.name}!${suffix}`,
+          icebreaker: result.icebreaker,
         });
       } else {
         const event = await api.eventByCode(parsed.code);
@@ -85,6 +86,12 @@ export function ScanScreen() {
     return (
       <View style={styles.center}>
         <Text style={state.kind === "error" ? styles.error : styles.success}>{state.message}</Text>
+        {state.kind === "done" && state.icebreaker && (
+          <View style={styles.icebreakerBox}>
+            <Text style={styles.icebreakerLabel}>Break the ice</Text>
+            <Text style={styles.icebreakerText}>{state.icebreaker}</Text>
+          </View>
+        )}
         <Button title="Scan again" onPress={() => setState({ kind: "scanning" })} />
       </View>
     );
@@ -121,6 +128,21 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   muted: { color: "#888", textAlign: "center" },
+  icebreakerBox: {
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    padding: 18,
+    gap: 6,
+    marginHorizontal: 8,
+  },
+  icebreakerLabel: {
+    color: "#4a7dff",
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  icebreakerText: { fontSize: 17, textAlign: "center", fontStyle: "italic" },
   success: { fontSize: 20, fontWeight: "600", textAlign: "center" },
   error: { fontSize: 16, color: "#c00", textAlign: "center" },
 });

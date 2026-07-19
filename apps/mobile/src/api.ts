@@ -73,7 +73,11 @@ export const api = {
   removeSocial: (platform: string) =>
     request<null>(`/users/me/socials/${platform}`, { method: "DELETE" }),
   connect: (toUserId: string, eventId?: string) =>
-    request<{ status: "connected" | "already_connected"; strength: number }>("/connections", {
+    request<{
+      status: "connected" | "already_connected";
+      strength: number;
+      icebreaker?: string;
+    }>("/connections", {
       method: "POST",
       body: JSON.stringify({ toUserId, eventId }),
     }),
