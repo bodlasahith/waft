@@ -15,6 +15,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import QRCode from "react-native-qrcode-svg";
 import { api, WaftEvent } from "../api";
 import { CARD_ORIGIN } from "../config";
+import { setActiveEvent } from "../eventContext";
 
 type Mode =
   | { kind: "list" }
@@ -85,7 +86,7 @@ export function EventsScreen() {
           {event.ends_at && new Date(event.ends_at) <= new Date() ? " · ended" : ""}
         </Text>
       </View>
-      <Text style={styles.rowCode}>{event.code}</Text>
+      <Text style={styles.rowChevron}>›</Text>
     </Pressable>
   );
 
@@ -97,6 +98,8 @@ export function EventsScreen() {
           <Text style={styles.link}>+ New event</Text>
         </Pressable>
       </View>
+
+      <JoinByCode onJoined={load} />
 
       {hosted === null && !error && <ActivityIndicator style={styles.spacer} />}
       {error && <Text style={styles.error}>{error}</Text>}
@@ -120,6 +123,67 @@ export function EventsScreen() {
         </Text>
       )}
     </ScrollView>
+  );
+}
+
+/**
+ * Check in without scanning — for when the QR is out of reach and someone
+ * reads the event code aloud. Same flow as scanning the event QR, including
+ * the icebreaker and event attribution for subsequent card scans.
+ */
+function JoinByCode({ onJoined }: { onJoined: () => void }) {
+  const [code, setCode] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  async function join() {
+    setBusy(true);
+    setMessage(null);
+    setFailed(false);
+    try {
+      const event = await api.eventByCode(code.trim());
+      const result = await api.checkin(event.id);
+      setActiveEvent({ id: event.id, name: event.name });
+      setMessage(
+        `Checked into ${event.name}!${result.icebreaker ? `\n\n"${result.icebreaker}"` : ""}`
+      );
+      setCode("");
+      onJoined();
+    } catch (e: any) {
+      setFailed(true);
+      setMessage(
+        e?.body?.error === "event_ended"
+          ? "This event has ended."
+          : e?.status === 404
+            ? "No event with that code."
+            : "Couldn't join — try again."
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <View style={styles.joinBox}>
+      <View style={styles.joinRow}>
+        <TextInput
+          style={[styles.input, styles.joinInput]}
+          placeholder="Event code"
+          autoCapitalize="none"
+          autoCorrect={false}
+          value={code}
+          onChangeText={(t) => {
+            setCode(t);
+            setMessage(null);
+          }}
+        />
+        <Button title="Join" onPress={join} disabled={busy || code.trim().length < 6} />
+      </View>
+      {message && (
+        <Text style={failed ? styles.error : styles.joinSuccess}>{message}</Text>
+      )}
+    </View>
   );
 }
 
@@ -296,7 +360,10 @@ function EventDetail({
       <View style={styles.qrWrap} pointerEvents="none">
         <QRCode value={`${CARD_ORIGIN}/e/${event.code}`} size={220} />
       </View>
-      <Text style={styles.muted}>Attendees scan this to check in</Text>
+      <Text style={styles.muted}>
+        Attendees scan this to check in — or join with code{" "}
+        <Text style={styles.codeInline}>{event.code}</Text>
+      </Text>
 
       {!ended ? (
         <>
@@ -384,7 +451,12 @@ const styles = StyleSheet.create({
   },
   rowName: { fontWeight: "600", fontSize: 15 },
   rowMeta: { color: "#888", fontSize: 12, marginTop: 2 },
-  rowCode: { color: "#4a7dff", fontFamily: "Courier", fontSize: 13 },
+  rowChevron: { color: "#bbb", fontSize: 22 },
+  codeInline: { color: "#4a7dff", fontFamily: "Courier", fontWeight: "600" },
+  joinBox: { gap: 6 },
+  joinRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  joinInput: { flex: 1 },
+  joinSuccess: { color: "#2a8f4d", textAlign: "center" },
   input: {
     borderWidth: 1,
     borderColor: "#ddd",

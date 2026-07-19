@@ -3,6 +3,7 @@ import { Button, StyleSheet, Text, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { api, ApiError } from "../api";
 import { CARD_ORIGIN } from "../config";
+import { getActiveEvent, setActiveEvent } from "../eventContext";
 
 type ScanState =
   | { kind: "scanning" }
@@ -22,10 +23,6 @@ function parseWaftUrl(data: string): { type: "card" | "event"; code: string } | 
   if (kind === "e" && code) return { type: "event", code };
   return null;
 }
-
-// Survives tab switches (screens unmount): once you check into an event,
-// connections you scan are attributed to it so they appear on its live graph.
-let activeEvent: { id: string; name: string } | null = null;
 
 export function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -51,6 +48,7 @@ export function ScanScreen() {
     setState({ kind: "busy" });
     try {
       if (parsed.type === "card") {
+        const activeEvent = getActiveEvent();
         const card = await api.card(parsed.code);
         const result = await api.connect(card.id, activeEvent?.id);
         const suffix = activeEvent ? ` (at ${activeEvent.name})` : "";
@@ -65,7 +63,7 @@ export function ScanScreen() {
       } else {
         const event = await api.eventByCode(parsed.code);
         const result = await api.checkin(event.id);
-        activeEvent = { id: event.id, name: event.name };
+        setActiveEvent({ id: event.id, name: event.name });
         setState({
           kind: "done",
           message: `Checked into ${event.name}!`,
