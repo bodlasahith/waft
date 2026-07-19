@@ -64,9 +64,13 @@ export function ScanScreen() {
         });
       } else {
         const event = await api.eventByCode(parsed.code);
-        await api.checkin(event.id);
+        const result = await api.checkin(event.id);
         activeEvent = { id: event.id, name: event.name };
-        setState({ kind: "done", message: `Checked into ${event.name}!` });
+        setState({
+          kind: "done",
+          message: `Checked into ${event.name}!`,
+          icebreaker: result.icebreaker,
+        });
       }
     } catch (e: any) {
       let message: string;

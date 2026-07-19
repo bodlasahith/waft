@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Button,
   Linking,
   Pressable,
@@ -10,6 +11,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import QRCode from "react-native-qrcode-svg";
 import { api, WaftEvent } from "../api";
 import { CARD_ORIGIN } from "../config";
@@ -101,10 +103,16 @@ function CreateEventForm({
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [icebreakers, setIcebreakers] = useState("");
+  const [startsAt, setStartsAt] = useState(new Date());
+  const [endsAt, setEndsAt] = useState<Date | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function create() {
+    if (endsAt && endsAt <= startsAt) {
+      setError("The end time must be after the start time.");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -112,7 +120,13 @@ function CreateEventForm({
         .split("\n")
         .map((s) => s.trim())
         .filter((s) => s.length > 0);
-      const event = await api.createEvent(name.trim(), location.trim(), custom);
+      const event = await api.createEvent(
+        name.trim(),
+        location.trim(),
+        custom,
+        startsAt,
+        endsAt ?? undefined
+      );
       onCreated(event);
     } catch {
       setError("Couldn't create the event — try again.");
@@ -136,6 +150,33 @@ function CreateEventForm({
         value={location}
         onChangeText={setLocation}
       />
+      <View style={styles.scheduleRow}>
+        <Text style={styles.scheduleLabel}>Starts</Text>
+        <DateTimePicker
+          value={startsAt}
+          mode="datetime"
+          onChange={(_, date) => date && setStartsAt(date)}
+        />
+      </View>
+      <View style={styles.scheduleRow}>
+        <Text style={styles.scheduleLabel}>Ends</Text>
+        {endsAt ? (
+          <View style={styles.scheduleValue}>
+            <DateTimePicker
+              value={endsAt}
+              mode="datetime"
+              onChange={(_, date) => date && setEndsAt(date)}
+            />
+            <Pressable onPress={() => setEndsAt(null)}>
+              <Text style={styles.removeEnd}>×</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable onPress={() => setEndsAt(new Date(startsAt.getTime() + 2 * 3600_000))}>
+            <Text style={styles.link}>+ Add end time</Text>
+          </Pressable>
+        )}
+      </View>
       <TextInput
         style={[styles.input, styles.multiline]}
         placeholder={"Icebreakers, one per line (optional — leave empty and AI writes them from the event name)"}
@@ -165,20 +206,36 @@ function EventDetail({ event: initial, onBack }: { event: WaftEvent; onBack: () 
   const ended = !!event.ends_at && new Date(event.ends_at) <= new Date();
   const wallUrl = `${CARD_ORIGIN}/event/${event.id}`;
 
-  useEffect(() => {
+  const loadAttendees = useCallback(() => {
     api
       .eventGraph(event.id)
       .then((g) => setAttendees(g.nodes))
       .catch((e) => {
         if (e?.status === 410) setWallExpired(true);
-        setAttendees([]);
+        setAttendees((prev) => prev ?? []);
       });
   }, [event.id]);
+
+  // Hosts leave this screen open while people arrive — keep the list live.
+  useEffect(() => {
+    loadAttendees();
+    if (ended) return;
+    const interval = setInterval(loadAttendees, 10_000);
+    return () => clearInterval(interval);
+  }, [loadAttendees, ended]);
+
+  function confirmEnd() {
+    Alert.alert("End this event?", "Check-ins close immediately. The live wall stays up for 24 hours.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "End event", style: "destructive", onPress: endEvent },
+    ]);
+  }
 
   async function endEvent() {
     setBusy(true);
     try {
       setEvent(await api.endEvent(event.id));
+      loadAttendees();
     } finally {
       setBusy(false);
     }
@@ -233,7 +290,7 @@ function EventDetail({ event: initial, onBack }: { event: WaftEvent; onBack: () 
       )}
 
       {!ended && (
-        <Pressable style={styles.endButton} onPress={endEvent} disabled={busy}>
+        <Pressable style={styles.endButton} onPress={confirmEnd} disabled={busy}>
           <Text style={styles.endButtonText}>{busy ? "Ending…" : "End event"}</Text>
         </Pressable>
       )}
@@ -295,6 +352,19 @@ const styles = StyleSheet.create({
   },
   iceItem: { fontSize: 14, color: "#333" },
   endedTag: { color: "#c00", fontWeight: "600", fontSize: 13 },
+  scheduleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    minHeight: 48,
+  },
+  scheduleLabel: { fontWeight: "600", fontSize: 15 },
+  scheduleValue: { flexDirection: "row", alignItems: "center", gap: 10 },
+  removeEnd: { color: "#c00", fontSize: 22, paddingHorizontal: 4 },
   endButton: {
     borderWidth: 1,
     borderColor: "#c00",

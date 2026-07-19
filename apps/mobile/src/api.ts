@@ -111,13 +111,20 @@ export const api = {
   userCard: (userId: string) => request<PublicCard>(`/users/${userId}/card`),
   eventByCode: (code: string) =>
     request<{ id: string; name: string }>(`/events/by-code/${code}`),
-  createEvent: (name: string, location?: string, icebreakers?: string[]) =>
+  createEvent: (
+    name: string,
+    location?: string,
+    icebreakers?: string[],
+    startsAt?: Date,
+    endsAt?: Date
+  ) =>
     request<WaftEvent>("/events", {
       method: "POST",
       body: JSON.stringify({
         name,
         location: location || undefined,
-        startsAt: new Date().toISOString(),
+        startsAt: (startsAt ?? new Date()).toISOString(),
+        endsAt: endsAt ? endsAt.toISOString() : undefined,
         icebreakers: icebreakers && icebreakers.length > 0 ? icebreakers : undefined,
       }),
     }),
@@ -130,5 +137,7 @@ export const api = {
       edges: { source: string; target: string; strength: number }[];
     }>(`/events/${eventId}/graph`),
   checkin: (eventId: string) =>
-    request<{ status: string }>(`/events/${eventId}/checkin`, { method: "POST" }),
+    request<{ status: string; icebreaker?: string }>(`/events/${eventId}/checkin`, {
+      method: "POST",
+    }),
 };

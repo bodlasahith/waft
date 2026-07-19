@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { checkinToEvent, getEventGraph } from "../services/graph.js";
-import { generateIcebreakers } from "../services/icebreakers.js";
+import { generateIcebreakers, pickIcebreaker } from "../services/icebreakers.js";
 import { supabase } from "../lib/supabase.js";
 import { broadcast } from "../lib/liveEvents.js";
 import { requireAuth } from "../lib/auth.js";
@@ -103,7 +103,7 @@ export async function eventRoutes(app: FastifyInstance) {
       const { eventId } = req.params as { eventId: string };
       const { data: event } = await supabase
         .from("events")
-        .select("ends_at")
+        .select("ends_at, icebreakers")
         .eq("id", eventId)
         .single();
       if (!event) return reply.status(404).send({ error: "event_not_found" });
@@ -116,7 +116,11 @@ export async function eventRoutes(app: FastifyInstance) {
       // so live viewers see people appear as they arrive.
       const graph = await getEventGraph(eventId);
       broadcast(eventId, { type: "graph", eventId, ...graph });
-      return reply.status(200).send({ status: "checked_in" });
+      // Walking into a room of strangers is when an icebreaker helps most.
+      const icebreaker = pickIcebreaker(event.icebreakers);
+      return reply
+        .status(200)
+        .send({ status: "checked_in", ...(icebreaker ? { icebreaker } : {}) });
     }
   );
 
