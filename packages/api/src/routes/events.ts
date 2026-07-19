@@ -71,12 +71,37 @@ export async function eventRoutes(app: FastifyInstance) {
     return reply.send(data);
   });
 
+  // Only the host can end an event; ended events stop accepting check-ins
+  // but their graph and wall stay viewable.
+  app.post("/events/:eventId/end", { preHandler: requireAuth }, async (req, reply) => {
+    const { eventId } = req.params as { eventId: string };
+    const { data, error } = await supabase
+      .from("events")
+      .update({ ends_at: new Date().toISOString() })
+      .eq("id", eventId)
+      .eq("created_by", req.userId)
+      .select()
+      .single();
+
+    if (error || !data) return reply.status(404).send({ error: "event_not_found" });
+    return reply.send(data);
+  });
+
   // You can only check yourself in — the user comes from the token.
   app.post(
     "/events/:eventId/checkin",
     { preHandler: requireAuth },
     async (req, reply) => {
       const { eventId } = req.params as { eventId: string };
+      const { data: event } = await supabase
+        .from("events")
+        .select("ends_at")
+        .eq("id", eventId)
+        .single();
+      if (!event) return reply.status(404).send({ error: "event_not_found" });
+      if (event.ends_at && new Date(event.ends_at) <= new Date()) {
+        return reply.status(410).send({ error: "event_ended" });
+      }
       await checkinToEvent(req.userId, eventId);
       broadcast(eventId, { type: "checkin", eventId, userId: req.userId });
       // Check-ins now add nodes to the event graph — push the fresh snapshot

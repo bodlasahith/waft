@@ -40,6 +40,7 @@ export interface WaftEvent {
   code: string;
   location: string | null;
   starts_at: string;
+  ends_at: string | null;
   icebreakers: string[] | null;
 }
 
@@ -121,6 +122,8 @@ export const api = {
       }),
     }),
   myEvents: () => request<WaftEvent[]>("/events/mine"),
+  endEvent: (eventId: string) =>
+    request<WaftEvent>(`/events/${eventId}/end`, { method: "POST" }),
   checkin: (eventId: string) =>
     request<{ status: string }>(`/events/${eventId}/checkin`, { method: "POST" }),
 };

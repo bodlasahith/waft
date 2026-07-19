@@ -72,6 +72,7 @@ export function ScanScreen() {
       let message: string;
       if (e?.status === 401) message = "Sign in to connect.";
       else if (e?.body?.error === "cannot_connect_to_self") message = "That's your own card!";
+      else if (e?.body?.error === "event_ended") message = "This event has ended.";
       else if (e instanceof ApiError) {
         const detail = (e.body as any)?.error ?? "";
         message = `Something went wrong (${e.status}${detail ? ` ${detail}` : ""}).`;

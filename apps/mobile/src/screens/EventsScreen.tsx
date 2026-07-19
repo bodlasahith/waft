@@ -81,6 +81,7 @@ export function EventsScreen() {
             <Text style={styles.rowMeta}>
               {new Date(event.starts_at).toLocaleDateString()}
               {event.location ? ` · ${event.location}` : ""}
+              {event.ends_at && new Date(event.ends_at) <= new Date() ? " · ended" : ""}
             </Text>
           </View>
           <Text style={styles.rowCode}>{event.code}</Text>
@@ -156,12 +157,28 @@ function CreateEventForm({
   );
 }
 
-function EventDetail({ event, onBack }: { event: WaftEvent; onBack: () => void }) {
+function EventDetail({ event: initial, onBack }: { event: WaftEvent; onBack: () => void }) {
+  const [event, setEvent] = useState(initial);
+  const [busy, setBusy] = useState(false);
+  const ended = !!event.ends_at && new Date(event.ends_at) <= new Date();
   const wallUrl = `${CARD_ORIGIN}/event/${event.id}`;
+
+  async function endEvent() {
+    setBusy(true);
+    try {
+      setEvent(await api.endEvent(event.id));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <ScrollView contentContainerStyle={[styles.container, styles.centered]}>
       <Text style={styles.title}>{event.name}</Text>
-      <View style={styles.qrWrap}>
+      {ended && <Text style={styles.endedTag}>Ended — no new check-ins</Text>}
+      {/* pointerEvents="none": the SVG QR swallows drag gestures otherwise,
+          which made the page impossible to scroll from the middle. */}
+      <View style={styles.qrWrap} pointerEvents="none">
         <QRCode value={`${CARD_ORIGIN}/e/${event.code}`} size={220} />
       </View>
       <Text style={styles.muted}>Attendees scan this to check in</Text>
@@ -180,6 +197,12 @@ function EventDetail({ event, onBack }: { event: WaftEvent; onBack: () => void }
             </Text>
           ))}
         </View>
+      )}
+
+      {!ended && (
+        <Pressable style={styles.endButton} onPress={endEvent} disabled={busy}>
+          <Text style={styles.endButtonText}>{busy ? "Ending…" : "End event"}</Text>
+        </Pressable>
       )}
 
       <Pressable onPress={onBack}>
@@ -238,4 +261,14 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   iceItem: { fontSize: 14, color: "#333" },
+  endedTag: { color: "#c00", fontWeight: "600", fontSize: 13 },
+  endButton: {
+    borderWidth: 1,
+    borderColor: "#c00",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    marginTop: 8,
+  },
+  endButtonText: { color: "#c00", fontWeight: "600" },
 });

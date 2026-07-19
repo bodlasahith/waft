@@ -255,6 +255,7 @@ tappable profile view in the Network tab), explicit social sharing (needs the
 - [ ] Interaction-based waft strength — strength grows from real engagement (opening/tapping a connection's profile, explicitly sharing a non-public social with that person), not rescans (a rescan is a no-op handshake; the API already returns `already_connected`). Needs per-connection interaction tracking + the mutual/event-only social-sharing UI
 - [x] Graph analytics — `computeGraphStats` in `@waft/shared` (degree, Brandes betweenness, density) rendered as the live leaderboard on the event wall (top connectors + cluster bridges) and the mobile stats line. Clustering/shortest-path insights still open
 - [ ] Gamification badges
+- [ ] Edge visual encoding v2 — map waft-edge appearance to relationship signals: thickness = strength, opacity = mutual connections (v1 shipped), plus color ramps for interaction level, dash patterns for shared-platform count, and subtle pulse animation for edges created in the last N minutes (event-wall drama). Interaction/shared-platform inputs arrive with the waft-strength counters; animation needs Reanimated or SVG SMIL on web
 - [x] Node avatars v1 — color + shape picker on the card tab, stored on the profile and mirrored onto the Neo4j node, rendered in every graph (accent + more shapes still open)
 
 ### Phase 3: Growth

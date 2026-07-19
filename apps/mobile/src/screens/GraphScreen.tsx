@@ -163,6 +163,34 @@ export function GraphScreen() {
     [graph, width, svgHeight]
   );
 
+  // Edge encoding: thickness = waft strength, opacity = mutual connections
+  // (shared neighbors pull an edge visually forward), color = whether the
+  // edge is yours or fringe. Interaction-driven styling lands with the
+  // waft-strength counters (see roadmap).
+  const edgeStyles = useMemo(() => {
+    if (!graph) return new Map<string, { opacity: number; mine: boolean }>();
+    const neighbors = new Map<string, Set<string>>();
+    for (const e of graph.edges) {
+      if (!neighbors.has(e.source)) neighbors.set(e.source, new Set());
+      if (!neighbors.has(e.target)) neighbors.set(e.target, new Set());
+      neighbors.get(e.source)!.add(e.target);
+      neighbors.get(e.target)!.add(e.source);
+    }
+    const meId = graph.nodes.find((n) => n.distance === 0)?.id;
+    const styles = new Map<string, { opacity: number; mine: boolean }>();
+    for (const e of graph.edges) {
+      const a = neighbors.get(e.source) ?? new Set();
+      const b = neighbors.get(e.target) ?? new Set();
+      let mutuals = 0;
+      for (const n of a) if (b.has(n)) mutuals++;
+      styles.set(`${e.source}-${e.target}`, {
+        opacity: Math.min(0.45 + mutuals * 0.25, 1),
+        mine: e.source === meId || e.target === meId,
+      });
+    }
+    return styles;
+  }, [graph]);
+
   if (error && !graph) {
     return (
       <View style={styles.center}>
@@ -193,6 +221,7 @@ export function GraphScreen() {
           const a = positions.get(e.source);
           const b = positions.get(e.target);
           if (!a || !b) return null;
+          const style = edgeStyles.get(`${e.source}-${e.target}`);
           return (
             <Line
               key={`${e.source}-${e.target}`}
@@ -200,7 +229,8 @@ export function GraphScreen() {
               y1={a.y}
               x2={b.x}
               y2={b.y}
-              stroke="#c9d4f2"
+              stroke={style?.mine ? "#7ba0ff" : "#c9d4f2"}
+              strokeOpacity={style?.opacity ?? 0.6}
               strokeWidth={Math.min(1 + e.strength, 5)}
             />
           );
