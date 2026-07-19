@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import { computeGraphStats } from "@waft/shared";
 
 const EventGraph = dynamic(() => import("@/components/EventGraph"), { ssr: false });
 
@@ -55,14 +56,51 @@ export default function EventPage({ params }: { params: Promise<{ eventId: strin
     return () => ws.close();
   }
 
+  const stats = useMemo(
+    () => computeGraphStats(graphData.nodes, graphData.edges),
+    [graphData]
+  );
+
   return (
     <main className="h-screen w-screen relative">
       <div className="absolute top-4 left-4 z-10 bg-neutral-900/80 backdrop-blur px-4 py-2 rounded-lg">
         <h1 className="text-lg font-semibold">Live Event Graph</h1>
         <p className="text-sm text-neutral-400">
-          {graphData.nodes.length} people · {graphData.edges.length} wafts
+          {stats.people} people · {stats.wafts} wafts
+          {stats.people >= 3 && ` · ${Math.round(stats.density * 100)}% connected`}
         </p>
       </div>
+
+      {(stats.topConnectors.length > 0 || stats.topBridges.length > 0) && (
+        <div className="absolute top-4 right-4 z-10 bg-neutral-900/80 backdrop-blur px-4 py-3 rounded-lg min-w-48">
+          {stats.topConnectors.length > 0 && (
+            <div>
+              <p className="text-xs uppercase tracking-wide text-neutral-500 mb-1">
+                Top connectors
+              </p>
+              {stats.topConnectors.map((p, i) => (
+                <p key={p.id} className="text-sm">
+                  <span className="text-neutral-500">{i + 1}.</span> {p.name}{" "}
+                  <span className="text-neutral-400">· {p.score}</span>
+                </p>
+              ))}
+            </div>
+          )}
+          {stats.topBridges.length > 0 && (
+            <div className="mt-2">
+              <p className="text-xs uppercase tracking-wide text-neutral-500 mb-1">
+                Bridging clusters
+              </p>
+              {stats.topBridges.map((p) => (
+                <p key={p.id} className="text-sm">
+                  🌉 {p.name}
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <EventGraph nodes={graphData.nodes} edges={graphData.edges} />
     </main>
   );

@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import Svg, { G, Line, Text as SvgText } from "react-native-svg";
+import { computeGraphStats } from "@waft/shared";
 import { api, PublicCard } from "../api";
 import { AvatarNode } from "../components/AvatarNode";
 
@@ -230,8 +231,9 @@ export function GraphScreen() {
       </Svg>
 
       <Text style={styles.hint}>
-        {graph.nodes.length - 1} connection{graph.nodes.length === 2 ? "" : "s"} · tap a node to see
-        their card
+        {graph.nodes.filter((n) => n.distance === 1).length} direct ·{" "}
+        {graph.nodes.filter((n) => n.distance > 1).length} extended ·{" "}
+        {computeGraphStats(graph.nodes, graph.edges).wafts} wafts — tap a node to see their card
       </Text>
 
       {(selected || selectedLoading) && (

@@ -1,3 +1,5 @@
+export * from "./analytics.js";
+
 export const PLATFORMS = [
   "instagram",
   "linkedin",
