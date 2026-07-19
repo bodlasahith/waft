@@ -58,6 +58,13 @@ export const api = {
       body: JSON.stringify({ name, photoUrl }),
     }),
   card: (cardCode: string) => request<PublicCard>(`/cards/${cardCode}`),
+  addSocial: (platform: string, handle: string, url?: string) =>
+    request<unknown>("/users/me/socials", {
+      method: "POST",
+      body: JSON.stringify({ platform, handle, url }),
+    }),
+  removeSocial: (platform: string) =>
+    request<null>(`/users/me/socials/${platform}`, { method: "DELETE" }),
   connect: (toUserId: string, eventId?: string) =>
     request<{ status: "connected" | "already_connected"; strength: number }>("/connections", {
       method: "POST",
