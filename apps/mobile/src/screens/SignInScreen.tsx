@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { colors, radii } from "../theme";
 import { AppButton } from "../components/UI";
+import { GoogleButton } from "../components/GoogleButton";
 import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri } from "expo-auth-session";
 import { supabase } from "../supabase";
@@ -250,25 +251,23 @@ export function SignInScreen() {
       {step !== "password" && (
         <>
           <View style={styles.divider} />
-          <AppButton
-            title="Continue with Google"
-            variant="ghost"
-            onPress={() => signInWithProvider("google")}
-            disabled={busy}
-          />
+          <GoogleButton onPress={() => signInWithProvider("google")} disabled={busy} />
+          {/* Password is a tertiary option — only surfaced for accounts that
+              have one (device flag), or when the review email is typed — so
+              new users see a clean two-option screen. */}
+          {step === "email" && (hasPassword || email.trim().toLowerCase() === REVIEW_EMAIL) && (
+            <AppButton
+              title="Sign in with password"
+              variant="ghost"
+              onPress={() => setStep("password")}
+              disabled={busy}
+            />
+          )}
         </>
       )}
 
       {busy && <ActivityIndicator style={styles.spinner} />}
       {error && <Text style={styles.error}>{error}</Text>}
-      {/* Password sign-in is only surfaced for accounts that have a password
-          (currently just the App Store review account) — normal users never
-          see it, so they aren't tempted into a path that can't work for them. */}
-      {step === "email" && (hasPassword || email.trim().toLowerCase() === REVIEW_EMAIL) && (
-        <Pressable onPress={() => setStep("password")}>
-          <Text style={styles.faintLink}>Sign in with password</Text>
-        </Pressable>
-      )}
     </View>
   );
 }
