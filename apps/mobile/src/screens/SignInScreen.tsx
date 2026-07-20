@@ -18,6 +18,10 @@ WebBrowser.maybeCompleteAuthSession();
 
 type Step = "email" | "code" | "password";
 
+// Only this account (App Store review) has a password, so only it should see
+// the password sign-in link. Everyone else uses OTP or Google.
+const REVIEW_EMAIL = "sahithb314@gmail.com";
+
 // Both the auth-browser result and the deep-link fallback can observe the
 // same redirect; only the first observer acts on it.
 const handledCodes = new Set<string>();
@@ -251,7 +255,10 @@ export function SignInScreen() {
 
       {busy && <ActivityIndicator style={styles.spinner} />}
       {error && <Text style={styles.error}>{error}</Text>}
-      {step === "email" && (
+      {/* Password sign-in is only surfaced for accounts that have a password
+          (currently just the App Store review account) — normal users never
+          see it, so they aren't tempted into a path that can't work for them. */}
+      {step === "email" && email.trim().toLowerCase() === REVIEW_EMAIL && (
         <Pressable onPress={() => setStep("password")}>
           <Text style={styles.faintLink}>Sign in with password</Text>
         </Pressable>
