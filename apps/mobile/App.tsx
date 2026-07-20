@@ -71,6 +71,10 @@ function App() {
   useEffect(() => {
     if (!session) {
       setProfile("loading");
+      // Reset navigation so the next sign-in always starts on the card,
+      // never on a screen (e.g. Settings) left open before signing out.
+      setShowSettings(false);
+      setTab("card");
       return;
     }
     (async () => {

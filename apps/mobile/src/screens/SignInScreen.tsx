@@ -198,7 +198,7 @@ export function SignInScreen() {
           <Text style={styles.muted}>We emailed a sign-in code to {email.trim()}</Text>
           <TextInput
             style={styles.input}
-            placeholder="123456"
+            placeholder="12345678"
             placeholderTextColor={colors.textFaint}
             keyboardType="number-pad"
             textContentType="oneTimeCode"
