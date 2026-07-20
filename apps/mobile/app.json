@@ -17,7 +17,13 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -35,6 +41,15 @@
     ],
     "runtimeVersion": {
       "policy": "appVersion"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "6556e00f-4815-470a-a0d9-80ddd8f3950b"
+      }
+    },
+    "owner": "bodlasahith",
+    "updates": {
+      "url": "https://u.expo.dev/6556e00f-4815-470a-a0d9-80ddd8f3950b"
     }
   }
 }
