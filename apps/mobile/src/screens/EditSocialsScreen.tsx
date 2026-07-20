@@ -41,6 +41,7 @@ interface Props {
  */
 export function EditSocialsScreen({ socials, onChanged, onClose }: Props) {
   const [adding, setAdding] = useState<Platform | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
   const [handle, setHandle] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,14 +49,16 @@ export function EditSocialsScreen({ socials, onChanged, onClose }: Props) {
   const linked = new Map(socials.map((s) => [s.platform, s.handle]));
   const unlinked = PLATFORMS.filter((p) => !linked.has(p));
 
-  async function add() {
-    if (!adding) return;
+  // Adding a social upserts by platform, so saving an edit is the same call
+  // with the same platform and a new handle.
+  async function save(platform: Platform) {
     setBusy(true);
     setError(null);
     try {
       // Handles are pasted messily — strip the @ people habitually include.
-      await api.addSocial(adding, handle.trim().replace(/^@/, ""));
+      await api.addSocial(platform, handle.trim().replace(/^@/, ""));
       setAdding(null);
+      setEditing(null);
       setHandle("");
       onChanged();
     } catch {
@@ -63,6 +66,12 @@ export function EditSocialsScreen({ socials, onChanged, onClose }: Props) {
     } finally {
       setBusy(false);
     }
+  }
+
+  function startEdit(platform: string, current: string) {
+    setAdding(null);
+    setEditing(platform);
+    setHandle(current);
   }
 
   async function remove(platform: string) {
@@ -90,17 +99,50 @@ export function EditSocialsScreen({ socials, onChanged, onClose }: Props) {
       {socials.length === 0 && (
         <Text style={styles.muted}>Nothing linked yet — add your first below.</Text>
       )}
-      {socials.map((s) => (
-        <View key={s.platform} style={styles.row}>
-          <View>
+      {socials.map((s) =>
+        editing === s.platform ? (
+          <View key={s.platform} style={styles.addBox}>
             <Text style={styles.platform}>{PLATFORM_LABELS[s.platform as Platform] ?? s.platform}</Text>
-            <Text style={styles.handle}>{s.handle}</Text>
+            <TextInput
+              style={styles.input}
+              placeholder={s.platform === "phone" ? "+1 555 123 4567" : "your handle"}
+              placeholderTextColor={colors.textFaint}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoFocus
+              keyboardType={s.platform === "phone" ? "phone-pad" : "default"}
+              value={handle}
+              onChangeText={setHandle}
+            />
+            <View style={styles.addActions}>
+              <AppButton
+                title="Save"
+                onPress={() => save(s.platform as Platform)}
+                disabled={handle.trim().length === 0}
+                busy={busy}
+              />
+              <Pressable onPress={() => { setEditing(null); setHandle(""); }}>
+                <Text style={styles.cancel}>Cancel</Text>
+              </Pressable>
+            </View>
           </View>
-          <Pressable onPress={() => remove(s.platform)} disabled={busy}>
-            <Text style={styles.remove}>Remove</Text>
-          </Pressable>
-        </View>
-      ))}
+        ) : (
+          <View key={s.platform} style={styles.row}>
+            <View>
+              <Text style={styles.platform}>{PLATFORM_LABELS[s.platform as Platform] ?? s.platform}</Text>
+              <Text style={styles.handle}>{s.handle}</Text>
+            </View>
+            <View style={styles.rowActions}>
+              <Pressable onPress={() => startEdit(s.platform, s.handle)} disabled={busy}>
+                <Text style={styles.edit}>Edit</Text>
+              </Pressable>
+              <Pressable onPress={() => remove(s.platform)} disabled={busy}>
+                <Text style={styles.remove}>Remove</Text>
+              </Pressable>
+            </View>
+          </View>
+        )
+      )}
 
       {adding ? (
         <View style={styles.addBox}>
@@ -117,7 +159,7 @@ export function EditSocialsScreen({ socials, onChanged, onClose }: Props) {
             onChangeText={setHandle}
           />
           <View style={styles.addActions}>
-            <AppButton title="Add" onPress={add} disabled={handle.trim().length === 0} busy={busy} />
+            <AppButton title="Add" onPress={() => save(adding)} disabled={handle.trim().length === 0} busy={busy} />
             <Pressable onPress={() => { setAdding(null); setHandle(""); }}>
               <Text style={styles.cancel}>Cancel</Text>
             </Pressable>
@@ -129,7 +171,15 @@ export function EditSocialsScreen({ socials, onChanged, onClose }: Props) {
             <Text style={styles.sectionLabel}>Add a link</Text>
             <View style={styles.chips}>
               {unlinked.map((p) => (
-                <Pressable key={p} style={styles.chip} onPress={() => setAdding(p)}>
+                <Pressable
+                  key={p}
+                  style={styles.chip}
+                  onPress={() => {
+                    setEditing(null);
+                    setHandle("");
+                    setAdding(p);
+                  }}
+                >
                   <Text style={styles.chipText}>{PLATFORM_LABELS[p]}</Text>
                 </Pressable>
               ))}
@@ -161,6 +211,8 @@ const styles = StyleSheet.create({
   },
   platform: { fontWeight: "700", fontSize: 15, color: colors.text },
   handle: { color: colors.textMuted, fontSize: 13, marginTop: 2 },
+  rowActions: { flexDirection: "row", alignItems: "center", gap: 16 },
+  edit: { color: colors.accent, fontSize: 13, fontWeight: "600" },
   remove: { color: colors.danger, fontSize: 13 },
   sectionLabel: { color: colors.textFaint, marginTop: 8, fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1.2 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
