@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   Dimensions,
   Linking,
   PanResponder,
@@ -9,9 +10,9 @@ import {
   Text,
   View,
 } from "react-native";
-import Svg, { G, Line, Text as SvgText } from "react-native-svg";
+import Svg, { Circle, G, Line, Rect, Text as SvgText } from "react-native-svg";
 import { computeGraphStats } from "@waft/shared";
-import { api, PublicCard } from "../api";
+import { api } from "../api";
 import { AvatarNode } from "../components/AvatarNode";
 
 interface Node {
@@ -39,7 +40,32 @@ const SOCIAL_URLS: Record<string, string> = {
   reddit: "https://reddit.com/u/",
   spotify: "https://open.spotify.com/user/",
   facebook: "https://facebook.com/",
+  telegram: "https://t.me/",
 };
+
+// Satellite badge styling per platform — brand color + glyph letter.
+const PLATFORM_BADGES: Record<string, { color: string; glyph: string; dark?: boolean }> = {
+  instagram: { color: "#E1306C", glyph: "I" },
+  linkedin: { color: "#0A66C2", glyph: "in" },
+  github: { color: "#24292e", glyph: "G" },
+  x: { color: "#000000", glyph: "𝕏" },
+  discord: { color: "#5865F2", glyph: "D" },
+  spotify: { color: "#1DB954", glyph: "S" },
+  tiktok: { color: "#010101", glyph: "T" },
+  reddit: { color: "#FF4500", glyph: "R" },
+  snapchat: { color: "#FFFC00", glyph: "S", dark: true },
+  facebook: { color: "#1877F2", glyph: "f" },
+  telegram: { color: "#229ED9", glyph: "T" },
+  slack: { color: "#4A154B", glyph: "S" },
+  phone: { color: "#34c77b", glyph: "☎" },
+};
+
+function socialHref(platform: string, handle: string, url?: string): string | null {
+  if (url) return url;
+  if (platform === "phone") return `tel:${handle.replace(/[^+\d]/g, "")}`;
+  const prefix = SOCIAL_URLS[platform];
+  return prefix ? prefix + handle : null;
+}
 
 /**
  * Small force layout: radial seed by hop distance, then spring relaxation.
@@ -120,9 +146,25 @@ function computeLayout(nodes: Node[], edges: Edge[], width: number, height: numb
 export function GraphScreen() {
   const [graph, setGraph] = useState<{ nodes: Node[]; edges: Edge[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<PublicCard | null>(null);
-  const [selectedLoading, setSelectedLoading] = useState(false);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
+
+  // Tapping a node pops its linked socials out as orbiting satellite badges
+  // instead of a bottom sheet — the socials are part of the graph too.
+  const [expanded, setExpanded] = useState<{
+    nodeId: string;
+    socials: { platform: string; handle: string; url?: string }[];
+  } | null>(null);
+  const expandAnim = useRef(new Animated.Value(0)).current;
+  const [expandProgress, setExpandProgress] = useState(0);
+  useEffect(() => {
+    const id = expandAnim.addListener(({ value }) => setExpandProgress(value));
+    return () => expandAnim.removeListener(id);
+  }, [expandAnim]);
+
+  const collapse = useCallback(() => {
+    setExpanded(null);
+    expandAnim.setValue(0);
+  }, [expandAnim]);
 
   // Pinch-to-zoom and drag-to-pan. Plain PanResponder — taps fall through to
   // nodes/edges (we only claim the gesture once it moves or goes two-finger).
@@ -229,13 +271,18 @@ export function GraphScreen() {
     load();
   }, [load]);
 
-  async function openProfile(node: Node) {
-    if (node.distance === 0) return; // that's you
-    setSelectedLoading(true);
+  async function toggleNode(node: Node) {
+    if (expanded?.nodeId === node.id) {
+      collapse();
+      return;
+    }
     try {
-      setSelected(await api.userCard(node.id));
-    } finally {
-      setSelectedLoading(false);
+      const card = await api.userCard(node.id);
+      setExpanded({ nodeId: node.id, socials: card.socials });
+      expandAnim.setValue(0);
+      Animated.spring(expandAnim, { toValue: 1, friction: 6, useNativeDriver: false }).start();
+    } catch {
+      // node without a reachable card — nothing to expand
     }
   }
 
@@ -311,6 +358,16 @@ export function GraphScreen() {
       {...panResponder.panHandlers}
     >
       <Svg width={width} height={svgHeight}>
+        {/* background catcher: tapping empty space collapses the satellites */}
+        <Rect
+          x={0}
+          y={0}
+          width={width}
+          height={svgHeight}
+          fill="#000"
+          fillOpacity={0.003}
+          onPress={collapse}
+        />
         <G transform={`translate(${view.tx},${view.ty}) scale(${view.scale})`}>
         {graph.edges.map((e) => {
           const a = positions.get(e.source);
@@ -357,7 +414,7 @@ export function GraphScreen() {
                 color={n.avatarColor ?? fallback}
                 shape={n.avatarShape}
                 initial={n.name.charAt(0).toUpperCase()}
-                onPress={() => openProfile(n)}
+                onPress={() => toggleNode(n)}
               />
               <SvgText x={p.x} y={p.y + r + 16} fontSize={11} fill="#555" textAnchor="middle">
                 {isMe ? "You" : n.name.split(" ")[0]}
@@ -365,6 +422,67 @@ export function GraphScreen() {
             </G>
           );
         })}
+
+        {/* satellite badges orbiting the expanded node */}
+        {expanded &&
+          (() => {
+            const p = positions.get(expanded.nodeId);
+            const node = graph.nodes.find((n) => n.id === expanded.nodeId);
+            if (!p || !node) return null;
+            const baseR = node.distance === 0 ? 26 : node.distance === 1 ? 20 : 14;
+            if (expanded.socials.length === 0) {
+              return (
+                <SvgText
+                  x={p.x}
+                  y={p.y - baseR - 12 * expandProgress}
+                  fontSize={11}
+                  fill="#999"
+                  opacity={expandProgress}
+                  textAnchor="middle"
+                >
+                  no public links yet
+                </SvgText>
+              );
+            }
+            const count = expanded.socials.length;
+            return expanded.socials.map((s, i) => {
+              const angle = -Math.PI / 2 + (2 * Math.PI * i) / count;
+              const dist = (baseR + 34) * expandProgress;
+              const x = p.x + dist * Math.cos(angle);
+              const y = p.y + dist * Math.sin(angle);
+              const badge = PLATFORM_BADGES[s.platform] ?? { color: "#8a94a8", glyph: "•" };
+              const br = 13 * expandProgress;
+              const href = socialHref(s.platform, s.handle, s.url);
+              return (
+                <G
+                  key={s.platform}
+                  opacity={expandProgress}
+                  onPress={() => href && Linking.openURL(href)}
+                >
+                  <Circle cx={x} cy={y} r={br} fill={badge.color} stroke="#fff" strokeWidth={2} />
+                  <SvgText
+                    x={x}
+                    y={y + br * 0.35}
+                    fontSize={br * 0.9}
+                    fontWeight="bold"
+                    fill={badge.dark ? "#222" : "#fff"}
+                    textAnchor="middle"
+                  >
+                    {badge.glyph}
+                  </SvgText>
+                  <SvgText
+                    x={x}
+                    y={y + br + 11}
+                    fontSize={8.5}
+                    fill="#777"
+                    textAnchor="middle"
+                  >
+                    {s.handle.length > 14 ? s.handle.slice(0, 13) + "…" : s.handle}
+                  </SvgText>
+                </G>
+              );
+            });
+          })()}
         </G>
       </Svg>
 
@@ -377,8 +495,8 @@ export function GraphScreen() {
       <Text style={styles.hint}>
         {graph.nodes.filter((n) => n.distance === 1).length} direct ·{" "}
         {graph.nodes.filter((n) => n.distance > 1).length} extended ·{" "}
-        {computeGraphStats(graph.nodes, graph.edges).wafts} wafts — tap nodes and edges, pinch to
-        zoom
+        {computeGraphStats(graph.nodes, graph.edges).wafts} wafts — tap a node for their links,
+        pinch to zoom
       </Text>
 
       {selectedEdge && (
@@ -417,40 +535,6 @@ export function GraphScreen() {
         </Pressable>
       )}
 
-      {(selected || selectedLoading) && (
-        <Pressable style={styles.overlay} onPress={() => setSelected(null)}>
-          <Pressable style={styles.sheet} onPress={() => {}}>
-            {selectedLoading || !selected ? (
-              <ActivityIndicator />
-            ) : (
-              <>
-                <Text style={styles.sheetName}>{selected.name}</Text>
-                {selected.socials.length === 0 && (
-                  <Text style={styles.muted}>No public links yet.</Text>
-                )}
-                {selected.socials.map((s) => (
-                  <Pressable
-                    key={s.platform}
-                    style={styles.socialRow}
-                    onPress={() => {
-                      const url =
-                        s.url ??
-                        (SOCIAL_URLS[s.platform] ? SOCIAL_URLS[s.platform] + s.handle : undefined);
-                      if (url) Linking.openURL(url);
-                    }}
-                  >
-                    <Text style={styles.socialPlatform}>{s.platform}</Text>
-                    <Text style={styles.socialHandle}>{s.handle}</Text>
-                  </Pressable>
-                ))}
-                <Pressable onPress={() => setSelected(null)}>
-                  <Text style={styles.close}>Close</Text>
-                </Pressable>
-              </>
-            )}
-          </Pressable>
-        </Pressable>
-      )}
     </View>
   );
 }
