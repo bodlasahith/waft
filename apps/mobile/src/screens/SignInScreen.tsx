@@ -16,7 +16,7 @@ import { supabase } from "../supabase";
 
 WebBrowser.maybeCompleteAuthSession();
 
-type Step = "email" | "code";
+type Step = "email" | "code" | "password";
 
 // Both the auth-browser result and the deep-link fallback can observe the
 // same redirect; only the first observer acts on it.
@@ -60,8 +60,24 @@ export function SignInScreen() {
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Secondary path — not part of the normal OTP/OAuth flow. Kept low-key
+  // (a small link) so it doesn't complicate the primary "20-second signup",
+  // but it gives a no-inbox, no-OAuth login for accounts provisioned with a
+  // password (e.g. the App Store review account).
+  async function signInWithPassword() {
+    setBusy(true);
+    setError(null);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    setBusy(false);
+    if (error) setError("Wrong email or password.");
+  }
 
   // Fallback capture: if the auth browser doesn't self-close on the
   // waft:// redirect (simulator quirk), iOS routes the deep link to the
@@ -146,7 +162,7 @@ export function SignInScreen() {
       <Text style={styles.logo}>waft<Text style={{ color: colors.accent }}>.</Text></Text>
       <Text style={styles.tagline}>Scan once. Connect everywhere.</Text>
 
-      {step === "email" ? (
+      {step === "email" && (
         <>
           <TextInput
             style={styles.input}
@@ -165,7 +181,9 @@ export function SignInScreen() {
             busy={busy}
           />
         </>
-      ) : (
+      )}
+
+      {step === "code" && (
         <>
           <Text style={styles.muted}>We emailed a sign-in code to {email.trim()}</Text>
           <TextInput
@@ -186,16 +204,58 @@ export function SignInScreen() {
         </>
       )}
 
-      <View style={styles.divider} />
-      <AppButton
-        title="Continue with Google"
-        variant="ghost"
-        onPress={() => signInWithProvider("google")}
-        disabled={busy}
-      />
+      {step === "password" && (
+        <>
+          <TextInput
+            style={styles.input}
+            placeholder="you@example.com"
+            placeholderTextColor={colors.textFaint}
+            autoCapitalize="none"
+            autoComplete="email"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor={colors.textFaint}
+            autoCapitalize="none"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
+          <AppButton
+            title="Sign in"
+            onPress={signInWithPassword}
+            disabled={!email.includes("@") || password.length === 0}
+            busy={busy}
+          />
+          <Pressable onPress={() => setStep("email")}>
+            <Text style={styles.link}>Back to code sign-in</Text>
+          </Pressable>
+        </>
+      )}
+
+      {step !== "password" && (
+        <>
+          <View style={styles.divider} />
+          <AppButton
+            title="Continue with Google"
+            variant="ghost"
+            onPress={() => signInWithProvider("google")}
+            disabled={busy}
+          />
+        </>
+      )}
 
       {busy && <ActivityIndicator style={styles.spinner} />}
       {error && <Text style={styles.error}>{error}</Text>}
+      {step === "email" && (
+        <Pressable onPress={() => setStep("password")}>
+          <Text style={styles.faintLink}>Sign in with password</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -222,6 +282,7 @@ const styles = StyleSheet.create({
   divider: { height: 1, backgroundColor: colors.border, marginVertical: 16 },
   muted: { color: colors.textMuted, textAlign: "center" },
   link: { color: colors.accent, textAlign: "center", paddingVertical: 8 },
+  faintLink: { color: colors.textFaint, textAlign: "center", paddingVertical: 8, fontSize: 13 },
   spinner: { marginTop: 8 },
   error: { color: colors.danger, textAlign: "center" },
 });
