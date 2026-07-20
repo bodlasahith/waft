@@ -50,6 +50,19 @@ export async function connectionRoutes(app: FastifyInstance) {
   app.get("/connections/me/graph", { preHandler: requireAuth }, async (req, reply) => {
     const depth = Number((req.query as any).depth) || 2;
     const graph = await getNetworkGraph(req.userId, Math.min(depth, 4));
+
+    // Resolve event names so edge details can say where a waft happened.
+    const eventIds = [...new Set(graph.edges.map((e) => e.eventId).filter(Boolean))];
+    if (eventIds.length > 0) {
+      const { data: events } = await supabase
+        .from("events")
+        .select("id, name")
+        .in("id", eventIds);
+      const names = new Map((events ?? []).map((e) => [e.id, e.name]));
+      for (const edge of graph.edges as (typeof graph.edges[number] & { eventName?: string })[]) {
+        if (edge.eventId) edge.eventName = names.get(edge.eventId);
+      }
+    }
     return reply.send(graph);
   });
 }

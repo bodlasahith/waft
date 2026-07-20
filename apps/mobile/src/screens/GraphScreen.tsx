@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
   Linking,
+  PanResponder,
   Pressable,
   StyleSheet,
   Text,
@@ -24,6 +25,9 @@ interface Edge {
   source: string;
   target: string;
   strength: number;
+  createdAt?: string | null;
+  eventId?: string | null;
+  eventName?: string;
 }
 
 const SOCIAL_URLS: Record<string, string> = {
@@ -118,6 +122,50 @@ export function GraphScreen() {
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<PublicCard | null>(null);
   const [selectedLoading, setSelectedLoading] = useState(false);
+  const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
+
+  // Pinch-to-zoom and drag-to-pan. Plain PanResponder — taps fall through to
+  // nodes/edges (we only claim the gesture once it moves or goes two-finger).
+  const [view, setView] = useState({ scale: 1, tx: 0, ty: 0 });
+  const gesture = useRef({ baseScale: 1, baseTx: 0, baseTy: 0, startDist: null as number | null });
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (evt, gs) =>
+        evt.nativeEvent.touches.length === 2 || Math.abs(gs.dx) + Math.abs(gs.dy) > 8,
+      onPanResponderMove: (evt, gs) => {
+        const g = gesture.current;
+        const touches = evt.nativeEvent.touches;
+        if (touches.length >= 2) {
+          const dist = Math.hypot(
+            touches[0].pageX - touches[1].pageX,
+            touches[0].pageY - touches[1].pageY
+          );
+          if (g.startDist === null) g.startDist = dist / g.baseScale;
+          const scale = Math.min(4, Math.max(0.4, dist / g.startDist));
+          setView((v) => ({ ...v, scale }));
+        } else {
+          g.startDist = null;
+          setView({ scale: g.baseScale, tx: g.baseTx + gs.dx, ty: g.baseTy + gs.dy });
+        }
+      },
+      onPanResponderRelease: () => {
+        const g = gesture.current;
+        setView((v) => {
+          g.baseScale = v.scale;
+          g.baseTx = v.tx;
+          g.baseTy = v.ty;
+          g.startDist = null;
+          return v;
+        });
+      },
+    })
+  ).current;
+
+  function resetView() {
+    gesture.current = { baseScale: 1, baseTx: 0, baseTy: 0, startDist: null };
+    setView({ scale: 1, tx: 0, ty: 0 });
+  }
 
   const load = useCallback(async () => {
     try {
@@ -215,24 +263,37 @@ export function GraphScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} {...panResponder.panHandlers}>
       <Svg width={width} height={svgHeight}>
+        <G transform={`translate(${view.tx},${view.ty}) scale(${view.scale})`}>
         {graph.edges.map((e) => {
           const a = positions.get(e.source);
           const b = positions.get(e.target);
           if (!a || !b) return null;
           const style = edgeStyles.get(`${e.source}-${e.target}`);
           return (
-            <Line
-              key={`${e.source}-${e.target}`}
-              x1={a.x}
-              y1={a.y}
-              x2={b.x}
-              y2={b.y}
-              stroke={style?.mine ? "#7ba0ff" : "#c9d4f2"}
-              strokeOpacity={style?.opacity ?? 0.6}
-              strokeWidth={Math.min(1 + e.strength, 5)}
-            />
+            <G key={`${e.source}-${e.target}`}>
+              <Line
+                x1={a.x}
+                y1={a.y}
+                x2={b.x}
+                y2={b.y}
+                stroke={style?.mine ? "#7ba0ff" : "#c9d4f2"}
+                strokeOpacity={style?.opacity ?? 0.6}
+                strokeWidth={Math.min(1 + e.strength, 5)}
+              />
+              {/* invisible fat twin so a 2px line is actually tappable */}
+              <Line
+                x1={a.x}
+                y1={a.y}
+                x2={b.x}
+                y2={b.y}
+                stroke="#000"
+                strokeOpacity={0.01}
+                strokeWidth={22}
+                onPress={() => setSelectedEdge(e)}
+              />
+            </G>
           );
         })}
         {graph.nodes.map((n) => {
@@ -258,13 +319,57 @@ export function GraphScreen() {
             </G>
           );
         })}
+        </G>
       </Svg>
+
+      {(view.scale !== 1 || view.tx !== 0 || view.ty !== 0) && (
+        <Pressable style={styles.resetButton} onPress={resetView}>
+          <Text style={styles.resetText}>Reset view</Text>
+        </Pressable>
+      )}
 
       <Text style={styles.hint}>
         {graph.nodes.filter((n) => n.distance === 1).length} direct ·{" "}
         {graph.nodes.filter((n) => n.distance > 1).length} extended ·{" "}
-        {computeGraphStats(graph.nodes, graph.edges).wafts} wafts — tap a node to see their card
+        {computeGraphStats(graph.nodes, graph.edges).wafts} wafts — tap nodes and edges, pinch to
+        zoom
       </Text>
+
+      {selectedEdge && (
+        <Pressable style={styles.overlay} onPress={() => setSelectedEdge(null)}>
+          <Pressable style={styles.sheet} onPress={() => {}}>
+            <Text style={styles.sheetName}>
+              {graph.nodes.find((n) => n.id === selectedEdge.source)?.name.split(" ")[0] ?? "?"}
+              {" ↔ "}
+              {graph.nodes.find((n) => n.id === selectedEdge.target)?.name.split(" ")[0] ?? "?"}
+            </Text>
+            <View style={styles.socialRow}>
+              <Text style={styles.socialPlatform}>Waft strength</Text>
+              <Text style={styles.socialHandle}>{selectedEdge.strength}</Text>
+            </View>
+            {selectedEdge.createdAt && (
+              <View style={styles.socialRow}>
+                <Text style={styles.socialPlatform}>Connected</Text>
+                <Text style={styles.socialHandle}>
+                  {new Date(selectedEdge.createdAt).toLocaleString(undefined, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
+                </Text>
+              </View>
+            )}
+            <View style={styles.socialRow}>
+              <Text style={styles.socialPlatform}>Where</Text>
+              <Text style={styles.socialHandle}>
+                {selectedEdge.eventName ?? (selectedEdge.eventId ? "an event" : "in the wild")}
+              </Text>
+            </View>
+            <Pressable onPress={() => setSelectedEdge(null)}>
+              <Text style={styles.close}>Close</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      )}
 
       {(selected || selectedLoading) && (
         <Pressable style={styles.overlay} onPress={() => setSelected(null)}>
@@ -310,6 +415,16 @@ const styles = StyleSheet.create({
   muted: { color: "#888", textAlign: "center" },
   emptyTitle: { fontSize: 20, fontWeight: "700" },
   hint: { color: "#888", fontSize: 12, textAlign: "center", marginTop: 4 },
+  resetButton: {
+    position: "absolute",
+    top: 10,
+    right: 14,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  resetText: { color: "#4a7dff", fontSize: 12, fontWeight: "600" },
   overlay: {
     position: "absolute",
     top: 0,

@@ -106,7 +106,14 @@ export const api = {
         avatarShape: string | null;
         distance: number;
       }[];
-      edges: { source: string; target: string; strength: number }[];
+      edges: {
+        source: string;
+        target: string;
+        strength: number;
+        createdAt: string | null;
+        eventId: string | null;
+        eventName?: string;
+      }[];
     }>(`/connections/me/graph?depth=${depth}`),
   userCard: (userId: string) => request<PublicCard>(`/users/${userId}/card`),
   eventByCode: (code: string) =>
