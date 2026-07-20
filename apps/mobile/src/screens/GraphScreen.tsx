@@ -126,8 +126,18 @@ export function GraphScreen() {
 
   // Pinch-to-zoom and drag-to-pan. Plain PanResponder — taps fall through to
   // nodes/edges (we only claim the gesture once it moves or goes two-finger).
+  // Zoom is anchored at the pinch midpoint: each step scales incrementally and
+  // re-solves the translation so the world point under the fingers stays put.
   const [view, setView] = useState({ scale: 1, tx: 0, ty: 0 });
-  const gesture = useRef({ baseScale: 1, baseTx: 0, baseTy: 0, startDist: null as number | null });
+  const gesture = useRef({
+    baseScale: 1,
+    baseTx: 0,
+    baseTy: 0,
+    offsetX: 0,
+    offsetY: 0,
+    pinch: null as { dist: number; focal: { x: number; y: number } } | null,
+  });
+  const containerRef = useRef<View>(null);
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
@@ -137,16 +147,38 @@ export function GraphScreen() {
         const g = gesture.current;
         const touches = evt.nativeEvent.touches;
         if (touches.length >= 2) {
-          const dist = Math.hypot(
-            touches[0].pageX - touches[1].pageX,
-            touches[0].pageY - touches[1].pageY
-          );
-          if (g.startDist === null) g.startDist = dist / g.baseScale;
-          const scale = Math.min(4, Math.max(0.4, dist / g.startDist));
-          setView((v) => ({ ...v, scale }));
+          const [t0, t1] = touches;
+          const dist = Math.hypot(t0.pageX - t1.pageX, t0.pageY - t1.pageY);
+          const focal = {
+            x: (t0.pageX + t1.pageX) / 2 - g.offsetX,
+            y: (t0.pageY + t1.pageY) / 2 - g.offsetY,
+          };
+          if (!g.pinch) {
+            g.pinch = { dist, focal };
+            return;
+          }
+          const prev = g.pinch;
+          setView((v) => {
+            const target = Math.min(4, Math.max(0.4, v.scale * (dist / prev.dist)));
+            const k = target / v.scale;
+            return {
+              scale: target,
+              tx: focal.x - k * (focal.x - v.tx) + (focal.x - prev.focal.x),
+              ty: focal.y - k * (focal.y - v.ty) + (focal.y - prev.focal.y),
+            };
+          });
+          g.pinch = { dist, focal };
         } else {
-          g.startDist = null;
-          setView({ scale: g.baseScale, tx: g.baseTx + gs.dx, ty: g.baseTy + gs.dy });
+          setView((v) => {
+            if (g.pinch) {
+              // pinch → single-finger: rebase so the pan doesn't jump
+              g.pinch = null;
+              g.baseScale = v.scale;
+              g.baseTx = v.tx - gs.dx;
+              g.baseTy = v.ty - gs.dy;
+            }
+            return { scale: g.baseScale, tx: g.baseTx + gs.dx, ty: g.baseTy + gs.dy };
+          });
         }
       },
       onPanResponderRelease: () => {
@@ -155,7 +187,7 @@ export function GraphScreen() {
           g.baseScale = v.scale;
           g.baseTx = v.tx;
           g.baseTy = v.ty;
-          g.startDist = null;
+          g.pinch = null;
           return v;
         });
       },
@@ -163,7 +195,11 @@ export function GraphScreen() {
   ).current;
 
   function resetView() {
-    gesture.current = { baseScale: 1, baseTx: 0, baseTy: 0, startDist: null };
+    const g = gesture.current;
+    g.baseScale = 1;
+    g.baseTx = 0;
+    g.baseTy = 0;
+    g.pinch = null;
     setView({ scale: 1, tx: 0, ty: 0 });
   }
 
@@ -263,7 +299,17 @@ export function GraphScreen() {
   }
 
   return (
-    <View style={styles.container} {...panResponder.panHandlers}>
+    <View
+      ref={containerRef}
+      style={styles.container}
+      onLayout={() =>
+        containerRef.current?.measureInWindow((x, y) => {
+          gesture.current.offsetX = x;
+          gesture.current.offsetY = y;
+        })
+      }
+      {...panResponder.panHandlers}
+    >
       <Svg width={width} height={svgHeight}>
         <G transform={`translate(${view.tx},${view.ty}) scale(${view.scale})`}>
         {graph.edges.map((e) => {
