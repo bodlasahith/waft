@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Footer, getWaftHref } from "@/components/Footer";
 
 const PLATFORM_META: Record<string, { label: string; color: string; urlPrefix: string }> = {
   instagram: { label: "Instagram", color: "#E1306C", urlPrefix: "https://instagram.com/" },
@@ -26,7 +27,8 @@ export default async function CardPage({ params }: { params: Promise<{ code: str
   if (!user) notFound();
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen p-6">
+    <main className="flex flex-col items-center min-h-screen p-6">
+      <div className="flex-1 flex items-center">
       <div className="w-full max-w-sm bg-neutral-900 rounded-2xl p-6 shadow-2xl border border-neutral-800">
         {user.photo_url && (
           <img
@@ -62,13 +64,15 @@ export default async function CardPage({ params }: { params: Promise<{ code: str
         <div className="mt-6 pt-4 border-t border-neutral-800 text-center">
           <p className="text-sm text-neutral-500 mb-2">Connect on Waft to see your shared network</p>
           <a
-            href="/"
+            href={getWaftHref}
             className="block w-full py-2.5 bg-white text-black text-center font-medium rounded-lg hover:bg-neutral-200 transition-colors"
           >
             Get Waft
           </a>
         </div>
       </div>
+      </div>
+      <Footer />
     </main>
   );
 }
