@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import * as Linking from "expo-linking";
 import {
   ActivityIndicator,
   Pressable,
@@ -23,6 +24,26 @@ export function SignInScreen() {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Fallback capture: if the auth browser doesn't self-close on the
+  // waft:// redirect (simulator quirk), iOS routes the deep link to the
+  // app — complete the exchange from here and dismiss the browser.
+  useEffect(() => {
+    async function handleUrl(url: string) {
+      if (!url.startsWith("waft://")) return;
+      const authCode = new URL(url).searchParams.get("code");
+      console.log("[oauth] deep-link fallback:", url.slice(0, 60), "code:", !!authCode);
+      if (!authCode) return;
+      WebBrowser.dismissAuthSession();
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(authCode);
+      if (exchangeError) console.log("[oauth] fallback exchange error:", exchangeError.message);
+    }
+    const sub = Linking.addEventListener("url", ({ url }) => handleUrl(url));
+    Linking.getInitialURL().then((url) => {
+      if (url) handleUrl(url);
+    });
+    return () => sub.remove();
+  }, []);
 
   async function sendCode() {
     setBusy(true);
@@ -53,10 +74,9 @@ export function SignInScreen() {
     setBusy(true);
     setError(null);
     try {
-      // Pin the native scheme: in a development-client build (expo-updates
-      // adds the dev launcher), bare makeRedirectUri() returns the dev-client
-      // deep link, which Supabase's allow-list rightly rejects.
-      const redirectTo = makeRedirectUri({ native: "waft://auth" });
+      // Pin the exact redirect that's allow-listed and historically proven;
+      // bare makeRedirectUri() can vary by build type.
+      const redirectTo = makeRedirectUri({ native: "waft://" });
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -69,11 +89,16 @@ export function SignInScreen() {
       });
       if (error) throw error;
 
+      console.log("[oauth] redirectTo:", redirectTo);
+      console.log("[oauth] authorize url:", data.url.slice(0, 140));
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+      console.log("[oauth] browser result:", result.type, "url" in result ? result.url : "");
       if (result.type === "success") {
         const code = new URL(result.url).searchParams.get("code");
+        console.log("[oauth] extracted code:", code ? code.slice(0, 8) + "…" : "NONE");
         if (!code) throw new Error("No auth code in redirect");
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (exchangeError) console.log("[oauth] exchange error:", exchangeError.message);
         if (exchangeError) throw exchangeError;
       }
     } catch (e: any) {
