@@ -5,14 +5,30 @@
   "build": {
     "production": {
       "autoIncrement": true,
-      "channel": "production"
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://ufoqifjfzvoktgluwfka.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_FluuW8V2POew-YO0SENIYA_oUvb4hAd",
+        "EXPO_PUBLIC_API_URL": "https://waft-production.up.railway.app",
+        "EXPO_PUBLIC_CARD_ORIGIN": "https://getwaft.app"
+      }
     },
     "preview": {
       "distribution": "internal",
-      "channel": "preview"
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://ufoqifjfzvoktgluwfka.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_FluuW8V2POew-YO0SENIYA_oUvb4hAd",
+        "EXPO_PUBLIC_API_URL": "https://waft-production.up.railway.app",
+        "EXPO_PUBLIC_CARD_ORIGIN": "https://getwaft.app"
+      }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "ascAppId": "6792655313"
+      }
+    }
   }
 }
