@@ -1,7 +1,10 @@
+import { Footer } from "@/components/Footer";
+
 export const metadata = { title: "Privacy — Waft" };
 
 export default function Privacy() {
   return (
+    <div className="min-h-screen flex flex-col">
     <main className="max-w-2xl mx-auto px-6 py-16 space-y-6">
       <h1 className="text-3xl font-bold">Privacy Policy</h1>
       <p className="text-neutral-400 text-sm">Last updated: July 2026 (beta)</p>
@@ -54,5 +57,7 @@ export default function Privacy() {
         </p>
       </section>
     </main>
+    <Footer />
+    </div>
   );
 }

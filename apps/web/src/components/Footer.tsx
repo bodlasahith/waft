@@ -10,9 +10,9 @@ export function Footer() {
         <Link href="/privacy" className="hover:text-neutral-300">
           Privacy
         </Link>
-        <a href="mailto:bodlasahith@gmail.com" className="hover:text-neutral-300">
+        <Link href="/contact" className="hover:text-neutral-300">
           Contact
-        </a>
+        </Link>
       </div>
       <p className="mt-3 text-neutral-600">© {new Date().getFullYear()} Waft</p>
     </footer>

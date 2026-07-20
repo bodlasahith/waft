@@ -7,6 +7,7 @@ import { eventRoutes, isWallExpired } from "./routes/events.js";
 import { supabase } from "./lib/supabase.js";
 import { userRoutes } from "./routes/users.js";
 import { groupRoutes } from "./routes/groups.js";
+import { feedbackRoutes } from "./routes/feedback.js";
 import { closeDriver } from "./lib/neo4j.js";
 import { subscribe } from "./lib/liveEvents.js";
 import { getEventGraph } from "./services/graph.js";
@@ -52,6 +53,7 @@ await app.register(connectionRoutes);
 await app.register(eventRoutes);
 await app.register(userRoutes);
 await app.register(groupRoutes);
+await app.register(feedbackRoutes);
 
 // WebSocket for live event graph updates. Sends the current graph on
 // connect, then pushes fresh snapshots whenever a connection or check-in
