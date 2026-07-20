@@ -9,7 +9,17 @@ import {
   View,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import * as Sentry from "@sentry/react-native";
 import { colors, radii } from "./src/theme";
+
+// Crash + error reporting. No-op without a DSN (local dev), active in
+// TestFlight/production builds where EXPO_PUBLIC_SENTRY_DSN is baked in.
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  enabled: !!process.env.EXPO_PUBLIC_SENTRY_DSN,
+  // A demo build is worth full traces; dial down if volume ever matters.
+  tracesSampleRate: 1.0,
+});
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "./src/supabase";
 import { api, ApiError } from "./src/api";
@@ -31,7 +41,7 @@ const TABS = [
 type TabKey = (typeof TABS)[number]["key"];
 type Profile = "loading" | "missing" | "ready";
 
-export default function App() {
+function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const [profile, setProfile] = useState<Profile>("loading");
@@ -193,3 +203,6 @@ const styles = StyleSheet.create({
   tabLabel: { color: colors.textMuted, fontSize: 14, fontWeight: "600" },
   tabActive: { color: colors.accent },
 });
+
+// Sentry.wrap adds an error boundary + touch/navigation breadcrumbs.
+export default Sentry.wrap(App);
