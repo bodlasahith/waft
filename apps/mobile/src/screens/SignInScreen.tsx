@@ -53,7 +53,10 @@ export function SignInScreen() {
     setBusy(true);
     setError(null);
     try {
-      const redirectTo = makeRedirectUri();
+      // Pin the native scheme: in a development-client build (expo-updates
+      // adds the dev launcher), bare makeRedirectUri() returns the dev-client
+      // deep link, which Supabase's allow-list rightly rejects.
+      const redirectTo = makeRedirectUri({ native: "waft://auth" });
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
