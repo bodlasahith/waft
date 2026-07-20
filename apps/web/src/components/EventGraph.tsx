@@ -7,9 +7,23 @@ import Sigma from "sigma";
 interface Props {
   nodes: { id: string; name: string }[];
   edges: { source: string; target: string; strength: number }[];
+  // id -> rank (1-based) for the event leaderboard; top nodes get a crown + glow.
+  highlights?: Record<string, number>;
 }
 
-export default function EventGraph({ nodes, edges }: Props) {
+const MEDAL = ["", "🥇", "🥈", "🥉"];
+function rankLabel(rank: number, name: string) {
+  const medal = MEDAL[rank] ?? "👑";
+  return `${medal} ${name}`;
+}
+function rankColor(rank: number) {
+  if (rank === 1) return "#FFD700";
+  if (rank === 2) return "#D8D8E0";
+  if (rank === 3) return "#E0A66B";
+  return "#8FA6FF";
+}
+
+export default function EventGraph({ nodes, edges, highlights = {} }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const sigmaRef = useRef<Sigma | null>(null);
   const graphRef = useRef<Graph | null>(null);
@@ -48,6 +62,11 @@ export default function EventGraph({ nodes, edges }: Props) {
           color: "#ffffff",
         });
       }
+      // Restyle every refresh so the leaderboard updates live as the wall grows.
+      const rank = highlights[node.id];
+      graph.setNodeAttribute(node.id, "label", rank ? rankLabel(rank, node.name) : node.name);
+      graph.setNodeAttribute(node.id, "color", rank ? rankColor(rank) : "#ffffff");
+      graph.setNodeAttribute(node.id, "size", rank ? 20 - rank * 1.5 : 8);
     }
 
     for (const edge of edges) {
@@ -61,7 +80,7 @@ export default function EventGraph({ nodes, edges }: Props) {
     }
 
     sigmaRef.current?.refresh();
-  }, [nodes, edges]);
+  }, [nodes, edges, highlights]);
 
   return <div ref={containerRef} className="w-full h-full bg-neutral-950" />;
 }

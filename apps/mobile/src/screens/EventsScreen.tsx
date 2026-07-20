@@ -17,6 +17,7 @@ import QRCode from "react-native-qrcode-svg";
 import { api, WaftEvent } from "../api";
 import { CARD_ORIGIN } from "../config";
 import { setActiveEvent } from "../eventContext";
+import { computeGraphStats } from "@waft/shared";
 
 type Mode =
   | { kind: "list" }
@@ -312,6 +313,7 @@ function EventDetail({
   const [event, setEvent] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [attendees, setAttendees] = useState<{ id: string; name: string }[] | null>(null);
+  const [leaders, setLeaders] = useState<{ id: string; name: string; score: number }[]>([]);
   const [met, setMet] = useState<{ id: string; name: string }[] | null>(null);
   const [wallExpired, setWallExpired] = useState(false);
   const ended = !!event.ends_at && new Date(event.ends_at) <= new Date();
@@ -327,7 +329,11 @@ function EventDetail({
   const loadAttendees = useCallback(() => {
     api
       .eventGraph(event.id)
-      .then((g) => setAttendees(g.nodes))
+      .then((g) => {
+        setAttendees(g.nodes);
+        // Leaderboard: most wafts made at this event (degree).
+        setLeaders(computeGraphStats(g.nodes, g.edges, 5).topConnectors);
+      })
       .catch((e) => {
         if (e?.status === 410) setWallExpired(true);
         setAttendees((prev) => prev ?? []);
@@ -384,6 +390,22 @@ function EventDetail({
         <Text style={styles.muted}>
           {wallExpired ? "The live wall has expired." : "The live wall stays up for 24 hours."}
         </Text>
+      )}
+
+      {leaders.length > 0 && (
+        <View style={styles.iceList}>
+          <Text style={styles.iceLabel}>🏆 Leaderboard</Text>
+          {leaders.map((p, i) => (
+            <View key={p.id} style={styles.leaderRow}>
+              <Text style={styles.iceItem}>
+                {["🥇", "🥈", "🥉"][i] ?? `${i + 1}.`} {p.name}
+              </Text>
+              <Text style={styles.leaderScore}>
+                {p.score} waft{p.score === 1 ? "" : "s"}
+              </Text>
+            </View>
+          ))}
+        </View>
       )}
 
       {met && met.length > 0 && (
@@ -516,6 +538,8 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   iceItem: { fontSize: 14, color: colors.text },
+  leaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  leaderScore: { color: colors.textMuted, fontSize: 12 },
   endedTag: { color: colors.danger, fontWeight: "600", fontSize: 13 },
   scheduleRow: {
     flexDirection: "row",
