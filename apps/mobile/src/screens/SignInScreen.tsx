@@ -18,6 +18,44 @@ WebBrowser.maybeCompleteAuthSession();
 
 type Step = "email" | "code";
 
+// Both the auth-browser result and the deep-link fallback can observe the
+// same redirect; only the first observer acts on it.
+const handledCodes = new Set<string>();
+
+// Regex extraction — host-less URLs (waft://...) are the shape URL parsers
+// fumble, so never trust them for this.
+function extractParam(url: string, name: string): string | null {
+  const match = url.match(new RegExp(`[?&#]${name}=([^&#]+)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+// Implicit flow: tokens ride the redirect fragment. Set them directly —
+// no code exchange, no server-side flow state. Returns an error message
+// or null on success/no-op.
+async function completeFromRedirect(url: string): Promise<string | null> {
+  if (handledCodes.has(url)) return null;
+  handledCodes.add(url);
+  const accessToken = extractParam(url, "access_token");
+  const refreshToken = extractParam(url, "refresh_token");
+  if (accessToken && refreshToken) {
+    const { error } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+    if (error) console.log("[oauth] setSession error:", error.message);
+    return error ? error.message : null;
+  }
+  // PKCE-style ?code= fallback, in case the server ever sends one
+  const authCode = extractParam(url, "code");
+  if (authCode) {
+    const { error } = await supabase.auth.exchangeCodeForSession(authCode);
+    if (error) console.log("[oauth] exchange error:", error.message);
+    return error ? error.message : null;
+  }
+  const errDesc = extractParam(url, "error_description");
+  return errDesc ? errDesc : "no tokens in redirect";
+}
+
 export function SignInScreen() {
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
@@ -31,12 +69,9 @@ export function SignInScreen() {
   useEffect(() => {
     async function handleUrl(url: string) {
       if (!url.startsWith("waft://")) return;
-      const authCode = new URL(url).searchParams.get("code");
-      console.log("[oauth] deep-link fallback:", url.slice(0, 60), "code:", !!authCode);
-      if (!authCode) return;
+      console.log("[oauth] deep-link fallback:", url.slice(0, 60));
       WebBrowser.dismissAuthSession();
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(authCode);
-      if (exchangeError) console.log("[oauth] fallback exchange error:", exchangeError.message);
+      await completeFromRedirect(url);
     }
     const sub = Linking.addEventListener("url", ({ url }) => handleUrl(url));
     Linking.getInitialURL().then((url) => {
@@ -94,12 +129,10 @@ export function SignInScreen() {
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
       console.log("[oauth] browser result:", result.type, "url" in result ? result.url : "");
       if (result.type === "success") {
-        const code = new URL(result.url).searchParams.get("code");
-        console.log("[oauth] extracted code:", code ? code.slice(0, 8) + "…" : "NONE");
-        if (!code) throw new Error("No auth code in redirect");
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-        if (exchangeError) console.log("[oauth] exchange error:", exchangeError.message);
-        if (exchangeError) throw exchangeError;
+        const message = await completeFromRedirect(result.url);
+        if (message) throw new Error(`sign-in failed: ${message}`);
+      } else {
+        console.log("[oauth] non-success result:", result.type);
       }
     } catch (e: any) {
       setError(e.message ?? "Sign-in failed.");
