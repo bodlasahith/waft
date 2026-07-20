@@ -10,7 +10,8 @@
         "EXPO_PUBLIC_SUPABASE_URL": "https://ufoqifjfzvoktgluwfka.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_FluuW8V2POew-YO0SENIYA_oUvb4hAd",
         "EXPO_PUBLIC_API_URL": "https://waft-production.up.railway.app",
-        "EXPO_PUBLIC_CARD_ORIGIN": "https://getwaft.app"
+        "EXPO_PUBLIC_CARD_ORIGIN": "https://getwaft.app",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://d4394f862d46f891c07f7069a48d1939@o4511769077612544.ingest.us.sentry.io/4511769081413637"
       }
     },
     "preview": {
@@ -20,7 +21,8 @@
         "EXPO_PUBLIC_SUPABASE_URL": "https://ufoqifjfzvoktgluwfka.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_FluuW8V2POew-YO0SENIYA_oUvb4hAd",
         "EXPO_PUBLIC_API_URL": "https://waft-production.up.railway.app",
-        "EXPO_PUBLIC_CARD_ORIGIN": "https://getwaft.app"
+        "EXPO_PUBLIC_CARD_ORIGIN": "https://getwaft.app",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://d4394f862d46f891c07f7069a48d1939@o4511769077612544.ingest.us.sentry.io/4511769081413637"
       }
     }
   },
