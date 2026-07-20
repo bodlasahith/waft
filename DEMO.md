@@ -1,7 +1,20 @@
-# Demo Plan — YC AI Startup School, July 25–26, 2026
+# Demo Plan — YC AI Startup School (July 25–26) + Pear Prime
 
 The pitch is the product: every "what's your contact?" moment is a demo.
 Funnel: **scan → web card → Get Waft (TestFlight) → they scan the next person.**
+
+## Pear Prime (~40 handpicked people) — the beachhead
+
+A curated 40-person room is Waft's perfect habitat: full-room adoption is
+actually achievable, and the event's purpose ("meet each other") is the
+product's purpose.
+
+- [ ] Email Pear organizers offering the wall as the event's networking layer
+      (projected live graph + AI icebreakers themed to Pear Prime, zero setup)
+- [ ] Create the "Pear Prime" event with tailored icebreakers
+- [ ] TestFlight QR + join code printed for tables
+- [ ] Capture the artifact: screenshot/recording of the fully-connected room
+      graph + leaderboard — this is the "result" slide for the YC weekend
 
 ## ⚠️ The one thing that can brick the demo
 
