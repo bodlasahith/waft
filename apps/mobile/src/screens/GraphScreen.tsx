@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import Svg, { Circle, G, Line, Rect, Text as SvgText } from "react-native-svg";
 import { computeGraphStats } from "@waft/shared";
+import { colors as theme } from "../theme";
 import { api } from "../api";
 import { AvatarNode } from "../components/AvatarNode";
 
@@ -381,7 +382,7 @@ export function GraphScreen() {
                 y1={a.y}
                 x2={b.x}
                 y2={b.y}
-                stroke={style?.mine ? "#7ba0ff" : "#c9d4f2"}
+                stroke={style?.mine ? theme.edgeMine : theme.edgeFringe}
                 strokeOpacity={style?.opacity ?? 0.6}
                 strokeWidth={Math.min(1 + e.strength, 5)}
               />
@@ -407,6 +408,12 @@ export function GraphScreen() {
           const fallback = isMe ? "#4a7dff" : n.distance === 1 ? "#7ba0ff" : "#b8c8f5";
           return (
             <G key={n.id}>
+              {isMe && (
+                <>
+                  <Circle cx={p.x} cy={p.y} r={r + 14} fill={theme.accent} opacity={0.08} />
+                  <Circle cx={p.x} cy={p.y} r={r + 7} fill={theme.accent} opacity={0.14} />
+                </>
+              )}
               <AvatarNode
                 x={p.x}
                 y={p.y}
@@ -416,7 +423,7 @@ export function GraphScreen() {
                 initial={n.name.charAt(0).toUpperCase()}
                 onPress={() => toggleNode(n)}
               />
-              <SvgText x={p.x} y={p.y + r + 16} fontSize={11} fill="#555" textAnchor="middle">
+              <SvgText x={p.x} y={p.y + r + 16} fontSize={11} fill="#9AA5C0" textAnchor="middle">
                 {isMe ? "You" : n.name.split(" ")[0]}
               </SvgText>
             </G>
@@ -436,7 +443,7 @@ export function GraphScreen() {
                   x={p.x}
                   y={p.y - baseR - 12 * expandProgress}
                   fontSize={11}
-                  fill="#999"
+                  fill="#8A93A8"
                   opacity={expandProgress}
                   textAnchor="middle"
                 >
@@ -459,7 +466,7 @@ export function GraphScreen() {
                   opacity={expandProgress}
                   onPress={() => href && Linking.openURL(href)}
                 >
-                  <Circle cx={x} cy={y} r={br} fill={badge.color} stroke="#fff" strokeWidth={2} />
+                  <Circle cx={x} cy={y} r={br} fill={badge.color} stroke={theme.bg} strokeWidth={2} />
                   <SvgText
                     x={x}
                     y={y + br * 0.35}
@@ -474,7 +481,7 @@ export function GraphScreen() {
                     x={x}
                     y={y + br + 11}
                     fontSize={8.5}
-                    fill="#777"
+                    fill="#8A93A8"
                     textAnchor="middle"
                   >
                     {s.handle.length > 14 ? s.handle.slice(0, 13) + "…" : s.handle}
@@ -542,19 +549,21 @@ export function GraphScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8, padding: 24 },
-  muted: { color: "#888", textAlign: "center" },
-  emptyTitle: { fontSize: 20, fontWeight: "700" },
-  hint: { color: "#888", fontSize: 12, textAlign: "center", marginTop: 4 },
+  muted: { color: theme.textMuted, textAlign: "center" },
+  emptyTitle: { fontSize: 20, fontWeight: "800", color: theme.text },
+  hint: { color: theme.textFaint, fontSize: 12, textAlign: "center", marginTop: 4 },
   resetButton: {
     position: "absolute",
     top: 10,
     right: 14,
-    backgroundColor: "rgba(255,255,255,0.9)",
+    backgroundColor: theme.surface,
+    borderWidth: 1,
+    borderColor: theme.border,
     borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
-  resetText: { color: "#4a7dff", fontSize: 12, fontWeight: "600" },
+  resetText: { color: theme.accent, fontSize: 12, fontWeight: "600" },
   overlay: {
     position: "absolute",
     top: 0,
@@ -565,22 +574,24 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   sheet: {
-    backgroundColor: "#fff",
+    backgroundColor: theme.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
+    borderWidth: 1,
+    borderColor: theme.border,
     padding: 24,
     gap: 10,
     minHeight: 180,
   },
-  sheetName: { fontSize: 20, fontWeight: "700", marginBottom: 4 },
+  sheetName: { fontSize: 20, fontWeight: "800", marginBottom: 4, color: theme.text },
   socialRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#eee",
+    borderBottomColor: theme.border,
   },
-  socialPlatform: { fontWeight: "600", textTransform: "capitalize" },
-  socialHandle: { color: "#4a7dff" },
-  close: { color: "#888", textAlign: "center", paddingTop: 12 },
+  socialPlatform: { fontWeight: "600", textTransform: "capitalize", color: theme.text },
+  socialHandle: { color: theme.accent },
+  close: { color: theme.textMuted, textAlign: "center", paddingTop: 12 },
 });

@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Button, StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, TextInput, View } from "react-native";
+import { colors, radii } from "../theme";
+import { AppButton } from "../components/UI";
 import { api } from "../api";
 
 /**
@@ -30,14 +32,16 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
       <TextInput
         style={styles.input}
         placeholder="Your name"
+        placeholderTextColor={colors.textFaint}
         autoFocus
         value={name}
         onChangeText={setName}
       />
-      <Button
+      <AppButton
         title="Get my Waft card"
         onPress={submit}
-        disabled={busy || name.trim().length === 0}
+        disabled={name.trim().length === 0}
+        busy={busy}
       />
       {error && <Text style={styles.error}>{error}</Text>}
     </View>
@@ -46,14 +50,15 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", padding: 32, gap: 16 },
-  title: { fontSize: 22, fontWeight: "700", textAlign: "center" },
+  title: { fontSize: 24, fontWeight: "800", textAlign: "center", color: colors.text },
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    padding: 14,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    padding: 15,
     fontSize: 16,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
+    color: colors.text,
   },
-  error: { color: "#c00", textAlign: "center" },
+  error: { color: colors.danger, textAlign: "center" },
 });

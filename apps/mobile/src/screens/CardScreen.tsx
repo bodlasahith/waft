@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import { colors, radii } from "../theme";
 import QRCode from "react-native-qrcode-svg";
 import Svg from "react-native-svg";
 import { api, MyProfile } from "../api";
@@ -69,6 +70,7 @@ export function CardScreen() {
 
   return (
     <View style={styles.center}>
+      <CardEntrance>
       <Pressable onPress={() => setPickingAvatar(true)} style={styles.avatarRow}>
         <Svg width={44} height={44}>
           <AvatarNode
@@ -94,15 +96,45 @@ export function CardScreen() {
       <Pressable onPress={() => setPickingAvatar(true)}>
         <Text style={styles.editLink}>Customize your node</Text>
       </Pressable>
+      </CardEntrance>
     </View>
+  );
+}
+
+/** Springs the card in on mount — subtle, but the first thing you see. */
+function CardEntrance({ children }: { children: ReactNode }) {
+  const anim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.spring(anim, { toValue: 1, friction: 7, useNativeDriver: true }).start();
+  }, [anim]);
+  return (
+    <Animated.View
+      style={{
+        alignItems: "center",
+        gap: 16,
+        opacity: anim,
+        transform: [{ scale: anim.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }) }],
+      }}
+    >
+      {children}
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 16, padding: 24 },
   avatarRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  name: { fontSize: 24, fontWeight: "700" },
-  qrWrap: { padding: 16, backgroundColor: "#fff", borderRadius: 16 },
-  muted: { color: "#888", textAlign: "center" },
-  editLink: { color: "#4a7dff", fontSize: 14, fontWeight: "500" },
+  name: { fontSize: 26, fontWeight: "800", color: colors.text, letterSpacing: -0.5 },
+  qrWrap: {
+    padding: 18,
+    backgroundColor: colors.qrTile,
+    borderRadius: radii.lg,
+    shadowColor: colors.accent,
+    shadowOpacity: 0.45,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 12,
+  },
+  muted: { color: colors.textMuted, textAlign: "center" },
+  editLink: { color: colors.accent, fontSize: 14, fontWeight: "600" },
 });

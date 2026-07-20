@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { ActivityIndicator, Button, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { colors as themeColors, radii } from "../theme";
+import { AppButton } from "../components/UI";
 import Svg from "react-native-svg";
 import { AVATAR_COLORS, AVATAR_SHAPES } from "@waft/shared";
 import { api, Avatar } from "../api";
@@ -65,7 +67,7 @@ export function AvatarPickerScreen({ current, initial, onDone }: Props) {
         ))}
       </View>
 
-      <Button title="Save" onPress={save} disabled={busy} />
+      <AppButton title="Save" onPress={save} busy={busy} />
       <Pressable onPress={onDone}>
         <Text style={styles.cancel}>Cancel</Text>
       </Pressable>
@@ -77,15 +79,29 @@ export function AvatarPickerScreen({ current, initial, onDone }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24, gap: 12 },
-  title: { fontSize: 22, fontWeight: "700" },
-  muted: { color: "#888", textAlign: "center" },
-  sectionLabel: { color: "#888", alignSelf: "flex-start", marginTop: 8 },
+  title: { fontSize: 24, fontWeight: "800", color: themeColors.text, letterSpacing: -0.5 },
+  muted: { color: themeColors.textMuted, textAlign: "center" },
+  sectionLabel: {
+    color: themeColors.textFaint,
+    alignSelf: "flex-start",
+    marginTop: 8,
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 1.2,
+  },
   swatches: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   swatch: { width: 36, height: 36, borderRadius: 18 },
-  swatchSelected: { borderWidth: 3, borderColor: "#222" },
+  swatchSelected: { borderWidth: 3, borderColor: themeColors.text },
   shapes: { flexDirection: "row", gap: 10 },
-  shapeOption: { borderRadius: 10, borderWidth: 2, borderColor: "transparent", padding: 2 },
-  shapeSelected: { borderColor: "#222" },
-  cancel: { color: "#888", paddingTop: 4 },
-  error: { color: "#c00" },
+  shapeOption: {
+    borderRadius: radii.sm,
+    borderWidth: 2,
+    borderColor: "transparent",
+    padding: 2,
+    backgroundColor: themeColors.surface,
+  },
+  shapeSelected: { borderColor: themeColors.accent },
+  cancel: { color: themeColors.textMuted, paddingTop: 4 },
+  error: { color: themeColors.danger },
 });

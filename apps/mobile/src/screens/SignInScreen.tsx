@@ -1,13 +1,14 @@
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Button,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { colors, radii } from "../theme";
+import { AppButton } from "../components/UI";
 import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri } from "expo-auth-session";
 import { supabase } from "../supabase";
@@ -81,7 +82,7 @@ export function SignInScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.logo}>Waft</Text>
+      <Text style={styles.logo}>waft<Text style={{ color: colors.accent }}>.</Text></Text>
       <Text style={styles.tagline}>Scan once. Connect everywhere.</Text>
 
       {step === "email" ? (
@@ -89,16 +90,18 @@ export function SignInScreen() {
           <TextInput
             style={styles.input}
             placeholder="you@example.com"
+            placeholderTextColor={colors.textFaint}
             autoCapitalize="none"
             autoComplete="email"
             keyboardType="email-address"
             value={email}
             onChangeText={setEmail}
           />
-          <Button
+          <AppButton
             title="Send sign-in code"
             onPress={sendCode}
-            disabled={busy || !email.includes("@")}
+            disabled={!email.includes("@")}
+            busy={busy}
           />
         </>
       ) : (
@@ -107,6 +110,7 @@ export function SignInScreen() {
           <TextInput
             style={styles.input}
             placeholder="123456"
+            placeholderTextColor={colors.textFaint}
             keyboardType="number-pad"
             textContentType="oneTimeCode"
             autoComplete="one-time-code"
@@ -114,7 +118,7 @@ export function SignInScreen() {
             value={code}
             onChangeText={setCode}
           />
-          <Button title="Verify" onPress={verifyCode} disabled={busy || code.length < 6} />
+          <AppButton title="Verify" onPress={verifyCode} disabled={code.length < 6} busy={busy} />
           <Pressable onPress={() => setStep("email")}>
             <Text style={styles.link}>Use a different email</Text>
           </Pressable>
@@ -122,7 +126,12 @@ export function SignInScreen() {
       )}
 
       <View style={styles.divider} />
-      <Button title="Continue with Google" onPress={() => signInWithProvider("google")} disabled={busy} />
+      <AppButton
+        title="Continue with Google"
+        variant="ghost"
+        onPress={() => signInWithProvider("google")}
+        disabled={busy}
+      />
 
       {busy && <ActivityIndicator style={styles.spinner} />}
       {error && <Text style={styles.error}>{error}</Text>}
@@ -132,19 +141,26 @@ export function SignInScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", padding: 32, gap: 12 },
-  logo: { fontSize: 40, fontWeight: "800", textAlign: "center" },
-  tagline: { color: "#888", textAlign: "center", marginBottom: 24 },
+  logo: {
+    fontSize: 52,
+    fontWeight: "800",
+    textAlign: "center",
+    color: colors.text,
+    letterSpacing: -1.5,
+  },
+  tagline: { color: colors.textMuted, textAlign: "center", marginBottom: 28, fontSize: 15 },
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    padding: 14,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    padding: 15,
     fontSize: 16,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
+    color: colors.text,
   },
-  divider: { height: 1, backgroundColor: "#eee", marginVertical: 16 },
-  muted: { color: "#888", textAlign: "center" },
-  link: { color: "#4a7dff", textAlign: "center", paddingVertical: 8 },
+  divider: { height: 1, backgroundColor: colors.border, marginVertical: 16 },
+  muted: { color: colors.textMuted, textAlign: "center" },
+  link: { color: colors.accent, textAlign: "center", paddingVertical: 8 },
   spinner: { marginTop: 8 },
-  error: { color: "#c00", textAlign: "center" },
+  error: { color: colors.danger, textAlign: "center" },
 });

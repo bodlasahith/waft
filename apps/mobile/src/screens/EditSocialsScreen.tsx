@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Button,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -9,6 +8,8 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { colors, radii } from "../theme";
+import { AppButton } from "../components/UI";
 import { PLATFORMS, Platform } from "@waft/shared";
 import { api } from "../api";
 
@@ -107,6 +108,7 @@ export function EditSocialsScreen({ socials, onChanged, onClose }: Props) {
           <TextInput
             style={styles.input}
             placeholder={adding === "phone" ? "+1 555 123 4567" : "your handle"}
+            placeholderTextColor={colors.textFaint}
             autoCapitalize="none"
             autoCorrect={false}
             autoFocus
@@ -115,7 +117,7 @@ export function EditSocialsScreen({ socials, onChanged, onClose }: Props) {
             onChangeText={setHandle}
           />
           <View style={styles.addActions}>
-            <Button title="Add" onPress={add} disabled={busy || handle.trim().length === 0} />
+            <AppButton title="Add" onPress={add} disabled={handle.trim().length === 0} busy={busy} />
             <Pressable onPress={() => { setAdding(null); setHandle(""); }}>
               <Text style={styles.cancel}>Cancel</Text>
             </Pressable>
@@ -145,41 +147,52 @@ export function EditSocialsScreen({ socials, onChanged, onClose }: Props) {
 const styles = StyleSheet.create({
   container: { padding: 24, gap: 12 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  title: { fontSize: 22, fontWeight: "700" },
-  done: { color: "#4a7dff", fontSize: 16, fontWeight: "600" },
+  title: { fontSize: 24, fontWeight: "800", color: colors.text, letterSpacing: -0.5 },
+  done: { color: colors.accent, fontSize: 16, fontWeight: "700" },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 14,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    padding: 15,
   },
-  platform: { fontWeight: "600", fontSize: 15 },
-  handle: { color: "#666", fontSize: 13, marginTop: 2 },
-  remove: { color: "#c00", fontSize: 13 },
-  sectionLabel: { color: "#888", marginTop: 8 },
+  platform: { fontWeight: "700", fontSize: 15, color: colors.text },
+  handle: { color: colors.textMuted, fontSize: 13, marginTop: 2 },
+  remove: { color: colors.danger, fontSize: 13 },
+  sectionLabel: { color: colors.textFaint, marginTop: 8, fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1.2 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   chip: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: "#fff",
+    borderColor: colors.border,
+    borderRadius: radii.pill,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: colors.surface,
   },
-  chipText: { fontSize: 13 },
-  addBox: { backgroundColor: "#fff", borderRadius: 12, padding: 14, gap: 10 },
+  chipText: { fontSize: 13, color: colors.text, fontWeight: "600" },
+  addBox: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    padding: 15,
+    gap: 10,
+  },
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
+    borderColor: colors.border,
+    borderRadius: radii.sm,
     padding: 12,
     fontSize: 15,
+    backgroundColor: colors.surfaceAlt,
+    color: colors.text,
   },
   addActions: { flexDirection: "row", alignItems: "center", gap: 16 },
-  cancel: { color: "#888" },
-  muted: { color: "#888", textAlign: "center", marginVertical: 8 },
+  cancel: { color: colors.textMuted },
+  muted: { color: colors.textMuted, textAlign: "center", marginVertical: 8 },
   spinner: { marginTop: 4 },
-  error: { color: "#c00", textAlign: "center" },
+  error: { color: colors.danger, textAlign: "center" },
 });

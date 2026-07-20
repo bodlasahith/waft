@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Button, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { colors, radii } from "../theme";
+import { AppButton } from "../components/UI";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { api, ApiError } from "../api";
 import { CARD_ORIGIN } from "../config";
@@ -34,7 +36,7 @@ export function ScanScreen() {
     return (
       <View style={styles.center}>
         <Text style={styles.muted}>Waft needs the camera to scan QR codes.</Text>
-        <Button title="Allow camera" onPress={requestPermission} />
+        <AppButton title="Allow camera" onPress={requestPermission} />
       </View>
     );
   }
@@ -95,7 +97,7 @@ export function ScanScreen() {
             <Text style={styles.icebreakerText}>{state.icebreaker}</Text>
           </View>
         )}
-        <Button title="Scan again" onPress={() => setState({ kind: "scanning" })} />
+        <AppButton title="Scan again" variant="ghost" onPress={() => setState({ kind: "scanning" })} />
       </View>
     );
   }
@@ -130,22 +132,24 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: "hidden",
   },
-  muted: { color: "#888", textAlign: "center" },
+  muted: { color: colors.textMuted, textAlign: "center" },
   icebreakerBox: {
-    backgroundColor: "#fff",
-    borderRadius: 14,
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: 18,
     gap: 6,
     marginHorizontal: 8,
   },
   icebreakerLabel: {
-    color: "#4a7dff",
+    color: colors.accent,
     fontSize: 12,
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 1,
   },
-  icebreakerText: { fontSize: 17, textAlign: "center", fontStyle: "italic" },
-  success: { fontSize: 20, fontWeight: "600", textAlign: "center" },
-  error: { fontSize: 16, color: "#c00", textAlign: "center" },
+  icebreakerText: { fontSize: 17, textAlign: "center", fontStyle: "italic", color: colors.text },
+  success: { fontSize: 20, fontWeight: "700", textAlign: "center", color: colors.text },
+  error: { fontSize: 16, color: colors.danger, textAlign: "center" },
 });

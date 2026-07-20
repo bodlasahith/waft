@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   Pressable,
   SafeAreaView,
   StyleSheet,
@@ -8,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { colors, radii } from "./src/theme";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "./src/supabase";
 import { api, ApiError } from "./src/api";
@@ -34,6 +36,15 @@ export default function App() {
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const [profile, setProfile] = useState<Profile>("loading");
   const [tab, setTab] = useState<TabKey>("card");
+
+  // Quick crossfade when switching tabs.
+  const tabFade = useRef(new Animated.Value(1)).current;
+  function switchTab(next: TabKey) {
+    if (next === tab) return;
+    tabFade.setValue(0);
+    setTab(next);
+    Animated.timing(tabFade, { toValue: 1, duration: 220, useNativeDriver: true }).start();
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -78,7 +89,8 @@ export default function App() {
   if (!sessionLoaded) {
     return (
       <SafeAreaView style={[styles.root, styles.center]}>
-        <ActivityIndicator />
+        <StatusBar style="light" />
+        <ActivityIndicator color={colors.accent} />
       </SafeAreaView>
     );
   }
@@ -86,7 +98,7 @@ export default function App() {
   if (!session) {
     return (
       <SafeAreaView style={styles.root}>
-        <StatusBar style="auto" />
+        <StatusBar style="light" />
         <SignInScreen />
       </SafeAreaView>
     );
@@ -95,7 +107,7 @@ export default function App() {
   if (profile === "missing") {
     return (
       <SafeAreaView style={styles.root}>
-        <StatusBar style="auto" />
+        <StatusBar style="light" />
         <OnboardingScreen onDone={() => setProfile("ready")} />
       </SafeAreaView>
     );
@@ -107,8 +119,8 @@ export default function App() {
   if (profile === "loading") {
     return (
       <SafeAreaView style={[styles.root, styles.center]}>
-        <StatusBar style="auto" />
-        <ActivityIndicator />
+        <StatusBar style="light" />
+        <ActivityIndicator color={colors.accent} />
         <Text style={styles.loadingHint}>Setting up your card…</Text>
       </SafeAreaView>
     );
@@ -118,48 +130,66 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.root}>
-      <StatusBar style="auto" />
+      <StatusBar style="light" />
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Waft</Text>
+        <Text style={styles.headerTitle}>
+          waft<Text style={styles.headerDot}>.</Text>
+        </Text>
         <Pressable onPress={() => supabase.auth.signOut()}>
           <Text style={styles.signOut}>Sign out</Text>
         </Pressable>
       </View>
-      <View style={styles.content}>
+      <Animated.View style={[styles.content, { opacity: tabFade }]}>
         <Screen />
-      </View>
-      <View style={styles.tabBar}>
-        {TABS.map((t) => (
-          <Pressable key={t.key} style={styles.tab} onPress={() => setTab(t.key)}>
-            <Text style={[styles.tabLabel, tab === t.key && styles.tabActive]}>{t.label}</Text>
-          </Pressable>
-        ))}
+      </Animated.View>
+      <View style={styles.tabBarWrap}>
+        <View style={styles.tabBar}>
+          {TABS.map((t) => (
+            <Pressable
+              key={t.key}
+              style={[styles.tab, tab === t.key && styles.tabActivePill]}
+              onPress={() => switchTab(t.key)}
+            >
+              <Text style={[styles.tabLabel, tab === t.key && styles.tabActive]}>{t.label}</Text>
+            </Pressable>
+          ))}
+        </View>
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#fafafa" },
+  root: { flex: 1, backgroundColor: colors.bg },
   center: { alignItems: "center", justifyContent: "center" },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 12,
   },
-  headerTitle: { fontSize: 17, fontWeight: "700" },
-  loadingHint: { color: "#888", marginTop: 12 },
-  signOut: { color: "#888", fontSize: 13 },
+  headerTitle: { fontSize: 22, fontWeight: "800", color: colors.text, letterSpacing: -0.5 },
+  headerDot: { color: colors.accent },
+  loadingHint: { color: colors.textMuted, marginTop: 12 },
+  signOut: { color: colors.textFaint, fontSize: 13 },
   content: { flex: 1 },
+  tabBarWrap: { paddingHorizontal: 16, paddingBottom: 6, paddingTop: 4 },
   tabBar: {
     flexDirection: "row",
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#ddd",
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
+    borderRadius: radii.pill,
+    padding: 5,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  tab: { flex: 1, alignItems: "center", paddingVertical: 14 },
-  tabLabel: { color: "#888", fontSize: 15 },
-  tabActive: { color: "#4a7dff", fontWeight: "600" },
+  tab: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 10,
+    borderRadius: radii.pill,
+  },
+  tabActivePill: { backgroundColor: colors.accentSoft },
+  tabLabel: { color: colors.textMuted, fontSize: 14, fontWeight: "600" },
+  tabActive: { color: colors.accent },
 });

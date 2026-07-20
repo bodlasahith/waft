@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Button,
   Linking,
   Pressable,
   ScrollView,
@@ -11,6 +10,8 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { colors, radii } from "../theme";
+import { AppButton } from "../components/UI";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import QRCode from "react-native-qrcode-svg";
 import { api, WaftEvent } from "../api";
@@ -170,6 +171,7 @@ function JoinByCode({ onJoined }: { onJoined: () => void }) {
         <TextInput
           style={[styles.input, styles.joinInput]}
           placeholder="Event code"
+        placeholderTextColor={colors.textFaint}
           autoCapitalize="none"
           autoCorrect={false}
           value={code}
@@ -178,7 +180,7 @@ function JoinByCode({ onJoined }: { onJoined: () => void }) {
             setMessage(null);
           }}
         />
-        <Button title="Join" onPress={join} disabled={busy || code.trim().length < 6} />
+        <AppButton title="Join" onPress={join} disabled={code.trim().length < 6} busy={busy} />
       </View>
       {message && (
         <Text style={failed ? styles.error : styles.joinSuccess}>{message}</Text>
@@ -234,6 +236,7 @@ function CreateEventForm({
       <TextInput
         style={styles.input}
         placeholder="Event name"
+        placeholderTextColor={colors.textFaint}
         autoFocus
         value={name}
         onChangeText={setName}
@@ -241,6 +244,7 @@ function CreateEventForm({
       <TextInput
         style={styles.input}
         placeholder="Location (optional)"
+        placeholderTextColor={colors.textFaint}
         value={location}
         onChangeText={setLocation}
       />
@@ -249,6 +253,7 @@ function CreateEventForm({
         <DateTimePicker
           value={startsAt}
           mode="datetime"
+          themeVariant="dark"
           onChange={(_, date) => date && setStartsAt(date)}
         />
       </View>
@@ -259,6 +264,7 @@ function CreateEventForm({
             <DateTimePicker
               value={endsAt}
               mode="datetime"
+              themeVariant="dark"
               onChange={(_, date) => date && setEndsAt(date)}
             />
             <Pressable onPress={() => setEndsAt(null)}>
@@ -274,14 +280,16 @@ function CreateEventForm({
       <TextInput
         style={[styles.input, styles.multiline]}
         placeholder={"Icebreakers, one per line (optional — leave empty and AI writes them from the event name)"}
+        placeholderTextColor={colors.textFaint}
         multiline
         value={icebreakers}
         onChangeText={setIcebreakers}
       />
-      <Button
-        title={busy ? "Creating…" : "Create event"}
+      <AppButton
+        title="Create event"
         onPress={create}
-        disabled={busy || name.trim().length === 0}
+        disabled={name.trim().length === 0}
+        busy={busy}
       />
       <Pressable onPress={onCancel}>
         <Text style={styles.cancel}>Cancel</Text>
@@ -429,86 +437,109 @@ function EventDetail({
 const styles = StyleSheet.create({
   container: { padding: 24, gap: 12 },
   sectionHeader: {
-    color: "#888",
-    fontSize: 13,
+    color: colors.textFaint,
+    fontSize: 12,
     fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 1.2,
     marginTop: 8,
   },
   centered: { alignItems: "center" },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  title: { fontSize: 22, fontWeight: "700" },
-  link: { color: "#4a7dff", fontSize: 15, fontWeight: "600" },
+  title: { fontSize: 24, fontWeight: "800", color: colors.text, letterSpacing: -0.5 },
+  link: { color: colors.accent, fontSize: 15, fontWeight: "600" },
   spacer: { marginTop: 24 },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 14,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    padding: 15,
   },
-  rowName: { fontWeight: "600", fontSize: 15 },
-  rowMeta: { color: "#888", fontSize: 12, marginTop: 2 },
-  rowChevron: { color: "#bbb", fontSize: 22 },
-  codeInline: { color: "#4a7dff", fontFamily: "Courier", fontWeight: "600" },
+  rowName: { fontWeight: "700", fontSize: 15, color: colors.text },
+  rowMeta: { color: colors.textMuted, fontSize: 12, marginTop: 3 },
+  rowChevron: { color: colors.textFaint, fontSize: 22 },
+  codeInline: { color: colors.accent, fontFamily: "Courier", fontWeight: "600" },
   joinBox: { gap: 6 },
   joinRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   joinInput: { flex: 1 },
-  joinSuccess: { color: "#2a8f4d", textAlign: "center" },
+  joinSuccess: { color: colors.success, textAlign: "center" },
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    padding: 14,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    padding: 15,
     fontSize: 16,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
+    color: colors.text,
   },
   multiline: { minHeight: 90, textAlignVertical: "top" },
-  cancel: { color: "#888", textAlign: "center", paddingVertical: 8 },
-  muted: { color: "#888", textAlign: "center" },
-  error: { color: "#c00", textAlign: "center" },
-  qrWrap: { padding: 16, backgroundColor: "#fff", borderRadius: 16 },
+  cancel: { color: colors.textMuted, textAlign: "center", paddingVertical: 8 },
+  muted: { color: colors.textMuted, textAlign: "center" },
+  error: { color: colors.danger, textAlign: "center" },
+  qrWrap: {
+    padding: 18,
+    backgroundColor: colors.qrTile,
+    borderRadius: radii.lg,
+    shadowColor: colors.accent,
+    shadowOpacity: 0.45,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 12,
+  },
   wallButton: {
-    backgroundColor: "#4a7dff",
-    borderRadius: 10,
+    backgroundColor: colors.accent,
+    borderRadius: radii.md,
     paddingVertical: 12,
     paddingHorizontal: 24,
     marginTop: 4,
   },
-  wallButtonText: { color: "#fff", fontWeight: "600" },
-  wallUrl: { color: "#888", fontSize: 12 },
-  iceList: { alignSelf: "stretch", backgroundColor: "#fff", borderRadius: 12, padding: 14, gap: 6 },
+  wallButtonText: { color: "#fff", fontWeight: "700" },
+  wallUrl: { color: colors.textFaint, fontSize: 12 },
+  iceList: {
+    alignSelf: "stretch",
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    padding: 15,
+    gap: 6,
+  },
   iceLabel: {
-    color: "#4a7dff",
+    color: colors.accent,
     fontSize: 12,
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 1,
   },
-  iceItem: { fontSize: 14, color: "#333" },
-  endedTag: { color: "#c00", fontWeight: "600", fontSize: 13 },
+  iceItem: { fontSize: 14, color: colors.text },
+  endedTag: { color: colors.danger, fontWeight: "600", fontSize: 13 },
   scheduleRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    paddingHorizontal: 14,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    paddingHorizontal: 15,
     paddingVertical: 8,
     minHeight: 48,
   },
-  scheduleLabel: { fontWeight: "600", fontSize: 15 },
+  scheduleLabel: { fontWeight: "700", fontSize: 15, color: colors.text },
   scheduleValue: { flexDirection: "row", alignItems: "center", gap: 10 },
-  removeEnd: { color: "#c00", fontSize: 22, paddingHorizontal: 4 },
+  removeEnd: { color: colors.danger, fontSize: 22, paddingHorizontal: 4 },
+  title2: {},
   endButton: {
     borderWidth: 1,
-    borderColor: "#c00",
-    borderRadius: 10,
+    borderColor: colors.danger,
+    borderRadius: radii.md,
     paddingVertical: 10,
     paddingHorizontal: 24,
     marginTop: 8,
   },
-  endButtonText: { color: "#c00", fontWeight: "600" },
+  endButtonText: { color: colors.danger, fontWeight: "700" },
 });
