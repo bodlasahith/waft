@@ -25,6 +25,7 @@ import { supabase } from "./src/supabase";
 import { api, ApiError } from "./src/api";
 import { SignInScreen } from "./src/screens/SignInScreen";
 import { OnboardingScreen } from "./src/screens/OnboardingScreen";
+import { SettingsScreen } from "./src/screens/SettingsScreen";
 import { CardScreen } from "./src/screens/CardScreen";
 import { ScanScreen } from "./src/screens/ScanScreen";
 import { GraphScreen } from "./src/screens/GraphScreen";
@@ -46,10 +47,12 @@ function App() {
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const [profile, setProfile] = useState<Profile>("loading");
   const [tab, setTab] = useState<TabKey>("card");
+  const [showSettings, setShowSettings] = useState(false);
 
   // Quick crossfade when switching tabs.
   const tabFade = useRef(new Animated.Value(1)).current;
   function switchTab(next: TabKey) {
+    setShowSettings(false);
     if (next === tab) return;
     tabFade.setValue(0);
     setTab(next);
@@ -145,13 +148,19 @@ function App() {
         <Text style={styles.headerTitle}>
           waft<Text style={styles.headerDot}>.</Text>
         </Text>
-        <Pressable onPress={() => supabase.auth.signOut()}>
-          <Text style={styles.signOut}>Sign out</Text>
+        <Pressable onPress={() => setShowSettings(true)} hitSlop={12}>
+          <Text style={styles.settingsIcon}>⚙</Text>
         </Pressable>
       </View>
-      <Animated.View style={[styles.content, { opacity: tabFade }]}>
-        <Screen />
-      </Animated.View>
+      {showSettings ? (
+        <Animated.View style={styles.content}>
+          <SettingsScreen onClose={() => setShowSettings(false)} />
+        </Animated.View>
+      ) : (
+        <Animated.View style={[styles.content, { opacity: tabFade }]}>
+          <Screen />
+        </Animated.View>
+      )}
       <View style={styles.tabBarWrap}>
         <View style={styles.tabBar}>
           {TABS.map((t) => (
@@ -183,6 +192,7 @@ const styles = StyleSheet.create({
   headerDot: { color: colors.accent },
   loadingHint: { color: colors.textMuted, marginTop: 12 },
   signOut: { color: colors.textFaint, fontSize: 13 },
+  settingsIcon: { color: colors.textMuted, fontSize: 22 },
   content: { flex: 1 },
   tabBarWrap: { paddingHorizontal: 16, paddingBottom: 6, paddingTop: 4 },
   tabBar: {

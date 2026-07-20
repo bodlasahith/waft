@@ -13,6 +13,7 @@ import { AppButton } from "../components/UI";
 import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri } from "expo-auth-session";
 import { supabase } from "../supabase";
+import { getHasPassword } from "../passwordFlag";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -67,6 +68,11 @@ export function SignInScreen() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // True if this device has ever set a password — surfaces the password login.
+  const [hasPassword, setHasPassword] = useState(false);
+  useEffect(() => {
+    getHasPassword().then(setHasPassword);
+  }, []);
 
   // Secondary path — not part of the normal OTP/OAuth flow. Kept low-key
   // (a small link) so it doesn't complicate the primary "20-second signup",
@@ -258,7 +264,7 @@ export function SignInScreen() {
       {/* Password sign-in is only surfaced for accounts that have a password
           (currently just the App Store review account) — normal users never
           see it, so they aren't tempted into a path that can't work for them. */}
-      {step === "email" && email.trim().toLowerCase() === REVIEW_EMAIL && (
+      {step === "email" && (hasPassword || email.trim().toLowerCase() === REVIEW_EMAIL) && (
         <Pressable onPress={() => setStep("password")}>
           <Text style={styles.faintLink}>Sign in with password</Text>
         </Pressable>
