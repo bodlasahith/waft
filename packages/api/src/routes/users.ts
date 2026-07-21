@@ -1,8 +1,13 @@
 import { FastifyInstance, FastifyReply } from "fastify";
 import { z } from "zod";
 import { supabase } from "../lib/supabase.js";
-import { createPersonNode, setPersonAvatar } from "../services/graph.js";
-import { requireAuth } from "../lib/auth.js";
+import {
+  createPersonNode,
+  setPersonAvatar,
+  areConnected,
+  shareAnEvent,
+} from "../services/graph.js";
+import { requireAuth, optionalAuth } from "../lib/auth.js";
 import { nanoid } from "nanoid";
 import { AVATAR_COLORS, AVATAR_SHAPES, PLATFORMS } from "@waft/shared";
 
@@ -18,7 +23,8 @@ const addSocialSchema = z.object({
 async function sendPublicCard(
   reply: FastifyReply,
   column: "id" | "card_code",
-  value: string
+  value: string,
+  viewerId?: string
 ) {
   const { data: user } = await supabase
     .from("users")
@@ -28,11 +34,24 @@ async function sendPublicCard(
 
   if (!user) return reply.status(404).send({ error: "Card not found" });
 
+  // Everyone sees public socials. A known viewer also sees the owner's
+  // restricted socials they're entitled to: mutual_only if they share a
+  // WAFT edge, event_only if they've attended a common event.
+  const visibilities = ["public"];
+  if (viewerId && viewerId !== user.id) {
+    const [connected, sharedEvent] = await Promise.all([
+      areConnected(viewerId, user.id),
+      shareAnEvent(viewerId, user.id),
+    ]);
+    if (connected) visibilities.push("mutual_only");
+    if (sharedEvent) visibilities.push("event_only");
+  }
+
   const { data: socials } = await supabase
     .from("social_links")
     .select("platform, handle, url")
     .eq("user_id", user.id)
-    .eq("visibility", "public");
+    .in("visibility", visibilities);
 
   return reply.send({ ...user, socials: socials ?? [] });
 }
@@ -51,17 +70,19 @@ export async function userRoutes(app: FastifyInstance) {
     return reply.send(data);
   });
 
-  // Public card endpoint — no auth required (for QR scan fallback)
-  app.get("/users/:userId/card", async (req, reply) => {
+  // Public card. optionalAuth so an unauthenticated web scan gets only
+  // public socials, while a signed-in viewer also gets what they're entitled
+  // to (mutual/event socials).
+  app.get("/users/:userId/card", { preHandler: optionalAuth }, async (req, reply) => {
     const { userId } = req.params as { userId: string };
-    return sendPublicCard(reply, "id", userId);
+    return sendPublicCard(reply, "id", userId, req.userId);
   });
 
   // QR codes encode the opaque card_code (not the internal user id), so it
   // can be rotated independently if it ever leaks or gets shared too widely.
-  app.get("/cards/:cardCode", async (req, reply) => {
+  app.get("/cards/:cardCode", { preHandler: optionalAuth }, async (req, reply) => {
     const { cardCode } = req.params as { cardCode: string };
-    return sendPublicCard(reply, "card_code", cardCode);
+    return sendPublicCard(reply, "card_code", cardCode, req.userId);
   });
 
   // Node avatar — mirrored onto the Neo4j Person node so every graph

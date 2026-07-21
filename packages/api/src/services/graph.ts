@@ -208,6 +208,34 @@ export async function getEventConnections(userId: string, eventId: string) {
   }
 }
 
+/** Whether two people share a WAFT edge (a mutual connection). */
+export async function areConnected(a: string, b: string): Promise<boolean> {
+  const session = getDriver().session();
+  try {
+    const r = await session.run(
+      `MATCH (:Person {id: $a})-[:WAFT]-(:Person {id: $b}) RETURN 1 LIMIT 1`,
+      { a, b }
+    );
+    return r.records.length > 0;
+  } finally {
+    await session.close();
+  }
+}
+
+/** Whether two people have both attended a common event. */
+export async function shareAnEvent(a: string, b: string): Promise<boolean> {
+  const session = getDriver().session();
+  try {
+    const r = await session.run(
+      `MATCH (:Person {id: $a})-[:ATTENDED]->(e:Event)<-[:ATTENDED]-(:Person {id: $b}) RETURN 1 LIMIT 1`,
+      { a, b }
+    );
+    return r.records.length > 0;
+  } finally {
+    await session.close();
+  }
+}
+
 export async function checkinToEvent(userId: string, eventId: string) {
   const session = getDriver().session();
   try {

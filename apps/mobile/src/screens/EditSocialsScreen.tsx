@@ -29,20 +29,33 @@ const PLATFORM_LABELS: Record<Platform, string> = {
   phone: "Phone",
 };
 
+type Visibility = "public" | "mutual_only" | "event_only";
+const VIS_OPTIONS: { value: Visibility; label: string; blurb: string }[] = [
+  { value: "public", label: "Public", blurb: "Anyone who scans your card" },
+  { value: "mutual_only", label: "Connections", blurb: "Only people you've connected with" },
+  { value: "event_only", label: "Event only", blurb: "Only people from the same event" },
+];
+const VIS_LABEL: Record<string, string> = {
+  public: "Public",
+  mutual_only: "Connections",
+  event_only: "Event only",
+};
+
 interface Props {
-  socials: { platform: string; handle: string }[];
+  socials: { platform: string; handle: string; visibility?: string }[];
   onChanged: () => void;
   onClose: () => void;
 }
 
 /**
- * Add/remove the links behind your card. Adding is two taps: pick a
- * platform chip, type the handle. Everything saves immediately.
+ * Add/remove/edit the links behind your card, each with a visibility:
+ * public (on your scannable card), connections-only, or event-only.
  */
 export function EditSocialsScreen({ socials, onChanged, onClose }: Props) {
   const [adding, setAdding] = useState<Platform | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [handle, setHandle] = useState("");
+  const [visibility, setVisibility] = useState<Visibility>("public");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,13 +63,13 @@ export function EditSocialsScreen({ socials, onChanged, onClose }: Props) {
   const unlinked = PLATFORMS.filter((p) => !linked.has(p));
 
   // Adding a social upserts by platform, so saving an edit is the same call
-  // with the same platform and a new handle.
+  // with the same platform, the (possibly new) handle, and visibility.
   async function save(platform: Platform) {
     setBusy(true);
     setError(null);
     try {
       // Handles are pasted messily — strip the @ people habitually include.
-      await api.addSocial(platform, handle.trim().replace(/^@/, ""));
+      await api.addSocial(platform, handle.trim().replace(/^@/, ""), undefined, visibility);
       setAdding(null);
       setEditing(null);
       setHandle("");
@@ -68,10 +81,18 @@ export function EditSocialsScreen({ socials, onChanged, onClose }: Props) {
     }
   }
 
-  function startEdit(platform: string, current: string) {
+  function startAdd(platform: Platform) {
+    setEditing(null);
+    setHandle("");
+    setVisibility("public");
+    setAdding(platform);
+  }
+
+  function startEdit(platform: string, current: string, currentVis?: string) {
     setAdding(null);
     setEditing(platform);
     setHandle(current);
+    setVisibility((currentVis as Visibility) ?? "public");
   }
 
   async function remove(platform: string) {
@@ -114,6 +135,7 @@ export function EditSocialsScreen({ socials, onChanged, onClose }: Props) {
               value={handle}
               onChangeText={setHandle}
             />
+            <VisibilityPicker value={visibility} onChange={setVisibility} />
             <View style={styles.addActions}>
               <AppButton
                 title="Save"
@@ -130,10 +152,13 @@ export function EditSocialsScreen({ socials, onChanged, onClose }: Props) {
           <View key={s.platform} style={styles.row}>
             <View>
               <Text style={styles.platform}>{PLATFORM_LABELS[s.platform as Platform] ?? s.platform}</Text>
-              <Text style={styles.handle}>{s.handle}</Text>
+              <Text style={styles.handle}>
+                {s.handle}
+                {s.visibility && s.visibility !== "public" ? `  ·  ${VIS_LABEL[s.visibility]}` : ""}
+              </Text>
             </View>
             <View style={styles.rowActions}>
-              <Pressable onPress={() => startEdit(s.platform, s.handle)} disabled={busy}>
+              <Pressable onPress={() => startEdit(s.platform, s.handle, s.visibility)} disabled={busy}>
                 <Text style={styles.edit}>Edit</Text>
               </Pressable>
               <Pressable onPress={() => remove(s.platform)} disabled={busy}>
@@ -158,6 +183,7 @@ export function EditSocialsScreen({ socials, onChanged, onClose }: Props) {
             value={handle}
             onChangeText={setHandle}
           />
+          <VisibilityPicker value={visibility} onChange={setVisibility} />
           <View style={styles.addActions}>
             <AppButton title="Add" onPress={() => save(adding)} disabled={handle.trim().length === 0} busy={busy} />
             <Pressable onPress={() => { setAdding(null); setHandle(""); }}>
@@ -171,15 +197,7 @@ export function EditSocialsScreen({ socials, onChanged, onClose }: Props) {
             <Text style={styles.sectionLabel}>Add a link</Text>
             <View style={styles.chips}>
               {unlinked.map((p) => (
-                <Pressable
-                  key={p}
-                  style={styles.chip}
-                  onPress={() => {
-                    setEditing(null);
-                    setHandle("");
-                    setAdding(p);
-                  }}
-                >
+                <Pressable key={p} style={styles.chip} onPress={() => startAdd(p)}>
                   <Text style={styles.chipText}>{PLATFORM_LABELS[p]}</Text>
                 </Pressable>
               ))}
@@ -194,8 +212,59 @@ export function EditSocialsScreen({ socials, onChanged, onClose }: Props) {
   );
 }
 
+function VisibilityPicker({
+  value,
+  onChange,
+}: {
+  value: Visibility;
+  onChange: (v: Visibility) => void;
+}) {
+  return (
+    <View style={styles.visWrap}>
+      <Text style={styles.visLabel}>Who can see this</Text>
+      <View style={styles.visRow}>
+        {VIS_OPTIONS.map((o) => {
+          const active = value === o.value;
+          return (
+            <Pressable
+              key={o.value}
+              style={[styles.visChip, active && styles.visChipActive]}
+              onPress={() => onChange(o.value)}
+            >
+              <Text style={[styles.visChipText, active && styles.visChipTextActive]}>{o.label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      <Text style={styles.visBlurb}>{VIS_OPTIONS.find((o) => o.value === value)?.blurb}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { padding: 24, gap: 12 },
+  visWrap: { gap: 6 },
+  visLabel: {
+    color: colors.textFaint,
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  visRow: { flexDirection: "row", gap: 6 },
+  visChip: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.sm,
+    paddingVertical: 8,
+    alignItems: "center",
+    backgroundColor: colors.surfaceAlt,
+  },
+  visChipActive: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  visChipText: { color: colors.textMuted, fontSize: 12, fontWeight: "600" },
+  visChipTextActive: { color: colors.accent },
+  visBlurb: { color: colors.textMuted, fontSize: 11 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   title: { fontSize: 24, fontWeight: "800", color: colors.text, letterSpacing: -0.5 },
   done: { color: colors.accent, fontSize: 16, fontWeight: "700" },

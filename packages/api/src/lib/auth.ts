@@ -38,3 +38,22 @@ export async function requireAuth(req: FastifyRequest, reply: FastifyReply) {
     return reply.status(401).send({ error: "invalid_token" });
   }
 }
+
+/**
+ * Like requireAuth but never rejects — sets req.userId when a valid token is
+ * present, leaves it undefined otherwise. For endpoints that serve everyone
+ * but reveal more to a known, entitled viewer (e.g. the card's restricted
+ * socials to a mutual connection).
+ */
+export async function optionalAuth(req: FastifyRequest) {
+  const header = req.headers.authorization;
+  if (!header?.startsWith("Bearer ")) return;
+  try {
+    const { payload } = await jwtVerify(header.slice("Bearer ".length), jwks, {
+      audience: "authenticated",
+    });
+    if (typeof payload.sub === "string") req.userId = payload.sub;
+  } catch {
+    /* ignore — treated as anonymous */
+  }
+}

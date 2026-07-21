@@ -75,10 +75,10 @@ export const api = {
       body: JSON.stringify({ name, photoUrl }),
     }),
   card: (cardCode: string) => request<PublicCard>(`/cards/${cardCode}`),
-  addSocial: (platform: string, handle: string, url?: string) =>
+  addSocial: (platform: string, handle: string, url?: string, visibility?: string) =>
     request<unknown>("/users/me/socials", {
       method: "POST",
-      body: JSON.stringify({ platform, handle, url }),
+      body: JSON.stringify({ platform, handle, url, visibility }),
     }),
   removeSocial: (platform: string) =>
     request<null>(`/users/me/socials/${platform}`, { method: "DELETE" }),
