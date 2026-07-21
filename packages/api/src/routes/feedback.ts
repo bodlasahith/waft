@@ -8,8 +8,11 @@ const feedbackSchema = z.object({
   category: z.enum(["bug", "feature", "general", "interested"]).default("general"),
   subject: z.string().max(200).optional(),
   body: z.string().min(1).max(4000),
-  // Honeypot: real users leave it empty; bots fill every field.
-  website: z.string().max(0).optional(),
+  // Honeypot: real users leave it empty; bots fill every field. Accept any
+  // string here (NOT .max(0)) — a length cap would fail validation with a
+  // distinguishing 400 before the silent-drop below ever runs, tipping the
+  // bot off. Let it parse, then drop non-empty submissions with a bland 200.
+  website: z.string().optional(),
 });
 
 export async function feedbackRoutes(app: FastifyInstance) {

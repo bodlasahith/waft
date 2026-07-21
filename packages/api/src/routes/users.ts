@@ -15,7 +15,13 @@ import { AVATAR_COLORS, AVATAR_SHAPES, PLATFORMS } from "@waft/shared";
 const addSocialSchema = z.object({
   platform: z.enum(PLATFORMS),
   handle: z.string().min(1).max(100),
-  url: z.string().url().optional(),
+  // .url() alone accepts javascript:/data: — restrict to web schemes so a
+  // stored url can't become an executable href on the public card page.
+  url: z
+    .string()
+    .url()
+    .refine((u) => /^https?:\/\//i.test(u), "url must be http(s)")
+    .optional(),
   visibility: z.enum(["public", "event_only", "mutual_only"]).default("public"),
 });
 

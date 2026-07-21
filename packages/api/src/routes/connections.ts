@@ -1,6 +1,11 @@
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { createConnection, getEventGraph, getNetworkGraph } from "../services/graph.js";
+import {
+  createConnection,
+  getEventGraph,
+  getNetworkGraph,
+  hasAttendedEvent,
+} from "../services/graph.js";
 import { pickIcebreaker } from "../services/icebreakers.js";
 import { supabase } from "../lib/supabase.js";
 import { broadcast } from "../lib/liveEvents.js";
@@ -18,6 +23,13 @@ export async function connectionRoutes(app: FastifyInstance) {
     const body = connectSchema.parse(req.body);
     if (body.toUserId === req.userId) {
       return reply.status(400).send({ error: "cannot_connect_to_self" });
+    }
+
+    // An eventId tags the edge onto that event's public graph. Only let the
+    // caller attribute a connection to an event they actually checked into —
+    // otherwise anyone could inject edges into an arbitrary event's wall.
+    if (body.eventId && !(await hasAttendedEvent(req.userId, body.eventId))) {
+      return reply.status(403).send({ error: "not_checked_in" });
     }
 
     const result = await createConnection(req.userId, body.toUserId, body.eventId);
@@ -48,8 +60,10 @@ export async function connectionRoutes(app: FastifyInstance) {
 
   // Your network graph is yours alone — it reveals who you know and how.
   app.get("/connections/me/graph", { preHandler: requireAuth }, async (req, reply) => {
+    // Clamp to [1,4]: a negative/zero depth interpolates into the Cypher
+    // range `[:WAFT*1..N]` and 500s; >4 is a runaway traversal.
     const depth = Number((req.query as any).depth) || 2;
-    const graph = await getNetworkGraph(req.userId, Math.min(depth, 4));
+    const graph = await getNetworkGraph(req.userId, Math.max(1, Math.min(depth, 4)));
 
     // Resolve event names so edge details can say where a waft happened.
     const eventIds = [...new Set(graph.edges.map((e) => e.eventId).filter(Boolean))];

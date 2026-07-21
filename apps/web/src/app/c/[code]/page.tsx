@@ -14,6 +14,22 @@ const PLATFORM_META: Record<string, { label: string; color: string; urlPrefix: s
   facebook: { label: "Facebook", color: "#1877F2", urlPrefix: "https://facebook.com/" },
 };
 
+// A social's `url` is user-controlled and Zod's .url() accepts non-web
+// schemes (javascript:, data:), which would execute from an <a href> on this
+// public page. Only ever emit http(s); otherwise fall back to the platform's
+// canonical URL built from the handle, or drop the link entirely.
+function safeHref(rawUrl: string | undefined, urlPrefix: string, handle: string): string | null {
+  const candidate = rawUrl || (urlPrefix ? `${urlPrefix}${handle}` : "");
+  if (!candidate) return null;
+  try {
+    const parsed = new URL(candidate);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") return candidate;
+  } catch {
+    /* not an absolute URL — fall through */
+  }
+  return urlPrefix ? `${urlPrefix}${handle}` : null;
+}
+
 async function getUserCard(code: string) {
   const apiUrl = process.env.API_URL || "http://localhost:3001";
   const res = await fetch(`${apiUrl}/cards/${code}`, { cache: "no-store" });
@@ -43,7 +59,8 @@ export default async function CardPage({ params }: { params: Promise<{ code: str
           {user.socials.map((social: { platform: string; handle: string; url?: string }) => {
             const meta = PLATFORM_META[social.platform];
             if (!meta) return null;
-            const href = social.url || `${meta.urlPrefix}${social.handle}`;
+            const href = safeHref(social.url, meta.urlPrefix, social.handle);
+            if (!href) return null;
             return (
               <a
                 key={social.platform}

@@ -208,6 +208,20 @@ export async function getEventConnections(userId: string, eventId: string) {
   }
 }
 
+/** Whether the user has an ATTENDED edge to this specific event. */
+export async function hasAttendedEvent(userId: string, eventId: string): Promise<boolean> {
+  const session = getDriver().session();
+  try {
+    const r = await session.run(
+      `MATCH (:Person {id: $userId})-[:ATTENDED]->(:Event {id: $eventId}) RETURN 1 LIMIT 1`,
+      { userId, eventId }
+    );
+    return r.records.length > 0;
+  } finally {
+    await session.close();
+  }
+}
+
 /** Whether two people share a WAFT edge (a mutual connection). */
 export async function areConnected(a: string, b: string): Promise<boolean> {
   const session = getDriver().session();

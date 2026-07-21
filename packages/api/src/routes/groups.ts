@@ -32,6 +32,16 @@ const suggestPlatformSchema = z.object({
   userIds: z.array(z.string().uuid()).min(1),
 });
 
+// A member's handle is included in a group only if the caller is entitled to
+// see it under the same rules the public card enforces. The caller is
+// WAFT-connected to every member (the filterConnectedUsers gate), so they're
+// entitled to `public` and `mutual_only`. `event_only` is deliberately
+// excluded: honoring it correctly needs a per-member shared-event check
+// (see roadmap) — until then, under-granting is the safe choice. Without
+// this filter a single scan could pull a phone number the owner marked
+// event_only, contradicting sendPublicCard's guarantees.
+const GROUP_VISIBLE = ["public", "mutual_only"];
+
 // iMessage and WhatsApp have no separate "handle" — both are reached via
 // the phone number stored under the "phone" social link.
 const PLATFORM_TO_SOCIAL_FIELD: Record<(typeof SUPPORTED_PLATFORMS)[number], string> = {
@@ -68,7 +78,8 @@ export async function groupRoutes(app: FastifyInstance) {
       .from("social_links")
       .select("user_id, platform, handle")
       .in("user_id", userIds)
-      .in("platform", socialFields);
+      .in("platform", socialFields)
+      .in("visibility", GROUP_VISIBLE);
 
     if (!socials || socials.length === 0) {
       return reply.send({ suggestions: [], coverage: {} });
@@ -143,7 +154,8 @@ export async function groupRoutes(app: FastifyInstance) {
         .from("social_links")
         .select("user_id, handle")
         .in("user_id", body.userIds)
-        .eq("platform", "phone");
+        .eq("platform", "phone")
+        .in("visibility", GROUP_VISIBLE);
 
       memberHandles = (phoneSocials ?? []).map((s) => s.handle);
     } else {
@@ -151,7 +163,8 @@ export async function groupRoutes(app: FastifyInstance) {
         .from("social_links")
         .select("user_id, handle")
         .in("user_id", body.userIds)
-        .eq("platform", socialPlatform);
+        .eq("platform", socialPlatform)
+        .in("visibility", GROUP_VISIBLE);
 
       memberHandles = (socials ?? []).map((s) => s.handle);
     }
