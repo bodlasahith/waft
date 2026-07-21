@@ -32,7 +32,7 @@ const GAP = 6;
 const CX = 300;
 
 // ---- Alive ribbon: traveling ripple (tips anchored) + laminar flow ----
-const RIP_A = 1.4; // ripple amplitude, local units
+const RIP_A = 0.6; // ripple amplitude, local units
 const RIP_K = 6.8; // spatial frequency along the stroke
 const RIP_W = 2.6; // temporal frequency (rad/s)
 const SAMPLES = 9;

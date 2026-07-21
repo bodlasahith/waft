@@ -47,7 +47,7 @@ const RIB_H = 6.6;
 const PAL = ["#eef2ff", "#b9c8ff", "#6c8cff"];
 
 // ---- Alive ribbon: flutter + laminar flow (RN approximation) ----
-const RIP_A = 1.4; // ripple amplitude, local units
+const RIP_A = 0.6; // ripple amplitude, local units
 const RIP_K = 6.8; // spatial frequency along the stroke
 const RIP_W = 2.6; // temporal frequency (rad/s) — sets the keyframe spacing
 const SAMPLES = 9;

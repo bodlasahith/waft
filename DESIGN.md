@@ -46,7 +46,8 @@ short intervals as ambient drift. Used for splash / loading / sign-in.
 
 Once settled, the ribbon `w` stays **alive**: a traveling ripple flutters
 along each stroke (tips anchored, like a flag in light air — perpendicular
-displacement `A·sin(ks − ωt + φᵢ)·sin(πs)`, A≈1.4 local units), and **laminar
+displacement `A·sin(ks − ωt + φᵢ)·sin(πs)`, A=0.6 / k=6.8 / ω=2.6 — chosen
+in the flutter lab), and **laminar
 streamline streaks** traverse the whole W left→right along its centerline,
 riding the same ripple and drifting slightly past the ribbon edges (wind
 streaming around it, not turbulence). Web redraws smooth-sampled rib paths
