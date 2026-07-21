@@ -44,6 +44,15 @@ into crisp focus, then keeps *breathing* with low-amplitude turbulence so it's
 never frozen; wispy tendrils draw on during the reveal and reappear at random
 short intervals as ambient drift. Used for splash / loading / sign-in.
 
+Once settled, the ribbon `w` stays **alive**: a traveling ripple flutters
+along each stroke (tips anchored, like a flag in light air — perpendicular
+displacement `A·sin(ks − ωt + φᵢ)·sin(πs)`, A≈1.4 local units), and **laminar
+streamline streaks** traverse the whole W left→right along its centerline,
+riding the same ripple and drifting slightly past the ribbon edges (wind
+streaming around it, not turbulence). Web redraws smooth-sampled rib paths
+per frame; RN interpolates between two ripple-phase keyframes and runs the
+streaks as motes along the vertex polyline.
+
 Prototype (all states + variants): the `waft-logo` artifact.
 Web technique: SVG `feTurbulence` + `feDisplacementMap` (real smoke). App
 technique: approximate with react-native-svg tapered paths + gradients +

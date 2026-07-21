@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { AccessibilityInfo, Animated, Easing, StyleSheet, View } from "react-native";
 import Svg, {
+  Circle,
   Defs,
   Ellipse,
   G,
   LinearGradient,
   Path,
-  Polygon,
   RadialGradient,
   Stop,
   Text as SvgText,
@@ -22,7 +22,7 @@ import Svg, {
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedSvgText = Animated.createAnimatedComponent(SvgText);
 const AnimatedEllipse = Animated.createAnimatedComponent(Ellipse);
-const AnimatedPolygon = Animated.createAnimatedComponent(Polygon);
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 // All geometry lives in the same 600x240 space as the web mark.
 const VIEWBOX = "0 0 600 240";
@@ -46,28 +46,54 @@ const V: [number, number][] = [
 const RIB_H = 6.6;
 const PAL = ["#eef2ff", "#b9c8ff", "#6c8cff"];
 
-// Each ribbon segment: full-bellied hexagon tapering to near-points — the
-// wispiness is geometry + the alpha-fade gradients, never blur.
-function taper(a: [number, number], b: [number, number], H: number) {
+// ---- Alive ribbon: flutter + laminar flow (RN approximation) ----
+const RIP_A = 1.4; // ripple amplitude, local units
+const RIP_K = 6.8; // spatial frequency along the stroke
+const RIP_W = 2.6; // temporal frequency (rad/s) — sets the keyframe spacing
+const SAMPLES = 9;
+
+function ripple(s: number, phase: number, t: number) {
+  return RIP_A * Math.sin(RIP_K * s - t * RIP_W + phase) * Math.sin(Math.PI * s);
+}
+
+// Smooth-sampled rib path: full-bellied at the middle, tapering to
+// near-points at the ends (wispiness from geometry + alpha, never blur),
+// displaced perpendicular to the stroke by the ripple.
+function ribD(a: [number, number], b: [number, number], H: number, phase: number, t: number) {
   const dx = b[0] - a[0];
   const dy = b[1] - a[1];
   const L = Math.hypot(dx, dy);
-  const ux = -dy / L;
-  const uy = dx / L;
-  const m: [number, number] = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  const nx = -dy / L;
+  const ny = dx / L;
   const E = Math.max(1.1, H * 0.24);
-  return [
-    [a[0] + ux * E, a[1] + uy * E],
-    [m[0] + ux * H, m[1] + uy * H],
-    [b[0] + ux * E, b[1] + uy * E],
-    [b[0] - ux * E, b[1] - uy * E],
-    [m[0] - ux * H, m[1] - uy * H],
-    [a[0] - ux * E, a[1] - uy * E],
-  ]
-    .map((p) => p.map((v) => v.toFixed(1)).join(","))
-    .join(" ");
+  const top: string[] = [];
+  const bot: string[] = [];
+  for (let j = 0; j <= SAMPLES; j++) {
+    const s = j / SAMPLES;
+    const env = Math.sin(Math.PI * s);
+    const w = E + (H - E) * Math.pow(env, 0.85);
+    const d = ripple(s, phase, t);
+    const px = a[0] + dx * s + nx * d;
+    const py = a[1] + dy * s + ny * d;
+    top.push(`${(px + nx * w).toFixed(1)} ${(py + ny * w).toFixed(1)}`);
+    bot.push(`${(px - nx * w).toFixed(1)} ${(py - ny * w).toFixed(1)}`);
+  }
+  return `M${top.join(" L")} L${bot.reverse().join(" L")} Z`;
 }
-const RIBS = [0, 1, 2, 3].map((i) => taper(V[i], V[i + 1], RIB_H));
+
+// Two flutter keyframes half a ripple period apart; Animated interpolates
+// between the path strings (identical structure) for a gentle sway.
+const RIB_KEYS = [0, 1, 2, 3].map((i) => [
+  ribD(V[i], V[i + 1], RIB_H, i * 1.7, 0),
+  ribD(V[i], V[i + 1], RIB_H, i * 1.7, Math.PI / RIP_W),
+]);
+
+// Laminar streaks: small motes traversing the W centerline left→right.
+// Piecewise-linear interpolation along the vertices, fading at the tips.
+const FLOW_N = 5;
+const FLOW_FRACS = [0, 0.2882, 0.5, 0.7118, 1]; // cumulative arc-length fractions
+const FLOW_X = V.map((p) => p[0]);
+const FLOW_Y = V.map((p) => p[1]);
 
 // Layout precomputed for SF at 150px (no text measurement in RN): the W tops
 // out at the "aft" x-height (~77.5, +3% overshoot for the dissolving tips)
@@ -88,6 +114,10 @@ let wispId = 0;
 export function CoalesceWordmark({ width = 230 }: { width?: number }) {
   const gather = useRef(new Animated.Value(0)).current;
   const breathe = useRef(new Animated.Value(0)).current;
+  const wobble = useRef(new Animated.Value(0)).current;
+  const flowVals = useRef(
+    Array.from({ length: FLOW_N }, () => new Animated.Value(0))
+  ).current;
   const [wisps, setWisps] = useState<Wisp[]>([]);
   const [settled, setSettled] = useState(false);
 
@@ -126,10 +156,28 @@ export function CoalesceWordmark({ width = 230 }: { width?: number }) {
     AccessibilityInfo.isReduceMotionEnabled().then((reduce) => {
       if (!alive) return;
       if (reduce) {
+        // Static settled mark, frozen mid-flutter (phase 0 of the keyframes).
         gather.setValue(1);
         setSettled(true);
         return;
       }
+      // The flutter sways between the two ripple keyframes the whole time.
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(wobble, {
+            toValue: 1,
+            duration: 2200,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: false,
+          }),
+          Animated.timing(wobble, {
+            toValue: 0,
+            duration: 2200,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: false,
+          }),
+        ])
+      ).start();
       REVEAL_WISPS.forEach((d, i) =>
         timers.push(setTimeout(() => spawnWisp(d, 2.3, 1400, 0.6), i * 90))
       );
@@ -159,14 +207,32 @@ export function CoalesceWordmark({ width = 230 }: { width?: number }) {
           ])
         ).start();
         ambientLoop();
+        // Launch the laminar streaks, staggered so they never clump.
+        flowVals.forEach((v, i) => {
+          const run = () => {
+            if (!alive) return;
+            v.setValue(0);
+            Animated.timing(v, {
+              toValue: 1,
+              duration: 3600 + Math.random() * 1800,
+              easing: Easing.linear,
+              useNativeDriver: false,
+            }).start(({ finished }) => {
+              if (finished) run();
+            });
+          };
+          timers.push(setTimeout(run, i * 800));
+        });
       });
     });
 
     return () => {
       alive = false;
       timers.forEach(clearTimeout);
+      wobble.stopAnimation();
+      flowVals.forEach((v) => v.stopAnimation());
     };
-  }, [gather, breathe]);
+  }, [gather, breathe, wobble, flowVals]);
 
   const aftOpacity = gather.interpolate({
     inputRange: [0, 0.14, 0.8, 1],
@@ -248,12 +314,36 @@ export function CoalesceWordmark({ width = 230 }: { width?: number }) {
           />
         ))}
         <G transform={W_TRANSFORM}>
-          {RIBS.map((pts, i) => (
-            <AnimatedPolygon
+          {RIB_KEYS.map((keys, i) => (
+            <AnimatedPath
               key={i}
-              points={pts}
+              d={
+                wobble.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: keys,
+                }) as unknown as string
+              }
               fill={`url(#cw-w-${i})`}
               opacity={ribOpacity(i) as unknown as number}
+            />
+          ))}
+          {flowVals.map((v, i) => (
+            <AnimatedCircle
+              key={i}
+              r={0.9 + (i % 3) * 0.25}
+              fill="#eef2ff"
+              cx={
+                v.interpolate({ inputRange: FLOW_FRACS, outputRange: FLOW_X }) as unknown as number
+              }
+              cy={
+                v.interpolate({ inputRange: FLOW_FRACS, outputRange: FLOW_Y }) as unknown as number
+              }
+              opacity={
+                v.interpolate({
+                  inputRange: [0, 0.12, 0.5, 0.88, 1],
+                  outputRange: [0, 0.65, 0.45, 0.65, 0],
+                }) as unknown as number
+              }
             />
           ))}
         </G>
