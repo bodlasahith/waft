@@ -12,3 +12,7 @@ export async function markHasPassword() {
 export async function getHasPassword(): Promise<boolean> {
   return (await AsyncStorage.getItem(KEY)) === "1";
 }
+
+export async function clearHasPassword() {
+  await AsyncStorage.removeItem(KEY);
+}

@@ -6,6 +6,7 @@ import {
   setPersonAvatar,
   areConnected,
   shareAnEvent,
+  deletePersonNode,
 } from "../services/graph.js";
 import { requireAuth, optionalAuth } from "../lib/auth.js";
 import { nanoid } from "nanoid";
@@ -137,6 +138,28 @@ export async function userRoutes(app: FastifyInstance) {
       return reply.status(204).send();
     }
   );
+
+  // Self-serve account deletion. Identity comes only from the verified token
+  // (self-delete only). Every step is idempotent and ordered so a partial
+  // failure can be retried: graph node first, then Postgres rows, and the
+  // auth record last — while it exists the user can still sign in and retry.
+  app.delete("/users/me", { preHandler: requireAuth }, async (req, reply) => {
+    await deletePersonNode(req.userId);
+
+    // events.created_by has no cascade — orphan the authorship instead of
+    // deleting events other attendees still reference.
+    await supabase.from("events").update({ created_by: null }).eq("created_by", req.userId);
+
+    // social_links cascade with the users row.
+    const { error } = await supabase.from("users").delete().eq("id", req.userId);
+    if (error) return reply.status(500).send({ error: error.message });
+
+    const { error: authError } = await supabase.auth.admin.deleteUser(req.userId);
+    if (authError && authError.status !== 404) {
+      return reply.status(500).send({ error: authError.message });
+    }
+    return reply.status(204).send();
+  });
 
   // Register (or refresh) the profile after OAuth sign-in. Identity comes
   // entirely from the verified token — id from sub, email from the email

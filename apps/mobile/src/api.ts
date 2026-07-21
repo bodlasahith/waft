@@ -82,6 +82,7 @@ export const api = {
     }),
   removeSocial: (platform: string) =>
     request<null>(`/users/me/socials/${platform}`, { method: "DELETE" }),
+  deleteAccount: () => request<null>("/users/me", { method: "DELETE" }),
   connect: (toUserId: string, eventId?: string) =>
     request<{
       status: "connected" | "already_connected";

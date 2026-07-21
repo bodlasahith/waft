@@ -1,21 +1,43 @@
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { colors, radii } from "../theme";
 import { AppButton } from "../components/UI";
 import { supabase } from "../supabase";
-import { getHasPassword, markHasPassword } from "../passwordFlag";
+import { api } from "../api";
+import { clearHasPassword, getHasPassword, markHasPassword } from "../passwordFlag";
 
-/** Account settings: set/change a password, sign out. */
+/** Account settings: set/change a password, sign out, delete account. */
 export function SettingsScreen({ onClose }: { onClose: () => void }) {
   const [hasPassword, setHasPassword] = useState(false);
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Typed confirmation — deleting your whole graph deserves more friction
+  // than tapping through an alert.
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleteText, setDeleteText] = useState("");
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     getHasPassword().then(setHasPassword);
   }, []);
+
+  async function deleteAccount() {
+    setDeleteBusy(true);
+    setDeleteError(null);
+    try {
+      await api.deleteAccount();
+      await clearHasPassword();
+      // Local session tokens are now orphaned — sign out drops them and
+      // App.tsx routes back to the sign-in screen.
+      await supabase.auth.signOut();
+    } catch {
+      setDeleteBusy(false);
+      setDeleteError("Couldn't delete your account — try again, or email us via the site.");
+    }
+  }
 
   async function savePassword() {
     setBusy(true);
@@ -74,6 +96,45 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
       <Pressable style={styles.signOut} onPress={() => supabase.auth.signOut()}>
         <Text style={styles.signOutText}>Sign out</Text>
       </Pressable>
+
+      {confirmingDelete ? (
+        <View style={[styles.section, styles.dangerSection]}>
+          <Text style={styles.dangerTitle}>Delete account</Text>
+          <Text style={styles.sectionHint}>
+            This permanently removes your card, links, connections, and event history.
+            There is no undo. Type DELETE to confirm.
+          </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="DELETE"
+            placeholderTextColor={colors.textFaint}
+            autoCapitalize="characters"
+            autoCorrect={false}
+            value={deleteText}
+            onChangeText={setDeleteText}
+          />
+          <AppButton
+            title="Permanently delete my account"
+            variant="danger"
+            onPress={() =>
+              Alert.alert("Delete your account?", "Your entire network graph will be erased.", [
+                { text: "Cancel", style: "cancel" },
+                { text: "Delete", style: "destructive", onPress: deleteAccount },
+              ])
+            }
+            disabled={deleteText.trim() !== "DELETE"}
+            busy={deleteBusy}
+          />
+          <Pressable onPress={() => { setConfirmingDelete(false); setDeleteText(""); setDeleteError(null); }}>
+            <Text style={styles.cancelDelete}>Never mind</Text>
+          </Pressable>
+          {deleteError && <Text style={styles.error}>{deleteError}</Text>}
+        </View>
+      ) : (
+        <Pressable style={styles.deleteLink} onPress={() => setConfirmingDelete(true)}>
+          <Text style={styles.deleteLinkText}>Delete account…</Text>
+        </Pressable>
+      )}
     </ScrollView>
   );
 }
@@ -112,4 +173,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   signOutText: { color: colors.textMuted, fontWeight: "600" },
+  dangerSection: { borderColor: colors.danger },
+  dangerTitle: { fontSize: 16, fontWeight: "700", color: colors.danger },
+  cancelDelete: { color: colors.textMuted, textAlign: "center", paddingVertical: 6 },
+  deleteLink: { alignItems: "center", paddingVertical: 10 },
+  deleteLinkText: { color: colors.danger, fontSize: 13 },
 });

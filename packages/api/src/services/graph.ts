@@ -236,6 +236,20 @@ export async function shareAnEvent(a: string, b: string): Promise<boolean> {
   }
 }
 
+/**
+ * Removes the person and every edge they're part of (WAFT connections,
+ * ATTENDED check-ins). Idempotent — a missing node is a no-op, so account
+ * deletion can be retried after a partial failure.
+ */
+export async function deletePersonNode(userId: string) {
+  const session = getDriver().session();
+  try {
+    await session.run(`MATCH (p:Person {id: $userId}) DETACH DELETE p`, { userId });
+  } finally {
+    await session.close();
+  }
+}
+
 export async function checkinToEvent(userId: string, eventId: string) {
   const session = getDriver().session();
   try {
