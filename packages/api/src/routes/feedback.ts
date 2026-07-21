@@ -14,7 +14,11 @@ const feedbackSchema = z.object({
 
 export async function feedbackRoutes(app: FastifyInstance) {
   // Public, unauthenticated — anyone who scanned a card can send a note.
-  app.post("/feedback", async (req, reply) => {
+  // Tighter rate limit than the global default since it's an open write
+  // path: no legitimate user submits feedback several times a minute.
+  app.post("/feedback", {
+    config: { rateLimit: { max: 8, timeWindow: "1 minute" } },
+  }, async (req, reply) => {
     const parsed = feedbackSchema.safeParse(req.body);
     if (!parsed.success) return reply.status(400).send({ error: "invalid_request" });
     const { website, ...data } = parsed.data;
