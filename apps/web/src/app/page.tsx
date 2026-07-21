@@ -1,4 +1,5 @@
 import { Footer, getWaftHref } from "@/components/Footer";
+import { CoalesceLogo } from "@/components/CoalesceLogo";
 
 const STEPS = [
   { n: "1", title: "Show your QR", body: "One card carries every social you choose to share." },
@@ -12,8 +13,9 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-1 flex flex-col items-center justify-center p-8 gap-10">
-        <div className="text-center">
-          <h1 className="text-5xl font-bold tracking-tight mb-4">Waft</h1>
+        <div className="text-center flex flex-col items-center">
+          <h1 className="sr-only">Waft</h1>
+          <CoalesceLogo className="w-full max-w-[480px] h-auto -my-8" />
           <p className="text-neutral-400 text-lg max-w-md">
             Scan once. Connect everywhere. See your network grow.
           </p>
