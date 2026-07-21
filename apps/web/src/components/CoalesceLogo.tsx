@@ -2,15 +2,57 @@
 
 import { useEffect, useRef } from "react";
 
-// The "Coalesce" wordmark from DESIGN.md: "waft" condenses out of vapor
-// (feTurbulence displacement 46 -> ~1), reveal wisps sweep through, then the
-// settled mark keeps a low-amplitude breathe with ambient wisps drifting by
-// at random short intervals. Mount once per page — the SVG defs use fixed ids.
+// The "Coalesce" wordmark from DESIGN.md: the ribbon-W lockup — the icon's
+// folded-ribbon W (left flourish trimmed 30%, sized to the x-height of "aft")
+// beside "aft" in the vapor gradient — condenses out of turbulent vapor
+// (feTurbulence displacement 46 -> ~1) while reveal wisps sweep through, then
+// keeps a low-amplitude breathe with ambient wisps drifting by at random
+// short intervals. Mount once per page — the SVG defs use fixed ids.
 
 const SVGNS = "http://www.w3.org/2000/svg";
 const FONT = '"Avenir Next", "Segoe UI", system-ui, sans-serif';
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+// Ribbon-W geometry, lowercase-w silhouette — symmetric tips on the x-line,
+// wider stance and higher middle peak than the icon's W, so it reads as the
+// "w" in "waft" rather than a capital.
+const V: [number, number][] = [
+  [20, 30],
+  [38, 74],
+  [52, 42],
+  [66, 74],
+  [84, 30],
+];
+const WL = { minX: 20, maxX: 84, minY: 30, maxY: 74 };
+const RIB_H = 6.6;
+const PAL = ["#eef2ff", "#b9c8ff", "#6c8cff"];
+const BASE = 170;
+const GAP = 6;
+const CX = 300;
+
+// Each ribbon segment is a hexagon: full-bellied at the middle, tapering to
+// near-points at the ends — wispiness from geometry, not blur.
+function taper(a: [number, number], b: [number, number], H: number) {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const L = Math.hypot(dx, dy);
+  const ux = -dy / L;
+  const uy = dx / L;
+  const m: [number, number] = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  const E = Math.max(1.1, H * 0.24);
+  return [
+    [a[0] + ux * E, a[1] + uy * E],
+    [m[0] + ux * H, m[1] + uy * H],
+    [b[0] + ux * E, b[1] + uy * E],
+    [b[0] - ux * E, b[1] - uy * E],
+    [m[0] - ux * H, m[1] - uy * H],
+    [a[0] - ux * E, a[1] - uy * E],
+  ]
+    .map((p) => p.map((v) => v.toFixed(1)).join(","))
+    .join(" ");
+}
+const RIBS = [0, 1, 2, 3].map((i) => taper(V[i], V[i + 1], RIB_H));
 
 const wordStyle: React.CSSProperties = {
   fontFamily: FONT,
@@ -20,21 +62,46 @@ const wordStyle: React.CSSProperties = {
 };
 
 export function CoalesceLogo({ className }: { className?: string }) {
+  const svgRef = useRef<SVGSVGElement>(null);
   const turbRef = useRef<SVGFETurbulenceElement>(null);
   const dispRef = useRef<SVGFEDisplacementMapElement>(null);
   const glowRef = useRef<SVGTextElement>(null);
+  const wgroupRef = useRef<SVGGElement>(null);
   const wordRef = useRef<SVGTextElement>(null);
   const wispsRef = useRef<SVGGElement>(null);
   const ambientRef = useRef<SVGGElement>(null);
 
   useEffect(() => {
+    const svg = svgRef.current;
     const turb = turbRef.current;
     const disp = dispRef.current;
     const glow = glowRef.current;
+    const wgroup = wgroupRef.current;
     const word = wordRef.current;
     const wisps = wispsRef.current;
     const ambient = ambientRef.current;
-    if (!turb || !disp || !glow || !word || !wisps || !ambient) return;
+    if (!svg || !turb || !disp || !glow || !wgroup || !word || !wisps || !ambient) return;
+    const ribs = [...wgroup.querySelectorAll("polygon")];
+
+    // Layout: the W tops out at the x-height of "aft" (+3% optical overshoot
+    // for its pointed, dissolving tips) and shares its baseline. Ink metrics
+    // come from canvas — svg text getBBox() returns the em box, not ink.
+    const ctx = document.createElement("canvas").getContext("2d");
+    let xh = 70; // Avenir Next x-height at 150px, if canvas is unavailable
+    if (ctx) {
+      ctx.font = `800 150px ${FONT}`;
+      xh = ctx.measureText("a").actualBoundingBoxAscent;
+    }
+    const bb = word.getBBox();
+    const targetH = xh * 1.03;
+    const wScale = targetH / (WL.maxY - WL.minY);
+    const wW = (WL.maxX - WL.minX) * wScale;
+    const startX = CX - (wW + GAP + bb.width) / 2;
+    wgroup.setAttribute(
+      "transform",
+      `translate(${(startX - WL.minX * wScale).toFixed(1)} ${(BASE - WL.maxY * wScale).toFixed(1)}) scale(${wScale.toFixed(3)})`
+    );
+    word.setAttribute("x", (startX + wW + GAP - bb.x).toFixed(1));
 
     const rafs = new Set<number>();
     const timers = new Set<ReturnType<typeof setTimeout>>();
@@ -98,6 +165,7 @@ export function CoalesceLogo({ className }: { className?: string }) {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
       disp.setAttribute("scale", "0");
       word.style.opacity = "1";
+      ribs.forEach((r) => ((r as SVGPolygonElement).style.opacity = "1"));
       glow.style.opacity = "0.24";
       return;
     }
@@ -118,7 +186,12 @@ export function CoalesceLogo({ className }: { className?: string }) {
         "baseFrequency",
         `${lerp(0.03, 0.012, e).toFixed(4)} ${lerp(0.05, 0.02, e).toFixed(4)}`
       );
-      word.style.opacity = String(Math.min(1, e * 1.5));
+      word.style.opacity = String(Math.min(1, Math.max(0, (e - 0.14) * 1.5)));
+      ribs.forEach((r, i) => {
+        (r as SVGPolygonElement).style.opacity = String(
+          Math.min(1, Math.max(0, (e - i * 0.1) / 0.55))
+        );
+      });
       glow.style.opacity = String(lerp(0, 0.5, e) * (1 - e * 0.35));
       if (t < 1) raf(frame);
       else {
@@ -139,6 +212,7 @@ export function CoalesceLogo({ className }: { className?: string }) {
 
   return (
     <svg
+      ref={svgRef}
       className={className}
       viewBox="0 0 600 240"
       role="img"
@@ -151,6 +225,24 @@ export function CoalesceLogo({ className }: { className?: string }) {
           <stop offset=".55" stopColor="#b9c8ff" />
           <stop offset="1" stopColor="#6c8cff" />
         </linearGradient>
+        {[0, 1, 2, 3].map((i) => (
+          <linearGradient
+            key={i}
+            id={`clg-w-${i}`}
+            gradientUnits="userSpaceOnUse"
+            x1={V[i][0]}
+            y1={V[i][1]}
+            x2={V[i + 1][0]}
+            y2={V[i + 1][1]}
+          >
+            {/* Segment 0's dissolving tail (the left flourish) fades in ~30%
+                sooner so it doesn't out-gesture the letterforms. */}
+            <stop offset="0" stopColor={PAL[0]} stopOpacity={i === 0 ? "0.3" : "0.1"} />
+            <stop offset={i === 0 ? "0.17" : "0.24"} stopColor={PAL[0]} stopOpacity="0.92" />
+            <stop offset="0.6" stopColor={PAL[1]} stopOpacity="1" />
+            <stop offset="1" stopColor={PAL[2]} stopOpacity="0.18" />
+          </linearGradient>
+        ))}
         <filter id="clg-vapor" x="-40%" y="-60%" width="180%" height="260%">
           <feTurbulence
             ref={turbRef}
@@ -181,16 +273,16 @@ export function CoalesceLogo({ className }: { className?: string }) {
       </text>
       <g ref={ambientRef} fill="none" stroke="url(#clg-ink)" strokeLinecap="round" />
       <g ref={wispsRef} fill="none" stroke="url(#clg-ink)" strokeLinecap="round" opacity={0.9} />
-      <text
-        ref={wordRef}
-        x={300}
-        y={170}
-        textAnchor="middle"
-        filter="url(#clg-vapor)"
-        style={{ ...wordStyle, fill: "url(#clg-ink)", opacity: 0 }}
-      >
-        waft
-      </text>
+      <g filter="url(#clg-vapor)">
+        <g ref={wgroupRef}>
+          {RIBS.map((pts, i) => (
+            <polygon key={i} points={pts} fill={`url(#clg-w-${i})`} style={{ opacity: 0 }} />
+          ))}
+        </g>
+        <text ref={wordRef} y={170} style={{ ...wordStyle, fill: "url(#clg-ink)", opacity: 0 }}>
+          aft
+        </text>
+      </g>
     </svg>
   );
 }

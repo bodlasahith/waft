@@ -21,9 +21,16 @@ to dark-first, given a soft accent glow.
 
 ## Logo
 
-- **Wordmark**: "waft" set in a heavy geometric sans, tight tracking, filled
-  with the white→periwinkle vapor gradient. (Decided over the ribbon-`w`
-  integration — the font weight reads cleaner; the ribbon lives in the icon.)
+- **Wordmark**: the **ribbon-W lockup** — a folded-ribbon `w` beside "aft" in
+  a heavy geometric sans (tight tracking, vapor-gradient fill). The wordmark's
+  ribbon uses a **lowercase-w silhouette** (symmetric tips on the x-line,
+  wider stance, higher middle peak than the icon's W) so it reads as the "w"
+  in "waft", not a capital. It's sized to the **x-height of "aft"** (+3%
+  optical overshoot for the pointed, dissolving tips) and shares the
+  baseline; the left flourish's dissolving tail fades in ~30% sooner so it
+  doesn't out-gesture the letterforms. Measure x-height with canvas ink
+  metrics (`actualBoundingBoxAscent`) — svg text `getBBox()` returns the em
+  box, not ink. (Supersedes the earlier font-only wordmark.)
 - **App icon**: a **folded-ribbon "W"** (Netflix-N technique) rendered as
   tapered, alpha-faded vapor ribbons — solid in the belly, dissolving at the
   tips. Sharp edges (no blur); wispiness is geometry, not softness. Adaptive:

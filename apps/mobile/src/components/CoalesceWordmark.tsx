@@ -3,22 +3,26 @@ import { AccessibilityInfo, Animated, Easing, StyleSheet, View } from "react-nat
 import Svg, {
   Defs,
   Ellipse,
+  G,
   LinearGradient,
   Path,
+  Polygon,
   RadialGradient,
   Stop,
   Text as SvgText,
 } from "react-native-svg";
 
-// The "Coalesce" wordmark (DESIGN.md): the RN approximation of the web
-// feTurbulence reveal — the gradient word gathers into place (letter-spacing
-// tightens as it fades in over a soft glow) while wispy tendrils draw through,
-// then ambient wisps keep drifting by at random short intervals. feTurbulence
-// isn't reliable in RN, so this keeps the feel, not the exact smoke.
+// The "Coalesce" wordmark (DESIGN.md): the ribbon-W lockup — the icon's
+// folded-ribbon W beside "aft" — in the RN approximation of the web
+// feTurbulence reveal: ribs fade in staggered and the letters gather into
+// place (letter-spacing tightens) over a soft glow while wispy tendrils draw
+// through, then ambient wisps keep drifting by at random short intervals.
+// feTurbulence isn't reliable in RN, so this keeps the feel, not the smoke.
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedSvgText = Animated.createAnimatedComponent(SvgText);
 const AnimatedEllipse = Animated.createAnimatedComponent(Ellipse);
+const AnimatedPolygon = Animated.createAnimatedComponent(Polygon);
 
 // All geometry lives in the same 600x240 space as the web mark.
 const VIEWBOX = "0 0 600 240";
@@ -28,6 +32,48 @@ const REVEAL_WISPS = [
   "M120 178 C 180 193,240 173,300 186",
 ];
 const WISP_LEN = 300;
+
+// Ribbon-W, lowercase-w silhouette — symmetric tips on the x-line, wider
+// stance and higher middle peak than the icon's W, so it reads as the "w" in
+// "waft" rather than a capital. Same local space as the icon.
+const V: [number, number][] = [
+  [20, 30],
+  [38, 74],
+  [52, 42],
+  [66, 74],
+  [84, 30],
+];
+const RIB_H = 6.6;
+const PAL = ["#eef2ff", "#b9c8ff", "#6c8cff"];
+
+// Each ribbon segment: full-bellied hexagon tapering to near-points — the
+// wispiness is geometry + the alpha-fade gradients, never blur.
+function taper(a: [number, number], b: [number, number], H: number) {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const L = Math.hypot(dx, dy);
+  const ux = -dy / L;
+  const uy = dx / L;
+  const m: [number, number] = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  const E = Math.max(1.1, H * 0.24);
+  return [
+    [a[0] + ux * E, a[1] + uy * E],
+    [m[0] + ux * H, m[1] + uy * H],
+    [b[0] + ux * E, b[1] + uy * E],
+    [b[0] - ux * E, b[1] - uy * E],
+    [m[0] - ux * H, m[1] - uy * H],
+    [a[0] - ux * E, a[1] - uy * E],
+  ]
+    .map((p) => p.map((v) => v.toFixed(1)).join(","))
+    .join(" ");
+}
+const RIBS = [0, 1, 2, 3].map((i) => taper(V[i], V[i + 1], RIB_H));
+
+// Layout precomputed for SF at 150px (no text measurement in RN): the W tops
+// out at the "aft" x-height (~77.5, +3% overshoot for the dissolving tips)
+// and shares the baseline at y=170. Nudge these if the device render sits off.
+const W_TRANSFORM = "translate(112.1, 35.8) scale(1.814)";
+const AFT_X = 270;
 
 interface Wisp {
   id: number;
@@ -122,9 +168,18 @@ export function CoalesceWordmark({ width = 230 }: { width?: number }) {
     };
   }, [gather, breathe]);
 
-  const wordOpacity = gather.interpolate({ inputRange: [0, 0.66, 1], outputRange: [0, 1, 1] });
+  const aftOpacity = gather.interpolate({
+    inputRange: [0, 0.14, 0.8, 1],
+    outputRange: [0, 0, 1, 1],
+  });
   // The "gathering": letters drift in from loose spacing to the tight lockup.
   const spacing = gather.interpolate({ inputRange: [0, 1], outputRange: [6, -5] });
+  // Ribs fade in staggered, leading the letters like the web reveal.
+  const ribOpacity = (i: number) =>
+    gather.interpolate({
+      inputRange: i === 0 ? [0, 0.55, 1] : [0, i * 0.1, i * 0.1 + 0.55, 1],
+      outputRange: i === 0 ? [0, 1, 1] : [0, 0, 1, 1],
+    });
   const glowOpacity = settled
     ? breathe.interpolate({ inputRange: [0, 1], outputRange: [0.22, 0.34] })
     : gather.interpolate({ inputRange: [0, 0.7, 1], outputRange: [0, 0.5, 0.28] });
@@ -138,6 +193,24 @@ export function CoalesceWordmark({ width = 230 }: { width?: number }) {
             <Stop offset="0.55" stopColor="#b9c8ff" />
             <Stop offset="1" stopColor="#6c8cff" />
           </LinearGradient>
+          {[0, 1, 2, 3].map((i) => (
+            <LinearGradient
+              key={i}
+              id={`cw-w-${i}`}
+              gradientUnits="userSpaceOnUse"
+              x1={V[i][0]}
+              y1={V[i][1]}
+              x2={V[i + 1][0]}
+              y2={V[i + 1][1]}
+            >
+              {/* Segment 0's dissolving tail (the left flourish) fades in
+                  ~30% sooner so it doesn't out-gesture the letterforms. */}
+              <Stop offset="0" stopColor={PAL[0]} stopOpacity={i === 0 ? "0.3" : "0.1"} />
+              <Stop offset={i === 0 ? "0.17" : "0.24"} stopColor={PAL[0]} stopOpacity="0.92" />
+              <Stop offset="0.6" stopColor={PAL[1]} stopOpacity="1" />
+              <Stop offset="1" stopColor={PAL[2]} stopOpacity="0.18" />
+            </LinearGradient>
+          ))}
           <RadialGradient id="cw-glow" cx="0.5" cy="0.5" r="0.5">
             <Stop offset="0" stopColor="#6c8cff" stopOpacity="0.55" />
             <Stop offset="1" stopColor="#6c8cff" stopOpacity="0" />
@@ -174,17 +247,27 @@ export function CoalesceWordmark({ width = 230 }: { width?: number }) {
             }
           />
         ))}
+        <G transform={W_TRANSFORM}>
+          {RIBS.map((pts, i) => (
+            <AnimatedPolygon
+              key={i}
+              points={pts}
+              fill={`url(#cw-w-${i})`}
+              opacity={ribOpacity(i) as unknown as number}
+            />
+          ))}
+        </G>
         <AnimatedSvgText
-          x="300"
+          x={AFT_X}
           y="170"
-          textAnchor="middle"
+          textAnchor="start"
           fontSize="150"
           fontWeight="800"
           letterSpacing={spacing as unknown as number}
           fill="url(#cw-ink)"
-          opacity={wordOpacity as unknown as number}
+          opacity={aftOpacity as unknown as number}
         >
-          waft
+          aft
         </AnimatedSvgText>
       </Svg>
     </View>
