@@ -11,6 +11,7 @@ import {
 import { colors, radii } from "../theme";
 import { AppButton } from "../components/UI";
 import { GoogleButton } from "../components/GoogleButton";
+import { CoalesceWordmark } from "../components/CoalesceWordmark";
 import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri } from "expo-auth-session";
 import { supabase } from "../supabase";
@@ -170,7 +171,7 @@ export function SignInScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.logo}>waft<Text style={{ color: colors.accent }}>.</Text></Text>
+      <CoalesceWordmark />
       <Text style={styles.tagline}>Scan once. Connect everywhere.</Text>
 
       {step === "email" && (
@@ -274,14 +275,7 @@ export function SignInScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", padding: 32, gap: 12 },
-  logo: {
-    fontSize: 52,
-    fontWeight: "800",
-    textAlign: "center",
-    color: colors.text,
-    letterSpacing: -1.5,
-  },
-  tagline: { color: colors.textMuted, textAlign: "center", marginBottom: 28, fontSize: 15 },
+  tagline: { color: colors.textMuted, textAlign: "center", marginBottom: 28, marginTop: -14, fontSize: 15 },
   input: {
     borderWidth: 1,
     borderColor: colors.border,
