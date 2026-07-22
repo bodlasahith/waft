@@ -8,6 +8,9 @@ const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 // generic server rejection.
 const BODY_MAX = 4000;
 const SUBJECT_MAX = 200;
+// something@something.tld, no spaces — catches the cases the server's email
+// check rejects (whitespace, missing TLD) before we send.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const CATEGORIES = [
   { value: "general", label: "General" },
@@ -26,16 +29,21 @@ export default function Contact() {
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [bodyInvalid, setBodyInvalid] = useState(false);
+  const [emailInvalid, setEmailInvalid] = useState(false);
 
   async function submit() {
-    // The message is the one required field — validate it here so the user
-    // gets a clear reason instead of a silently disabled button.
-    if (body.trim().length === 0) {
-      setBodyInvalid(true);
+    // Validate client-side so the user gets a clear reason on the offending
+    // field instead of a generic server rejection. Email is optional, but if
+    // given it must be well-formed (the server rejects whitespace / no TLD).
+    const trimmedEmail = email.trim();
+    const bodyEmpty = body.trim().length === 0;
+    const emailBad = trimmedEmail.length > 0 && !EMAIL_RE.test(trimmedEmail);
+    setBodyInvalid(bodyEmpty);
+    setEmailInvalid(emailBad);
+    if (bodyEmpty || emailBad) {
       setState("idle");
       return;
     }
-    setBodyInvalid(false);
     setState("sending");
     setErrorMsg("");
     try {
@@ -44,10 +52,10 @@ export default function Contact() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           category,
-          name: name || undefined,
-          email: email || undefined,
-          subject: subject || undefined,
-          body,
+          name: name.trim() || undefined,
+          email: trimmedEmail || undefined,
+          subject: subject.trim() || undefined,
+          body: body.trim(),
           website,
         }),
       });
@@ -112,14 +120,21 @@ export default function Contact() {
                 onChange={(e) => setName(e.target.value)}
               />
               <input
-                className={`${field} ${normalBorder}`}
+                className={`${field} ${emailInvalid ? "border-red-500/70" : normalBorder}`}
                 placeholder="Email (optional)"
                 type="email"
                 maxLength={200}
+                aria-invalid={emailInvalid}
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (emailInvalid) setEmailInvalid(false);
+                }}
               />
             </div>
+            {emailInvalid && (
+              <p className="text-red-400 text-xs -mt-2">Enter a valid email, or leave it blank.</p>
+            )}
             <input
               className={`${field} ${normalBorder}`}
               placeholder="Subject (optional)"

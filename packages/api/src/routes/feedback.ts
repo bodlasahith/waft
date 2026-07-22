@@ -4,7 +4,9 @@ import { supabase } from "../lib/supabase.js";
 
 const feedbackSchema = z.object({
   name: z.string().max(120).optional(),
-  email: z.string().email().max(200).optional(),
+  // Trim before validating so a pasted address with stray whitespace isn't
+  // rejected as malformed.
+  email: z.string().trim().email().max(200).optional(),
   category: z.enum(["bug", "feature", "general", "interested"]).default("general"),
   subject: z.string().max(200).optional(),
   body: z.string().min(1).max(4000),
