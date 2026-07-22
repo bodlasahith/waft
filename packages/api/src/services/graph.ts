@@ -136,39 +136,34 @@ async function queryEventGraph(eventId: string): Promise<EventGraph> {
        RETURN p.id AS id, p.name AS name, p.avatarColor AS avatarColor, p.avatarShape AS avatarShape`,
       { eventId }
     );
-    const result = await session.run(
-      `MATCH (a:Person)-[r:WAFT {eventId: $eventId}]-(b:Person)
-       RETURN DISTINCT a.id AS source, a.name AS sourceName,
-              b.id AS target, b.name AS targetName, r.strength AS strength`,
-      { eventId }
-    );
-    const nodes = new Map<
-      string,
-      { id: string; name: string; avatarColor?: string; avatarShape?: string }
-    >();
-    for (const record of attendees.records) {
-      nodes.set(record.get("id"), {
-        id: record.get("id"),
-        name: record.get("name"),
-        avatarColor: record.get("avatarColor"),
-        avatarShape: record.get("avatarShape"),
-      });
-    }
-    const edges: { source: string; target: string; strength: number }[] = [];
+    const nodes = attendees.records.map((r) => ({
+      id: r.get("id") as string,
+      name: r.get("name") as string,
+      avatarColor: r.get("avatarColor") ?? undefined,
+      avatarShape: r.get("avatarShape") ?? undefined,
+    }));
+    const ids = nodes.map((n) => n.id);
 
-    for (const record of result.records) {
-      const sourceId = record.get("source");
-      const targetId = record.get("target");
-      nodes.set(sourceId, { id: sourceId, name: record.get("sourceName") });
-      nodes.set(targetId, { id: targetId, name: record.get("targetName") });
-      edges.push({
-        source: sourceId,
-        target: targetId,
-        strength: record.get("strength")?.toNumber() ?? 1,
-      });
-    }
+    // Draw an edge between any two attendees who share a WAFT connection,
+    // however/whenever it formed — not only ones tagged with this event. So
+    // people already connected before checking in (e.g. auto-connected via a
+    // pending invite) still appear linked on the wall, without a re-scan.
+    // (a.id < b.id dedupes the undirected pair.)
+    const edgeResult = ids.length
+      ? await session.run(
+          `MATCH (a:Person)-[r:WAFT]-(b:Person)
+           WHERE a.id IN $ids AND b.id IN $ids AND a.id < b.id
+           RETURN a.id AS source, b.id AS target, coalesce(r.strength, 1) AS strength`,
+          { ids }
+        )
+      : null;
+    const edges = (edgeResult?.records ?? []).map((r) => ({
+      source: r.get("source") as string,
+      target: r.get("target") as string,
+      strength: r.get("strength")?.toNumber?.() ?? 1,
+    }));
 
-    return { nodes: [...nodes.values()], edges };
+    return { nodes, edges };
   } finally {
     await session.close();
   }
