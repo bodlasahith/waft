@@ -1,7 +1,22 @@
 # Demo Plan — YC AI Startup School (July 25–26) + Pear Prime
 
 The pitch is the product: every "what's your contact?" moment is a demo.
-Funnel: **scan → web card → Get Waft (TestFlight) → they scan the next person.**
+Funnel: **scan your card → web card (drop email) → Get Waft → auto-connected to you on join** (no second scan — pending-connection feature).
+
+## Status (updated Jul 22 — build-5 prep)
+
+- **Event is live:** "YC AI Startup School", code `ycss2026`, id `913f4bd3-227d-4cd5-ae7b-55cfe67dc695`, runs Jul 25 9am → Jul 26 8pm PDT (wall viewable ~24h after), 8 AI-founder icebreakers baked in.
+- **Assets generated** → `demo-assets/`: `poster-event.png` (event QR), `wallpaper-card.png` (lock-screen card QR), plus raw `qr-event.png` / `qr-card.png`. All on-brand (ribbon-W, vapor ground).
+- **URLs:** card `getwaft.app/c/x7W_R7LqZ-` · event/wall `getwaft.app/e/ycss2026` (resolves to the live wall).
+- **Build strategy:** safe path — wait for build 4 approval, then immediately cut build 5 (bakes in Apple Sign In + the ribbon-W icon + the entire held OTA batch) and race its review for the weekend.
+
+### Two QRs, two jobs — don't mix them up
+- **Card QR ("meet me")** — lock screen. New person scans (camera, no app needed) → your web card → email → install → **already connected to you on signup.** Lead with this for 1:1 intros.
+- **Event QR ("join the room")** — poster. App users scan it in-app to check into YC AI Startup School → they appear on the wall. A camera scan just opens the wall.
+
+### How connections show up (so nothing surprises you)
+- A scan (or auto-connect on join) makes a **mutual connection**. **Waft strength is uniform (1)** today — interaction-based strength is roadmapped, not live, so meeting again doesn't change a number yet.
+- The **event wall draws an edge between any two attendees who are connected**, however it formed. So people you auto-connected with **show linked on the wall once they check in — no re-scan needed.** (Fixed Jul 22; the wall previously only drew edges made *at* the event.)
 
 ## Pear Prime (~40 handpicked people) — the beachhead
 
@@ -81,8 +96,10 @@ signed with the paid cert (valid a year) and never think about it again.
 | AI icebreakers fail | Automatic — generic fallback list ships with every event |
 | Someone's phone won't scan | Join-by-code, printed under the QR |
 
-## Assets to generate (ask Claude)
+## Assets (generated → `demo-assets/`)
 
-- [ ] Event QR poster (print-ready, event QR + join code + TestFlight QR)
-- [ ] Lock-screen wallpaper with card QR
-- [ ] Demo-data reset script (clear test artifacts before Saturday: fake profiles stay or go — decide)
+- [x] Event QR poster (`poster-event.png`) — event QR + `getwaft.app/e/ycss2026`. **Add the TestFlight "Get the app" QR beside it once the public link exists.**
+- [x] Lock-screen wallpaper with card QR (`wallpaper-card.png`)
+- [x] Raw QRs (`qr-event.png`, `qr-card.png`) for reuse
+- [ ] Regenerate the card/poster QR to point at the TestFlight link once it's live (and set `NEXT_PUBLIC_TESTFLIGHT_URL` in Vercel)
+- [ ] Decide: keep the 12 seeded demo profiles (recommended — the wall looks alive) or clear them
