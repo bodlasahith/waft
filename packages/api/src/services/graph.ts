@@ -100,7 +100,33 @@ export async function getNetworkGraph(userId: string, depth: number = 2) {
   }
 }
 
-export async function getEventGraph(eventId: string) {
+type EventGraph = {
+  nodes: { id: string; name: string; avatarColor?: string; avatarShape?: string }[];
+  edges: { source: string; target: string; strength: number }[];
+};
+
+// Short-TTL cache for the event graph. The live wall's read volume spikes on
+// reconnect storms — a venue WiFi blip reconnects every viewer at once, each
+// re-fetching the graph — so serving those from a ~3s cache collapses
+// hundreds of identical Neo4j round-trips into one. Writes (check-in, new
+// connection) call invalidateEventGraph before they re-broadcast, so the live
+// snapshot stays correct; the cache only ever absorbs read bursts.
+const EVENT_GRAPH_TTL_MS = 3000;
+const eventGraphCache = new Map<string, { ts: number; data: EventGraph }>();
+
+export function invalidateEventGraph(eventId: string) {
+  eventGraphCache.delete(eventId);
+}
+
+export async function getEventGraph(eventId: string): Promise<EventGraph> {
+  const hit = eventGraphCache.get(eventId);
+  if (hit && Date.now() - hit.ts < EVENT_GRAPH_TTL_MS) return hit.data;
+  const data = await queryEventGraph(eventId);
+  eventGraphCache.set(eventId, { ts: Date.now(), data });
+  return data;
+}
+
+async function queryEventGraph(eventId: string): Promise<EventGraph> {
   const session = getDriver().session();
   try {
     // Attendees are nodes the moment they check in — the live graph should

@@ -5,6 +5,7 @@ import {
   getAttendedEventIds,
   getEventConnections,
   getEventGraph,
+  invalidateEventGraph,
 } from "../services/graph.js";
 import { generateIcebreakers, pickIcebreaker } from "../services/icebreakers.js";
 import { supabase } from "../lib/supabase.js";
@@ -12,12 +13,17 @@ import { broadcast } from "../lib/liveEvents.js";
 import { requireAuth } from "../lib/auth.js";
 import { nanoid } from "nanoid";
 
-// How long the live wall stays viewable after an event ends.
+// How long the live wall stays viewable after an event's explicit end.
 const WALL_TTL_HOURS = 24;
+// A wall with no explicit end still can't be public forever (it's an
+// unauthenticated attendee list). Bound its life from the start instead —
+// 48h covers a multi-day event; longer events should set an end date.
+const MAX_UNBOUNDED_WALL_HOURS = 48;
 
-export function isWallExpired(endsAt: string | null): boolean {
-  if (!endsAt) return false;
-  return Date.now() > new Date(endsAt).getTime() + WALL_TTL_HOURS * 3600_000;
+export function isWallExpired(endsAt: string | null, startsAt?: string | null): boolean {
+  if (endsAt) return Date.now() > new Date(endsAt).getTime() + WALL_TTL_HOURS * 3600_000;
+  if (startsAt) return Date.now() > new Date(startsAt).getTime() + MAX_UNBOUNDED_WALL_HOURS * 3600_000;
+  return false;
 }
 
 const createEventSchema = z.object({
@@ -138,7 +144,9 @@ export async function eventRoutes(app: FastifyInstance) {
       await checkinToEvent(req.userId, eventId);
       broadcast(eventId, { type: "checkin", eventId, userId: req.userId });
       // Check-ins now add nodes to the event graph — push the fresh snapshot
-      // so live viewers see people appear as they arrive.
+      // so live viewers see people appear as they arrive. Bust the cache
+      // first so the broadcast reflects this check-in, not a stale read.
+      invalidateEventGraph(eventId);
       const graph = await getEventGraph(eventId);
       broadcast(eventId, { type: "graph", eventId, ...graph });
       // Walking into a room of strangers is when an icebreaker helps most.
@@ -155,10 +163,10 @@ export async function eventRoutes(app: FastifyInstance) {
     const { eventId } = req.params as { eventId: string };
     const { data: event } = await supabase
       .from("events")
-      .select("ends_at")
+      .select("ends_at, starts_at")
       .eq("id", eventId)
       .single();
-    if (event && isWallExpired(event.ends_at)) {
+    if (event && isWallExpired(event.ends_at, event.starts_at)) {
       return reply.status(410).send({ error: "wall_expired" });
     }
     const graph = await getEventGraph(eventId);

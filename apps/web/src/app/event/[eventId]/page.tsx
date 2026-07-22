@@ -27,38 +27,65 @@ export default function EventPage({ params }: { params: Promise<{ eventId: strin
   const [eventId, setEventId] = useState<string>("");
   const [expired, setExpired] = useState(false);
 
+  // Live socket with auto-reconnect. Previously the socket had no onclose and
+  // its cleanup closure was never wired in, so a single WiFi blip froze the
+  // projected wall for the rest of the event. Now it reconnects with jittered
+  // exponential backoff and tears down cleanly on unmount / wall expiry.
   useEffect(() => {
+    let cancelled = false;
+    let ws: WebSocket | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let attempt = 0;
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001";
+
+    async function fetchGraph(id: string) {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+      const res = await fetch(`${apiUrl}/events/${id}/graph`);
+      if (res.status === 410) setExpired(true);
+      else if (res.ok) setGraphData(await res.json());
+    }
+
+    function open(id: string) {
+      if (cancelled) return;
+      ws = new WebSocket(`${wsUrl}/events/${id}/live`);
+      ws.onopen = () => {
+        attempt = 0; // reset backoff once a connection succeeds
+      };
+      ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        // Full graph snapshot on connect and after every check-in/connection.
+        if (msg.type === "graph") {
+          setGraphData({ nodes: msg.nodes ?? [], edges: msg.edges ?? [] });
+        } else if (msg.type === "expired") {
+          setExpired(true);
+          cancelled = true; // a dead wall shouldn't be reconnected
+          ws?.close();
+        }
+      };
+      ws.onclose = () => {
+        if (cancelled) return;
+        // 1s, 2s, 4s… capped at 30s, ±50% jitter so a venue-wide blip doesn't
+        // reconnect every wall in lockstep (a thundering herd into the API).
+        const base = Math.min(30000, 1000 * 2 ** attempt);
+        attempt++;
+        reconnectTimer = setTimeout(() => open(id), base * (0.5 + Math.random()));
+      };
+      ws.onerror = () => ws?.close(); // surfaces as onclose → reconnect
+    }
+
     params.then(({ eventId }) => {
+      if (cancelled) return;
       setEventId(eventId);
       fetchGraph(eventId);
-      connectWebSocket(eventId);
+      open(eventId);
     });
-  }, [params]);
 
-  async function fetchGraph(id: string) {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-    const res = await fetch(`${apiUrl}/events/${id}/graph`);
-    if (res.status === 410) setExpired(true);
-    else if (res.ok) setGraphData(await res.json());
-  }
-
-  function connectWebSocket(id: string) {
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001";
-    const ws = new WebSocket(`${wsUrl}/events/${id}/live`);
-
-    ws.onmessage = (event) => {
-      const msg = JSON.parse(event.data);
-      // The API pushes a full graph snapshot on connect and after every
-      // check-in or connection at this event.
-      if (msg.type === "graph") {
-        setGraphData({ nodes: msg.nodes ?? [], edges: msg.edges ?? [] });
-      } else if (msg.type === "expired") {
-        setExpired(true);
-      }
+    return () => {
+      cancelled = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      ws?.close();
     };
-
-    return () => ws.close();
-  }
+  }, [params]);
 
   const [topN, setTopN] = useState(5);
   const stats = useMemo(

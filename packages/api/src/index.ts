@@ -1,4 +1,5 @@
 import Fastify, { FastifyRequest } from "fastify";
+import { createHash } from "node:crypto";
 import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import websocket from "@fastify/websocket";
@@ -80,11 +81,14 @@ await app.register(cors, {
   },
 });
 
-// Per-IP rate limit as a spam/runaway-loop backstop. Generous global ceiling
-// (a normal user makes a handful of calls; a whole event of attendees each
-// get their own bucket via trustProxy). /health is exempt so Railway's
-// frequent healthcheck never trips it. Public/unauthenticated write routes
-// (e.g. /feedback) set stricter per-route overrides.
+// Rate limit as a spam/runaway-loop backstop. Key on the bearer token when
+// present, IP otherwise: a whole event NATs to one public IP on venue WiFi,
+// so per-IP keying would collapse every attendee into a single bucket at peak
+// (the review's sharpest scale finding). The token is a per-user/session
+// value, so each attendee gets their own bucket; anonymous routes (/feedback,
+// /cards) still key on IP. This is a bucket key, not authz — a forged token
+// just buys its own limit, no worse than spoofing X-Forwarded-For.
+// /health is exempt so Railway's frequent healthcheck never trips it.
 // No errorResponseBuilder: it would replace the thrown error with its return
 // value and strip the 429 statusCode, so the shared setErrorHandler below
 // (which keys off statusCode) would mislabel it a 500. Let the plugin throw
@@ -93,6 +97,13 @@ await app.register(rateLimit, {
   max: 200,
   timeWindow: "1 minute",
   allowList: (req: FastifyRequest) => req.url === "/health",
+  keyGenerator: (req: FastifyRequest) => {
+    const auth = req.headers.authorization;
+    if (auth?.startsWith("Bearer ")) {
+      return "u:" + createHash("sha256").update(auth.slice(7)).digest("base64url").slice(0, 22);
+    }
+    return "ip:" + req.ip;
+  },
 });
 
 await app.register(websocket);
@@ -110,10 +121,10 @@ app.get("/events/:eventId/live", { websocket: true }, async (socket, req) => {
   const { eventId } = req.params as { eventId: string };
   const { data: event } = await supabase
     .from("events")
-    .select("ends_at")
+    .select("ends_at, starts_at")
     .eq("id", eventId)
     .single();
-  if (event && isWallExpired(event.ends_at)) {
+  if (event && isWallExpired(event.ends_at, event.starts_at)) {
     socket.send(JSON.stringify({ type: "expired", eventId }));
     socket.close();
     return;

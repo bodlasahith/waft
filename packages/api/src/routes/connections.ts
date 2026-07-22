@@ -5,6 +5,7 @@ import {
   getEventGraph,
   getNetworkGraph,
   hasAttendedEvent,
+  invalidateEventGraph,
 } from "../services/graph.js";
 import { pickIcebreaker } from "../services/icebreakers.js";
 import { supabase } from "../lib/supabase.js";
@@ -41,6 +42,8 @@ export async function connectionRoutes(app: FastifyInstance) {
     // hand back one of the event's icebreakers for the post-scan screen.
     let icebreaker: string | null = null;
     if (body.eventId) {
+      // Fresh snapshot must include the edge just created — bust the cache.
+      invalidateEventGraph(body.eventId);
       const graph = await getEventGraph(body.eventId);
       broadcast(body.eventId, { type: "graph", eventId: body.eventId, ...graph });
       const { data: event } = await supabase
