@@ -2,9 +2,21 @@ import { Footer, getWaftHref } from "@/components/Footer";
 import { CoalesceLogo } from "@/components/CoalesceLogo";
 
 const STEPS = [
-  { n: "1", title: "Show your QR", body: "One card carries every social you choose to share." },
-  { n: "2", title: "They scan it", body: "One scan replaces the whole “what's your @” dance." },
-  { n: "3", title: "Watch it grow", body: "Every connection becomes a node in your live network graph." },
+  {
+    n: "01",
+    title: "Show your QR",
+    body: "One card carries every social you choose to share — no more fumbling through “what’s your @”.",
+  },
+  {
+    n: "02",
+    title: "They scan it",
+    body: "A single scan trades your whole set of handles, across every platform, in seconds.",
+  },
+  {
+    n: "03",
+    title: "Watch it grow",
+    body: "Every connection settles into your live network graph — the room, made visible.",
+  },
 ];
 
 const hasApp = getWaftHref !== "/";
@@ -12,39 +24,51 @@ const hasApp = getWaftHref !== "/";
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
-      <main className="flex-1 flex flex-col items-center justify-center p-8 gap-10">
-        <div className="text-center flex flex-col items-center">
+      <main className="flex-1 flex flex-col items-center px-6">
+        <section className="w-full max-w-2xl flex flex-col items-center text-center pt-24 pb-16">
           <h1 className="sr-only">Waft</h1>
-          <CoalesceLogo className="w-full max-w-[480px] h-auto -my-8" />
-          <p className="text-neutral-400 text-lg max-w-md">
-            Scan once. Connect everywhere. See your network grow.
+          <CoalesceLogo className="w-full max-w-[440px] h-auto -my-6" />
+          <p className="font-display text-2xl sm:text-3xl font-semibold tracking-tight mt-2">
+            Scan once. Connect everywhere.
           </p>
-          <p className="text-neutral-500 text-sm mt-2 max-w-md">
+          <p className="text-[var(--muted)] text-base sm:text-lg max-w-md mt-4 leading-relaxed">
             The phonebook, rebuilt for people whose contacts live across a dozen platforms.
           </p>
-        </div>
 
-        <div className="grid gap-4 sm:grid-cols-3 max-w-3xl w-full">
-          {STEPS.map((s) => (
-            <div key={s.n} className="rounded-2xl border border-neutral-800 bg-neutral-900 p-5">
-              <div className="text-neutral-500 text-sm mb-1">{s.n}</div>
-              <div className="font-semibold mb-1">{s.title}</div>
-              <p className="text-neutral-400 text-sm">{s.body}</p>
-            </div>
-          ))}
-        </div>
+          <div className="mt-9">
+            {hasApp ? (
+              <a href={getWaftHref} className="btn-primary inline-flex px-7 py-3.5 text-[15px]">
+                Get Waft on TestFlight
+              </a>
+            ) : (
+              <span className="vapor-card inline-flex items-center gap-2.5 px-5 py-2.5 text-sm text-[var(--muted)]">
+                <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse" />
+                Private beta — debuting at YC AI Startup School
+              </span>
+            )}
+          </div>
+        </section>
 
-        {hasApp ? (
-          <a
-            href={getWaftHref}
-            className="px-6 py-3 rounded-lg bg-white text-black font-medium hover:bg-neutral-200 transition-colors"
-          >
-            Get Waft on TestFlight
-          </a>
-        ) : (
-          <p className="text-neutral-500 text-sm text-center max-w-md">
-            Waft is in private beta — debuting at YC AI Startup School. Scanned someone&apos;s
-            card? Their links are one tap away, no app needed.
+        <section className="w-full max-w-4xl pb-4">
+          <p className="text-center text-xs uppercase tracking-[0.3em] text-[var(--faint)] mb-8">
+            How it works
+          </p>
+          <div className="grid gap-5 sm:grid-cols-3">
+            {STEPS.map((s) => (
+              <div key={s.n} className="vapor-card p-6 flex flex-col gap-3">
+                <span className="font-display text-vapor text-3xl font-extrabold tabular-nums">
+                  {s.n}
+                </span>
+                <h3 className="font-display font-semibold text-lg">{s.title}</h3>
+                <p className="text-[var(--muted)] text-sm leading-relaxed">{s.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {!hasApp && (
+          <p className="text-[var(--faint)] text-sm text-center max-w-md pt-10 pb-16">
+            Scanned someone’s card? Their links are one tap away — no app needed.
           </p>
         )}
       </main>

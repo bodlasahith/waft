@@ -2,22 +2,22 @@ import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="mt-16 border-t border-neutral-800 py-8 text-center text-sm text-neutral-500">
+    <footer className="mt-20 border-t border-[var(--border)] py-8 text-center text-sm">
       <div className="flex items-center justify-center gap-5">
-        <Link href="/" className="hover:text-neutral-300">
+        <Link href="/" className="link-muted">
           Waft
         </Link>
-        <Link href="/privacy" className="hover:text-neutral-300">
+        <Link href="/privacy" className="link-muted">
           Privacy
         </Link>
-        <Link href="/terms" className="hover:text-neutral-300">
+        <Link href="/terms" className="link-muted">
           Terms
         </Link>
-        <Link href="/contact" className="hover:text-neutral-300">
+        <Link href="/contact" className="link-muted">
           Contact
         </Link>
       </div>
-      <p className="mt-3 text-neutral-600">© {new Date().getFullYear()} Waft</p>
+      <p className="mt-3 text-[var(--faint)]">© {new Date().getFullYear()} Waft</p>
     </footer>
   );
 }

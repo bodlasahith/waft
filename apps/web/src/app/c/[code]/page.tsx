@@ -44,50 +44,61 @@ export default async function CardPage({ params }: { params: Promise<{ code: str
 
   return (
     <main className="flex flex-col items-center min-h-screen p-6">
-      <div className="flex-1 flex items-center">
-      <div className="w-full max-w-sm bg-neutral-900 rounded-2xl p-6 shadow-2xl border border-neutral-800">
-        {user.photo_url && (
-          <img
-            src={user.photo_url}
-            alt={user.name}
-            className="w-20 h-20 rounded-full mx-auto mb-4 object-cover"
-          />
-        )}
-        <h1 className="text-2xl font-bold text-center mb-6">{user.name}</h1>
+      <div className="flex-1 flex items-center w-full justify-center">
+        <div className="vapor-card w-full max-w-sm p-7 shadow-2xl">
+          {user.photo_url ? (
+            <img
+              src={user.photo_url}
+              alt={user.name}
+              className="w-20 h-20 rounded-full mx-auto mb-4 object-cover ring-2 ring-[var(--border-strong)]"
+            />
+          ) : (
+            <div className="w-20 h-20 rounded-full mx-auto mb-4 grid place-items-center bg-[var(--ground-2)] ring-2 ring-[var(--border-strong)]">
+              <span className="font-display text-2xl font-extrabold text-vapor">
+                {user.name?.charAt(0)?.toUpperCase() ?? "?"}
+              </span>
+            </div>
+          )}
+          <h1 className="font-display text-2xl font-bold text-center mb-1">{user.name}</h1>
+          <p className="text-center text-xs uppercase tracking-[0.25em] text-[var(--faint)] mb-6">
+            wafted to you
+          </p>
 
-        <div className="grid grid-cols-3 gap-3">
-          {user.socials.map((social: { platform: string; handle: string; url?: string }) => {
-            const meta = PLATFORM_META[social.platform];
-            if (!meta) return null;
-            const href = safeHref(social.url, meta.urlPrefix, social.handle);
-            if (!href) return null;
-            return (
-              <a
-                key={social.platform}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-col items-center gap-1 p-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 transition-colors"
-              >
-                <span className="text-2xl" style={{ color: meta.color }}>
-                  {meta.label.charAt(0)}
-                </span>
-                <span className="text-xs text-neutral-400">{meta.label}</span>
-              </a>
-            );
-          })}
-        </div>
+          <div className="grid grid-cols-3 gap-3">
+            {user.socials.map((social: { platform: string; handle: string; url?: string }) => {
+              const meta = PLATFORM_META[social.platform];
+              if (!meta) return null;
+              const href = safeHref(social.url, meta.urlPrefix, social.handle);
+              if (!href) return null;
+              return (
+                <a
+                  key={social.platform}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-[var(--border)] bg-[var(--ground-2)]/60 hover:border-[var(--border-strong)] transition-colors"
+                >
+                  <span
+                    className="w-8 h-8 grid place-items-center rounded-full text-sm font-bold font-display"
+                    style={{ color: meta.color, backgroundColor: `${meta.color}1f` }}
+                  >
+                    {meta.label.charAt(0)}
+                  </span>
+                  <span className="text-xs text-[var(--muted)]">{meta.label}</span>
+                </a>
+              );
+            })}
+          </div>
 
-        <div className="mt-6 pt-4 border-t border-neutral-800 text-center">
-          <p className="text-sm text-neutral-500 mb-2">Connect on Waft to see your shared network</p>
-          <a
-            href={getWaftHref}
-            className="block w-full py-2.5 bg-white text-black text-center font-medium rounded-lg hover:bg-neutral-200 transition-colors"
-          >
-            Get Waft
-          </a>
+          <div className="mt-6 pt-5 border-t border-[var(--border)] text-center">
+            <p className="text-sm text-[var(--muted)] mb-3">
+              Connect on Waft to see your shared network grow.
+            </p>
+            <a href={getWaftHref} className="btn-primary block w-full py-2.5">
+              Get Waft
+            </a>
+          </div>
         </div>
-      </div>
       </div>
       <Footer />
     </main>

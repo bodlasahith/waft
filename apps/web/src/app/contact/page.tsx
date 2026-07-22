@@ -43,20 +43,20 @@ export default function Contact() {
   }
 
   const field =
-    "w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2.5 text-white placeholder:text-neutral-600 focus:border-neutral-600 outline-none";
+    "w-full rounded-lg border border-[var(--border)] bg-[var(--ground-2)]/60 px-3 py-2.5 text-[var(--text)] placeholder:text-[var(--faint)] focus:border-[var(--border-strong)] outline-none transition-colors";
 
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-1 max-w-lg w-full mx-auto px-6 py-16">
-        <h1 className="text-3xl font-bold mb-2">Get in touch</h1>
-        <p className="text-neutral-400 mb-8">
+        <h1 className="font-display text-3xl font-bold mb-2">Get in touch</h1>
+        <p className="text-[var(--muted)] mb-8">
           Feedback, a bug, or just want to say hi? Drop a note.
         </p>
 
         {state === "sent" ? (
-          <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-6 text-center">
-            <p className="text-lg font-semibold">Thanks — got it.</p>
-            <p className="text-neutral-400 text-sm mt-1">We&apos;ll get back to you if it needs a reply.</p>
+          <div className="vapor-card p-6 text-center">
+            <p className="font-display text-lg font-semibold">Thanks — got it.</p>
+            <p className="text-[var(--muted)] text-sm mt-1">We&apos;ll get back to you if it needs a reply.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -67,8 +67,8 @@ export default function Contact() {
                   onClick={() => setCategory(c.value)}
                   className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
                     category === c.value
-                      ? "border-white bg-white text-black"
-                      : "border-neutral-700 text-neutral-300 hover:border-neutral-500"
+                      ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent-light)]"
+                      : "border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)]"
                   }`}
                 >
                   {c.label}
@@ -99,7 +99,7 @@ export default function Contact() {
             <button
               onClick={submit}
               disabled={body.trim().length === 0 || state === "sending"}
-              className="w-full py-3 rounded-lg bg-white text-black font-medium hover:bg-neutral-200 transition-colors disabled:opacity-40"
+              className="btn-primary w-full py-3 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {state === "sending" ? "Sending…" : "Send message"}
             </button>

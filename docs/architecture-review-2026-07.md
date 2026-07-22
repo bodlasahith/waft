@@ -6,6 +6,13 @@ plugin's local council: five Claude subagents each answering from one lens
 independent confirmation). Status of its findings is tracked in the README
 roadmap under "Hardening & scale"; the immediate security fixes and the four
 pre-demo hardening items were addressed 2026-07-21.
+
+NOTE ON PROVIDERS: this ran Claude-only because no external provider API keys
+(OpenAI, Gemini, Grok, Perplexity) were configured. For future council
+summons that validate large-scale architectural decisions, set those keys up
+first so the panel is genuinely cross-vendor rather than one model in five
+hats — that's when "consensus" becomes independent confirmation worth its
+weight. This review is retained as a useful single-model baseline regardless.
 -->
 
 # Local Council — Waft app assessment

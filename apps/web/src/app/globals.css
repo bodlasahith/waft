@@ -1,1 +1,111 @@
 @import "tailwindcss";
+
+/* Waft brand tokens — mirror of DESIGN.md / apps/mobile/src/theme.ts.
+   The site commits to one dark "vapor at night" world by design. */
+:root {
+  --ground: #0a0d15;
+  --ground-2: #0e1322;
+  --surface: rgba(21, 26, 38, 0.55);
+  --border: rgba(168, 188, 255, 0.1);
+  --border-strong: rgba(168, 188, 255, 0.2);
+  --accent: #6c8cff;
+  --accent-light: #a8bcff;
+  --text: #f2f5ff;
+  --muted: #8a93a8;
+  --faint: #5a6378;
+  --vapor: linear-gradient(180deg, #eaf0ff 0%, #b9c8ff 55%, #6c8cff 100%);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--ground);
+  color: var(--text);
+  font-family: var(--font-body), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display {
+  font-family: var(--font-display), var(--font-body), system-ui, sans-serif;
+}
+
+/* Ambient vapor ground — a deep, mostly-still glow that anchors the dark
+   canvas without competing with the logo's own motion. */
+.vapor-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background:
+    radial-gradient(1100px 680px at 50% -10%, #1a2140 0%, rgba(14, 19, 34, 0) 60%),
+    radial-gradient(900px 600px at 85% 15%, rgba(108, 140, 255, 0.1) 0%, rgba(10, 13, 21, 0) 55%),
+    radial-gradient(820px 640px at 6% 80%, rgba(168, 188, 255, 0.06) 0%, rgba(10, 13, 21, 0) 55%);
+}
+
+/* One very slow drift so the atmosphere breathes rather than sits flat. */
+.vapor-drift {
+  position: absolute;
+  width: 62vw;
+  height: 62vw;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(108, 140, 255, 0.09) 0%, rgba(108, 140, 255, 0) 70%);
+  filter: blur(28px);
+  animation: vapor-drift 28s ease-in-out infinite alternate;
+}
+
+@keyframes vapor-drift {
+  from {
+    transform: translate(-8%, -5%) scale(1);
+  }
+  to {
+    transform: translate(10%, 7%) scale(1.16);
+  }
+}
+
+.vapor-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.text-vapor {
+  background: var(--vapor);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.btn-primary {
+  background: var(--vapor);
+  color: #0a0d15;
+  font-weight: 700;
+  border-radius: 12px;
+  box-shadow: 0 6px 30px rgba(108, 140, 255, 0.35);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 44px rgba(108, 140, 255, 0.5);
+}
+
+.link-muted {
+  color: var(--muted);
+  transition: color 0.18s ease;
+}
+
+.link-muted:hover {
+  color: var(--accent-light);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vapor-drift {
+    animation: none;
+  }
+}
