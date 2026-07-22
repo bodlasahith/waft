@@ -17,7 +17,40 @@ const connectSchema = z.object({
   eventId: z.string().uuid().optional(),
 });
 
+const pendingSchema = z.object({
+  cardCode: z.string().min(1).max(64),
+  email: z.string().email().max(200),
+});
+
 export async function connectionRoutes(app: FastifyInstance) {
+  // Public, unauthenticated: a not-yet-registered person viewing someone's
+  // web card can ask to be connected the moment they join, so they don't have
+  // to re-scan the QR after installing. We store the intent keyed on their
+  // email; POST /users fulfills it when they sign up — which proves they
+  // control that address. We deliberately do NOT connect an already-existing
+  // account here: without proof of email control that would let anyone force
+  // a connection to an arbitrary user (and leak their mutual-only socials).
+  // Rate-limited like the other open write paths.
+  app.post(
+    "/connections/pending",
+    { config: { rateLimit: { max: 10, timeWindow: "1 minute" } } },
+    async (req, reply) => {
+      const body = pendingSchema.parse(req.body);
+      const { data: owner } = await supabase
+        .from("users")
+        .select("id")
+        .eq("card_code", body.cardCode)
+        .single();
+      if (!owner) return reply.status(404).send({ error: "card_not_found" });
+
+      await supabase.from("pending_connections").upsert(
+        { from_user_id: owner.id, invitee_email: body.email.trim().toLowerCase() },
+        { onConflict: "from_user_id,invitee_email" }
+      );
+      return reply.send({ status: "pending" });
+    }
+  );
+
   // The connecting user is always the authenticated caller — accepting a
   // fromUserId in the body would let anyone forge edges for other people.
   app.post("/connections", { preHandler: requireAuth }, async (req, reply) => {

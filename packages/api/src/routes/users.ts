@@ -7,6 +7,7 @@ import {
   areConnected,
   shareAnEvent,
   deletePersonNode,
+  createConnection,
 } from "../services/graph.js";
 import { requireAuth, optionalAuth } from "../lib/auth.js";
 import { nanoid } from "nanoid";
@@ -208,6 +209,36 @@ export async function userRoutes(app: FastifyInstance) {
       .single();
 
     if (error) return reply.status(500).send({ error: error.message });
+
+    // Fulfill any invite connections queued before this account existed:
+    // someone viewing this person's web card entered their email and asked to
+    // connect on join. We match on the *verified* token email, so the edge
+    // only forms once the invitee proves control of that address by signing
+    // in with it. Best-effort — a failure here must never block onboarding.
+    try {
+      const email = req.userEmail.toLowerCase();
+      const { data: pendings } = await supabase
+        .from("pending_connections")
+        .select("id, from_user_id")
+        .eq("invitee_email", email);
+      for (const p of pendings ?? []) {
+        if (p.from_user_id !== req.userId) {
+          await createConnection(p.from_user_id, req.userId);
+        }
+      }
+      if (pendings?.length) {
+        await supabase
+          .from("pending_connections")
+          .delete()
+          .in(
+            "id",
+            pendings.map((p) => p.id)
+          );
+      }
+    } catch (err) {
+      req.log.error({ err }, "pending-connection fulfillment failed");
+    }
+
     return reply.status(201).send(data);
   });
 }

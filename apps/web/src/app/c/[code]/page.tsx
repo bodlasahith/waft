@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Footer, getWaftHref } from "@/components/Footer";
+import { ConnectOnJoin } from "@/components/ConnectOnJoin";
 
 const PLATFORM_META: Record<string, { label: string; color: string; urlPrefix: string }> = {
   instagram: { label: "Instagram", color: "#E1306C", urlPrefix: "https://instagram.com/" },
@@ -90,11 +91,9 @@ export default async function CardPage({ params }: { params: Promise<{ code: str
             })}
           </div>
 
-          <div className="mt-6 pt-5 border-t border-[var(--border)] text-center">
-            <p className="text-sm text-[var(--muted)] mb-3">
-              Connect on Waft to see your shared network grow.
-            </p>
-            <a href={getWaftHref} className="btn-primary block w-full py-2.5">
+          <div className="mt-6 pt-5 border-t border-[var(--border)] flex flex-col gap-3">
+            <ConnectOnJoin cardCode={code} name={user.name} />
+            <a href={getWaftHref} className="btn-primary block w-full py-2.5 text-center">
               Get Waft
             </a>
           </div>
