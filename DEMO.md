@@ -15,8 +15,11 @@ Funnel: **scan your card → web card (drop email) → Get Waft → auto-connect
 - **Event QR ("join the room")** — poster. App users scan it in-app to check into YC AI Startup School → they appear on the wall. A camera scan just opens the wall.
 
 ### How connections show up (so nothing surprises you)
-- A scan (or auto-connect on join) makes a **mutual connection**. **Waft strength is uniform (1)** today — interaction-based strength is roadmapped, not live, so meeting again doesn't change a number yet.
-- The **event wall draws an edge between any two attendees who are connected**, however it formed. So people you auto-connected with **show linked on the wall once they check in — no re-scan needed.** (Fixed Jul 22; the wall previously only drew edges made *at* the event.)
+- **Checking in (event QR) never connects you to anyone** — it just adds you as a node on the wall. You only connect to people you actually meet and scan.
+- The **event wall shows connections MADE AT the event** (edges tagged with this event), plus every checked-in participant as a node. That's the networking that happened here — it drives people to go meet others.
+- **A card scan while checked into the event = an event connection** (shows on the wall + icebreaker). A card scan / auto-connect *outside* an event = a plain **mutual** (shows in personal networks, not on any event wall).
+- **Waft strength is uniform (1)** today — interaction-based strength is roadmapped, not live, so meeting again doesn't change a number yet.
+- Implication for auto-connects: someone you auto-connected via your lock-screen card is a **mutual**; if they check in they appear as a node, and they link to you on the wall only once they also scan your card in-app at the event.
 
 ## Pear Prime (~40 handpicked people) — the beachhead
 
