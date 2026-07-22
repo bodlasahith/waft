@@ -1,15 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
   <defs>
-    <linearGradient id="w" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#eef2ff"/>
-      <stop offset=".55" stop-color="#b9c8ff"/>
-      <stop offset="1" stop-color="#6c8cff"/>
-    </linearGradient>
+    <clipPath id="r"><rect width="100" height="100" rx="22"/></clipPath>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1a2140"/>
-      <stop offset="1" stop-color="#0a0d15"/>
+      <stop offset="0" stop-color="#1a2140"/><stop offset="1" stop-color="#0a0d15"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0.32" cy="0.2" r="0.9">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.14"/><stop offset="0.6" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="w0" gradientUnits="userSpaceOnUse" x1="22" y1="30" x2="39" y2="74">
+      <stop offset="0" stop-color="#eef2ff" stop-opacity="0.12"/><stop offset="0.24" stop-color="#eef2ff" stop-opacity="0.95"/>
+      <stop offset="0.6" stop-color="#b9c8ff" stop-opacity="1"/><stop offset="1" stop-color="#6c8cff" stop-opacity="0.22"/>
+    </linearGradient>
+    <linearGradient id="w1" gradientUnits="userSpaceOnUse" x1="39" y1="74" x2="50" y2="48">
+      <stop offset="0" stop-color="#eef2ff" stop-opacity="0.12"/><stop offset="0.24" stop-color="#eef2ff" stop-opacity="0.95"/>
+      <stop offset="0.6" stop-color="#b9c8ff" stop-opacity="1"/><stop offset="1" stop-color="#6c8cff" stop-opacity="0.22"/>
+    </linearGradient>
+    <linearGradient id="w2" gradientUnits="userSpaceOnUse" x1="50" y1="48" x2="61" y2="74">
+      <stop offset="0" stop-color="#eef2ff" stop-opacity="0.12"/><stop offset="0.24" stop-color="#eef2ff" stop-opacity="0.95"/>
+      <stop offset="0.6" stop-color="#b9c8ff" stop-opacity="1"/><stop offset="1" stop-color="#6c8cff" stop-opacity="0.22"/>
+    </linearGradient>
+    <linearGradient id="w3" gradientUnits="userSpaceOnUse" x1="61" y1="74" x2="78" y2="30">
+      <stop offset="0" stop-color="#eef2ff" stop-opacity="0.12"/><stop offset="0.24" stop-color="#eef2ff" stop-opacity="0.95"/>
+      <stop offset="0.6" stop-color="#b9c8ff" stop-opacity="1"/><stop offset="1" stop-color="#6c8cff" stop-opacity="0.22"/>
     </linearGradient>
   </defs>
-  <rect width="100" height="100" rx="24" fill="url(#bg)"/>
-  <path d="M22 30 L39 74 L50 48 L61 74 L78 30" fill="none" stroke="url(#w)" stroke-width="9.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <g clip-path="url(#r)">
+    <rect width="100" height="100" fill="url(#bg)"/>
+    <rect width="100" height="100" fill="url(#sheen)"/>
+    <polygon points="20.52,30.57 24.34,54.38 37.52,74.57 40.48,73.43 36.66,49.62 23.48,29.43" fill="url(#w0)"/>
+    <polygon points="40.46,74.62 50.58,63.57 51.46,48.62 48.54,47.38 38.42,58.43 37.54,73.38" fill="url(#w1)"/>
+    <polygon points="48.54,48.62 49.42,63.57 59.54,74.62 62.46,73.38 61.58,58.43 51.46,47.38" fill="url(#w2)"/>
+    <polygon points="62.48,74.57 75.66,54.38 79.48,30.57 76.52,29.43 63.34,49.62 59.52,73.43" fill="url(#w3)"/>
+  </g>
 </svg>

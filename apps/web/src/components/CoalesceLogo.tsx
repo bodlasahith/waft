@@ -106,7 +106,7 @@ export function CoalesceLogo({ className }: { className?: string }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const turbRef = useRef<SVGFETurbulenceElement>(null);
   const dispRef = useRef<SVGFEDisplacementMapElement>(null);
-  const glowRef = useRef<SVGTextElement>(null);
+  const glowRef = useRef<SVGEllipseElement>(null);
   const wgroupRef = useRef<SVGGElement>(null);
   const wordRef = useRef<SVGTextElement>(null);
   const wispsRef = useRef<SVGGElement>(null);
@@ -310,6 +310,10 @@ export function CoalesceLogo({ className }: { className?: string }) {
           <stop offset=".55" stopColor="#b9c8ff" />
           <stop offset="1" stopColor="#6c8cff" />
         </linearGradient>
+        <radialGradient id="clg-glow" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="#6c8cff" stopOpacity="0.55" />
+          <stop offset="1" stopColor="#6c8cff" stopOpacity="0" />
+        </radialGradient>
         {[0, 1, 2, 3].map((i) => (
           <linearGradient
             key={i}
@@ -347,15 +351,19 @@ export function CoalesceLogo({ className }: { className?: string }) {
           />
         </filter>
       </defs>
-      <text
+      {/* Soft ambient glow behind the mark. A radial gradient (not blurred
+          text) so it renders identically on mobile — a blurred <text>waft</text>
+          left a sharp translucent font "w" on browsers that don't blur SVG
+          text. */}
+      <ellipse
         ref={glowRef}
-        x={300}
-        y={170}
-        textAnchor="middle"
-        style={{ ...wordStyle, fill: "#6c8cff", filter: "blur(22px)", opacity: 0 }}
-      >
-        waft
-      </text>
+        cx={300}
+        cy={122}
+        rx={230}
+        ry={86}
+        fill="url(#clg-glow)"
+        style={{ opacity: 0 }}
+      />
       <g ref={ambientRef} fill="none" stroke="url(#clg-ink)" strokeLinecap="round" />
       <g ref={wispsRef} fill="none" stroke="url(#clg-ink)" strokeLinecap="round" opacity={0.9} />
       <g filter="url(#clg-vapor)">
