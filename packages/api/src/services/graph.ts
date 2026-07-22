@@ -136,34 +136,45 @@ async function queryEventGraph(eventId: string): Promise<EventGraph> {
        RETURN p.id AS id, p.name AS name, p.avatarColor AS avatarColor, p.avatarShape AS avatarShape`,
       { eventId }
     );
-    const nodes = attendees.records.map((r) => ({
-      id: r.get("id") as string,
-      name: r.get("name") as string,
-      avatarColor: r.get("avatarColor") ?? undefined,
-      avatarShape: r.get("avatarShape") ?? undefined,
-    }));
-    const ids = nodes.map((n) => n.id);
+    const nodes = new Map<
+      string,
+      { id: string; name: string; avatarColor?: string; avatarShape?: string }
+    >();
+    for (const r of attendees.records) {
+      nodes.set(r.get("id"), {
+        id: r.get("id"),
+        name: r.get("name"),
+        avatarColor: r.get("avatarColor") ?? undefined,
+        avatarShape: r.get("avatarShape") ?? undefined,
+      });
+    }
 
-    // Draw an edge between any two attendees who share a WAFT connection,
-    // however/whenever it formed — not only ones tagged with this event. So
-    // people already connected before checking in (e.g. auto-connected via a
-    // pending invite) still appear linked on the wall, without a re-scan.
+    // Edges are connections MADE AT this event (eventId matches). Checking in
+    // only adds you as a node — you link to someone only by actually meeting
+    // and scanning them here. So the wall shows the networking that happened
+    // at the event, not pre-existing relationships. A mutual made elsewhere
+    // (e.g. an auto-connect via a card scan) stays in personal networks and
+    // appears here only if the two also connect at the event.
     // (a.id < b.id dedupes the undirected pair.)
-    const edgeResult = ids.length
-      ? await session.run(
-          `MATCH (a:Person)-[r:WAFT]-(b:Person)
-           WHERE a.id IN $ids AND b.id IN $ids AND a.id < b.id
-           RETURN a.id AS source, b.id AS target, coalesce(r.strength, 1) AS strength`,
-          { ids }
-        )
-      : null;
-    const edges = (edgeResult?.records ?? []).map((r) => ({
-      source: r.get("source") as string,
-      target: r.get("target") as string,
-      strength: r.get("strength")?.toNumber?.() ?? 1,
-    }));
+    const result = await session.run(
+      `MATCH (a:Person)-[r:WAFT {eventId: $eventId}]-(b:Person)
+       WHERE a.id < b.id
+       RETURN a.id AS source, a.name AS sourceName,
+              b.id AS target, b.name AS targetName, coalesce(r.strength, 1) AS strength`,
+      { eventId }
+    );
+    const edges: { source: string; target: string; strength: number }[] = [];
+    for (const rec of result.records) {
+      const source = rec.get("source");
+      const target = rec.get("target");
+      // People who connected here but never scanned the event QR still belong
+      // on the wall — add them as nodes off the edge.
+      if (!nodes.has(source)) nodes.set(source, { id: source, name: rec.get("sourceName") });
+      if (!nodes.has(target)) nodes.set(target, { id: target, name: rec.get("targetName") });
+      edges.push({ source, target, strength: rec.get("strength")?.toNumber?.() ?? 1 });
+    }
 
-    return { nodes, edges };
+    return { nodes: [...nodes.values()], edges };
   } finally {
     await session.close();
   }

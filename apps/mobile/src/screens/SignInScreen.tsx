@@ -79,7 +79,17 @@ export function SignInScreen() {
   const [appleAvailable, setAppleAvailable] = useState(false);
   useEffect(() => {
     getHasPassword().then(setHasPassword);
-    if (Platform.OS === "ios") AppleAuthentication.isAvailableAsync().then(setAppleAvailable);
+    // Guarded: this JS may run via OTA on a binary that predates the native
+    // Apple module (e.g. build 4). isAvailableAsync would then throw/reject —
+    // treat that as "unavailable" and just hide the button rather than crash
+    // the sign-in screen. The button itself is gated on appleAvailable, so it
+    // never renders (and never instantiates the native view) in that case.
+    if (Platform.OS === "ios") {
+      Promise.resolve()
+        .then(() => AppleAuthentication.isAvailableAsync())
+        .then(setAppleAvailable)
+        .catch(() => setAppleAvailable(false));
+    }
   }, []);
 
   // Native Apple sign-in: the system sheet (Face ID) returns an identity
