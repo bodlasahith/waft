@@ -4,6 +4,10 @@ import { useState } from "react";
 import { Footer } from "@/components/Footer";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+// Match the API's feedback schema so oversized input can't slip through to a
+// generic server rejection.
+const BODY_MAX = 4000;
+const SUBJECT_MAX = 200;
 
 const CATEGORIES = [
   { value: "general", label: "General" },
@@ -20,9 +24,20 @@ export default function Contact() {
   const [body, setBody] = useState("");
   const [website, setWebsite] = useState(""); // honeypot
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [bodyInvalid, setBodyInvalid] = useState(false);
 
   async function submit() {
+    // The message is the one required field — validate it here so the user
+    // gets a clear reason instead of a silently disabled button.
+    if (body.trim().length === 0) {
+      setBodyInvalid(true);
+      setState("idle");
+      return;
+    }
+    setBodyInvalid(false);
     setState("sending");
+    setErrorMsg("");
     try {
       const res = await fetch(`${API}/feedback`, {
         method: "POST",
@@ -36,14 +51,26 @@ export default function Contact() {
           website,
         }),
       });
-      setState(res.ok ? "sent" : "error");
+      if (res.ok) {
+        setState("sent");
+        return;
+      }
+      setState("error");
+      setErrorMsg(
+        res.status === 429
+          ? "You've sent a few messages already — give it a minute, then try again."
+          : "Something went wrong on our end — please try again in a moment."
+      );
     } catch {
       setState("error");
+      setErrorMsg("Couldn't reach the server — check your connection and try again.");
     }
   }
 
   const field =
-    "w-full rounded-lg border border-[var(--border)] bg-[var(--ground-2)]/60 px-3 py-2.5 text-[var(--text)] placeholder:text-[var(--faint)] focus:border-[var(--border-strong)] outline-none transition-colors";
+    "w-full rounded-lg border bg-[var(--ground-2)]/60 px-3 py-2.5 text-[var(--text)] placeholder:text-[var(--faint)] focus:border-[var(--border-strong)] outline-none transition-colors";
+  const normalBorder = "border-[var(--border)]";
+  const nearLimit = body.length > BODY_MAX * 0.9;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -77,16 +104,58 @@ export default function Contact() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <input className={field} placeholder="Name (optional)" value={name} onChange={(e) => setName(e.target.value)} />
-              <input className={field} placeholder="Email (optional)" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <input
+                className={`${field} ${normalBorder}`}
+                placeholder="Name (optional)"
+                maxLength={120}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <input
+                className={`${field} ${normalBorder}`}
+                placeholder="Email (optional)"
+                type="email"
+                maxLength={200}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
-            <input className={field} placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} />
-            <textarea
-              className={`${field} min-h-[140px] resize-y`}
-              placeholder="Your message"
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
+            <input
+              className={`${field} ${normalBorder}`}
+              placeholder="Subject (optional)"
+              maxLength={SUBJECT_MAX}
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
             />
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label htmlFor="message" className="text-sm text-[var(--muted)]">
+                  Message <span className="text-[var(--accent)]">*</span>
+                </label>
+                <span
+                  className={`text-xs tabular-nums ${nearLimit ? "text-amber-400" : "text-[var(--faint)]"}`}
+                >
+                  {body.length}/{BODY_MAX}
+                </span>
+              </div>
+              <textarea
+                id="message"
+                className={`${field} ${bodyInvalid ? "border-red-500/70" : normalBorder} min-h-[140px] resize-y`}
+                placeholder="What's on your mind?"
+                maxLength={BODY_MAX}
+                aria-invalid={bodyInvalid}
+                value={body}
+                onChange={(e) => {
+                  setBody(e.target.value);
+                  if (bodyInvalid && e.target.value.trim().length > 0) setBodyInvalid(false);
+                }}
+              />
+              {bodyInvalid && (
+                <p className="text-red-400 text-xs mt-1.5">Add a message before sending.</p>
+              )}
+            </div>
+
             {/* honeypot — hidden from humans */}
             <input
               className="hidden"
@@ -98,13 +167,13 @@ export default function Contact() {
 
             <button
               onClick={submit}
-              disabled={body.trim().length === 0 || state === "sending"}
+              disabled={state === "sending"}
               className="btn-primary w-full py-3 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {state === "sending" ? "Sending…" : "Send message"}
             </button>
             {state === "error" && (
-              <p className="text-red-400 text-sm text-center">Couldn&apos;t send — try again.</p>
+              <p className="text-red-400 text-sm text-center">{errorMsg}</p>
             )}
           </div>
         )}
