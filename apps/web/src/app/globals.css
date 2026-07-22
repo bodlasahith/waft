@@ -12,12 +12,18 @@
   --accent-light: #a8bcff;
   --text: #f2f5ff;
   --muted: #8a93a8;
-  --faint: #5a6378;
+  /* Lightened from #5a6378 to clear WCAG AA 4.5:1 on the ground for small
+     labels (eyebrows, footer) — was 3.23:1. */
+  --faint: #6f7994;
   --vapor: linear-gradient(180deg, #eaf0ff 0%, #b9c8ff 55%, #6c8cff 100%);
+  /* Premium decelerate curve — settles fast then eases, like vapor coming
+     to rest. Used for reveals and press feedback. */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 html {
   color-scheme: dark;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -84,15 +90,72 @@ body {
   color: #0a0d15;
   font-weight: 700;
   border-radius: 12px;
+  cursor: pointer;
   box-shadow: 0 6px 30px rgba(108, 140, 255, 0.35);
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+    transform 0.22s var(--ease-out-expo),
+    box-shadow 0.22s var(--ease-out-expo);
 }
 
 .btn-primary:hover {
   transform: translateY(-1px);
   box-shadow: 0 10px 44px rgba(108, 140, 255, 0.5);
+}
+
+/* Tactile press — settle to 0.97 then release, no layout shift. */
+.btn-primary:active {
+  transform: scale(0.97);
+}
+
+/* Staggered entrance: elements rise and settle like the mark coalescing.
+   Applied on load; the page is short enough that scroll-observers aren't
+   needed. Reduced-motion shows everything immediately. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.reveal {
+  opacity: 0;
+  animation: rise 0.7s var(--ease-out-expo) both;
+}
+
+.reveal-1 {
+  animation-delay: 0.08s;
+}
+.reveal-2 {
+  animation-delay: 0.18s;
+}
+.reveal-3 {
+  animation-delay: 0.3s;
+}
+.reveal-4 {
+  animation-delay: 0.44s;
+}
+.reveal-5 {
+  animation-delay: 0.56s;
+}
+.reveal-6 {
+  animation-delay: 0.66s;
+}
+.reveal-7 {
+  animation-delay: 0.76s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    animation: none;
+    opacity: 1;
+  }
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 .link-muted {

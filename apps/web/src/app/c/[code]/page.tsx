@@ -76,7 +76,7 @@ export default async function CardPage({ params }: { params: Promise<{ code: str
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-[var(--border)] bg-[var(--ground-2)]/60 hover:border-[var(--border-strong)] transition-colors"
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-[var(--border)] bg-[var(--ground-2)]/60 hover:border-[var(--border-strong)] active:scale-[0.97] transition-[transform,border-color] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]"
                 >
                   <span
                     className="w-8 h-8 grid place-items-center rounded-full text-sm font-bold font-display"

@@ -65,7 +65,7 @@ export default function Contact() {
                 <button
                   key={c.value}
                   onClick={() => setCategory(c.value)}
-                  className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                  className={`px-3 py-1.5 rounded-full text-sm border cursor-pointer active:scale-[0.97] transition-[transform,border-color,background-color,color] duration-200 ${
                     category === c.value
                       ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent-light)]"
                       : "border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)]"
