@@ -9,6 +9,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.getwaft.app",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -38,6 +39,7 @@
         }
       ],
       "expo-web-browser",
+      "expo-apple-authentication",
       "@react-native-community/datetimepicker",
       "@sentry/react-native"
     ],

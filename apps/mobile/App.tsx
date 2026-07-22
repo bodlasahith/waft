@@ -23,6 +23,7 @@ Sentry.init({
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "./src/supabase";
 import { api, ApiError } from "./src/api";
+import { takePendingAppleName } from "./src/appleName";
 import { SignInScreen } from "./src/screens/SignInScreen";
 import { OnboardingScreen } from "./src/screens/OnboardingScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
@@ -84,8 +85,10 @@ function App() {
       } catch (e) {
         if (e instanceof ApiError && e.status === 404) {
           // OAuth providers give us a display name — register silently and
-          // skip onboarding; email sign-ins get asked for a name.
-          const metaName = session.user.user_metadata?.full_name;
+          // skip onboarding; email sign-ins get asked for a name. Google puts
+          // it in user_metadata; Apple only hands it back once at sign-in, so
+          // it's stashed there (takePendingAppleName).
+          const metaName = session.user.user_metadata?.full_name || takePendingAppleName();
           if (typeof metaName === "string" && metaName.trim()) {
             try {
               await api.register(metaName.trim(), session.user.user_metadata?.avatar_url);

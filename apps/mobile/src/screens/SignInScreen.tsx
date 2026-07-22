@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import * as Linking from "expo-linking";
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import * as AppleAuthentication from "expo-apple-authentication";
 import { colors, radii } from "../theme";
 import { AppButton } from "../components/UI";
 import { GoogleButton } from "../components/GoogleButton";
@@ -16,6 +18,7 @@ import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri } from "expo-auth-session";
 import { supabase } from "../supabase";
 import { getHasPassword } from "../passwordFlag";
+import { setPendingAppleName } from "../appleName";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -72,9 +75,47 @@ export function SignInScreen() {
   const [error, setError] = useState<string | null>(null);
   // True if this device has ever set a password — surfaces the password login.
   const [hasPassword, setHasPassword] = useState(false);
+  // Apple sign-in is iOS-only and needs the device to support it.
+  const [appleAvailable, setAppleAvailable] = useState(false);
   useEffect(() => {
     getHasPassword().then(setHasPassword);
+    if (Platform.OS === "ios") AppleAuthentication.isAvailableAsync().then(setAppleAvailable);
   }, []);
+
+  // Native Apple sign-in: the system sheet (Face ID) returns an identity
+  // token we hand to Supabase. Apple only includes the name on the *first*
+  // sign-in, so stash it for silent onboarding (see appleName.ts).
+  async function signInWithApple() {
+    setBusy(true);
+    setError(null);
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      if (!credential.identityToken) throw new Error("No identity token from Apple.");
+      const name = [credential.fullName?.givenName, credential.fullName?.familyName]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+      if (name) setPendingAppleName(name);
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: "apple",
+        token: credential.identityToken,
+      });
+      if (error) throw error;
+      // On success onAuthStateChange in App.tsx takes over.
+    } catch (e: any) {
+      // The user tapping "Cancel" on the Apple sheet isn't an error.
+      if (e?.code !== "ERR_REQUEST_CANCELED") {
+        setError(e?.message ?? "Apple sign-in failed.");
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
 
   // Secondary path — not part of the normal OTP/OAuth flow. Kept low-key
   // (a small link) so it doesn't complicate the primary "20-second signup",
@@ -252,6 +293,15 @@ export function SignInScreen() {
       {step !== "password" && (
         <>
           <View style={styles.divider} />
+          {appleAvailable && (
+            <AppleAuthentication.AppleAuthenticationButton
+              buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+              cornerRadius={radii.md}
+              style={styles.appleButton}
+              onPress={signInWithApple}
+            />
+          )}
           <GoogleButton onPress={() => signInWithProvider("google")} disabled={busy} />
           {/* Password is a tertiary option — only surfaced for accounts that
               have one (device flag), or when the review email is typed — so
@@ -286,6 +336,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: 16 },
+  appleButton: { height: 48, width: "100%" },
   muted: { color: colors.textMuted, textAlign: "center" },
   link: { color: colors.accent, textAlign: "center", paddingVertical: 8 },
   faintLink: { color: colors.textFaint, textAlign: "center", paddingVertical: 8, fontSize: 13 },
