@@ -10,6 +10,10 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.getwaft.app",
       "usesAppleSignIn": true,
+      "icon": {
+        "dark": "./assets/icon.png",
+        "light": "./assets/icon-light.png"
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
