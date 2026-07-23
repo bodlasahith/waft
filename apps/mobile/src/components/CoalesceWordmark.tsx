@@ -20,9 +20,13 @@ import Svg, {
 // feTurbulence isn't reliable in RN, so this keeps the feel, not the smoke.
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
-const AnimatedSvgText = Animated.createAnimatedComponent(SvgText);
 const AnimatedEllipse = Animated.createAnimatedComponent(Ellipse);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+// Animate the reveal by fading a GROUP, not the <Text> itself — react-native-
+// svg renders <Text> with animated props (opacity/letterSpacing) unreliably,
+// which was dropping "aft" entirely. A plain Text inside an Animated <G> is
+// solid.
+const AnimatedG = Animated.createAnimatedComponent(G);
 
 // All geometry lives in the same 600x240 space as the web mark.
 const VIEWBOX = "0 0 600 240";
@@ -238,8 +242,6 @@ export function CoalesceWordmark({ width = 230 }: { width?: number }) {
     inputRange: [0, 0.14, 0.8, 1],
     outputRange: [0, 0, 1, 1],
   });
-  // The "gathering": letters drift in from loose spacing to the tight lockup.
-  const spacing = gather.interpolate({ inputRange: [0, 1], outputRange: [6, -5] });
   // Ribs fade in staggered, leading the letters like the web reveal.
   const ribOpacity = (i: number) =>
     gather.interpolate({
@@ -345,18 +347,18 @@ export function CoalesceWordmark({ width = 230 }: { width?: number }) {
             />
           ))}
         </G>
-        <AnimatedSvgText
-          x={AFT_X}
-          y="170"
-          textAnchor="start"
-          fontSize="150"
-          fontWeight="800"
-          letterSpacing={spacing as unknown as number}
-          fill="url(#cw-ink)"
-          opacity={aftOpacity as unknown as number}
-        >
-          aft
-        </AnimatedSvgText>
+        <AnimatedG opacity={aftOpacity as unknown as number}>
+          <SvgText
+            x={AFT_X}
+            y="170"
+            textAnchor="start"
+            fontSize="150"
+            fontWeight="800"
+            fill="url(#cw-ink)"
+          >
+            aft
+          </SvgText>
+        </AnimatedG>
       </Svg>
     </View>
   );
