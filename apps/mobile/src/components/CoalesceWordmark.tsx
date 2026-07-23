@@ -348,13 +348,17 @@ export function CoalesceWordmark({ width = 230 }: { width?: number }) {
           ))}
         </G>
         <AnimatedG opacity={aftOpacity as unknown as number}>
+          {/* Solid fill (not a gradient): react-native-svg renders gradient
+              fills on shapes reliably but on <Text> inconsistently across iOS
+              versions. A bright vapor-periwinkle reads as one piece with the
+              ribbon W and is guaranteed to draw. */}
           <SvgText
             x={AFT_X}
             y="170"
             textAnchor="start"
             fontSize="150"
             fontWeight="800"
-            fill="url(#cw-ink)"
+            fill="#d4ddff"
           >
             aft
           </SvgText>
