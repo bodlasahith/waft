@@ -153,7 +153,7 @@ function App() {
     <SafeAreaView style={styles.root}>
       <StatusBar style="light" />
       <View style={styles.header}>
-        <WaftLogo size={22} />
+        <WaftLogo size={26} />
         <Pressable onPress={() => setShowSettings(true)} hitSlop={12}>
           <Text style={styles.settingsIcon}>⚙</Text>
         </Pressable>

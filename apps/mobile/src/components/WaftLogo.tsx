@@ -34,7 +34,10 @@ function taper(a: [number, number], b: [number, number], H: number) {
 }
 const RIBS = [0, 1, 2, 3].map((i) => taper(V[i], V[i + 1], 6.6));
 
-export function WaftLogo({ size = 22 }: { size?: number }) {
+// Icon-only by default — in-app chrome reads cleaner as just the mark (the
+// full "waft" wordmark carries the brand on the sign-in screen and the site).
+// Pass `label` to show the wordmark beside it.
+export function WaftLogo({ size = 26, label = false }: { size?: number; label?: boolean }) {
   return (
     <View style={styles.row}>
       <Svg width={size} height={size} viewBox="16 24 68 56">
@@ -49,7 +52,7 @@ export function WaftLogo({ size = 22 }: { size?: number }) {
           <Polygon key={i} points={pts} fill="url(#hw)" />
         ))}
       </Svg>
-      <Text style={[styles.word, { fontSize: size }]}>waft</Text>
+      {label && <Text style={[styles.word, { fontSize: size }]}>waft</Text>}
     </View>
   );
 }
