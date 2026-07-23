@@ -24,6 +24,7 @@ import { Session } from "@supabase/supabase-js";
 import { supabase } from "./src/supabase";
 import { api, ApiError } from "./src/api";
 import { takePendingAppleName } from "./src/appleName";
+import { WaftLogo } from "./src/components/WaftLogo";
 import { SignInScreen } from "./src/screens/SignInScreen";
 import { OnboardingScreen } from "./src/screens/OnboardingScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
@@ -152,9 +153,7 @@ function App() {
     <SafeAreaView style={styles.root}>
       <StatusBar style="light" />
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>
-          waft<Text style={styles.headerDot}>.</Text>
-        </Text>
+        <WaftLogo size={22} />
         <Pressable onPress={() => setShowSettings(true)} hitSlop={12}>
           <Text style={styles.settingsIcon}>⚙</Text>
         </Pressable>

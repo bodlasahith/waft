@@ -315,14 +315,12 @@ export function CoalesceWordmark({ width = 230 }: { width?: number }) {
         ))}
         <G transform={W_TRANSFORM}>
           {RIB_KEYS.map((keys, i) => (
+            // Static d — react-native-svg animates path-string interpolation
+            // unreliably (it was leaving the ribbon garbled). The reveal still
+            // animates via opacity; the flutter is a web-only nicety.
             <AnimatedPath
               key={i}
-              d={
-                wobble.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: keys,
-                }) as unknown as string
-              }
+              d={keys[0]}
               fill={`url(#cw-w-${i})`}
               opacity={ribOpacity(i) as unknown as number}
             />
