@@ -101,8 +101,8 @@ signed with the paid cert (valid a year) and never think about it again.
 
 ## Assets (generated → `demo-assets/`)
 
-- [x] Event QR poster (`poster-event.png`) — event QR + `getwaft.app/e/ycss2026`. **Add the TestFlight "Get the app" QR beside it once the public link exists.**
+- [x] Event QR poster (`poster-event.png`) — dual QR: **Get the app** (TestFlight `testflight.apple.com/join/WeqhVkZm`) + **Check in** (`getwaft.app/e/ycss2026`)
 - [x] Lock-screen wallpaper with card QR (`wallpaper-card.png`)
-- [x] Raw QRs (`qr-event.png`, `qr-card.png`) for reuse
-- [ ] Regenerate the card/poster QR to point at the TestFlight link once it's live (and set `NEXT_PUBLIC_TESTFLIGHT_URL` in Vercel)
+- [x] Raw QRs (`qr-testflight.png`, `qr-event.png`, `qr-card.png`) for reuse
+- [ ] Set `NEXT_PUBLIC_TESTFLIGHT_URL=https://testflight.apple.com/join/WeqhVkZm` in Vercel + redeploy, so every scanned card's "Get Waft" button points at the install page (currently falls back to the landing page)
 - [ ] Decide: keep the 12 seeded demo profiles (recommended — the wall looks alive) or clear them
