@@ -59,14 +59,24 @@ export async function connectionRoutes(app: FastifyInstance) {
       return reply.status(400).send({ error: "cannot_connect_to_self" });
     }
 
-    // An eventId tags the edge onto that event's public graph. Only let the
-    // caller attribute a connection to an event they actually checked into —
-    // otherwise anyone could inject edges into an arbitrary event's wall.
-    if (body.eventId && !(await hasAttendedEvent(req.userId, body.eventId))) {
-      return reply.status(403).send({ error: "not_checked_in" });
+    // An eventId tags the edge onto that event's public graph. Two gates:
+    //  1. The caller must have checked in — otherwise anyone could inject
+    //     edges into an arbitrary event's wall. This is a hard 403.
+    //  2. Both people must have checked in for it to count as an *event*
+    //     connection. If the scanned person hasn't, the scan still happened
+    //     and they should become mutuals — we just drop the event tag so it
+    //     lands as a plain "in the wild" connection, not on the wall.
+    let eventId = body.eventId;
+    if (eventId) {
+      if (!(await hasAttendedEvent(req.userId, eventId))) {
+        return reply.status(403).send({ error: "not_checked_in" });
+      }
+      if (!(await hasAttendedEvent(body.toUserId, eventId))) {
+        eventId = undefined;
+      }
     }
 
-    const result = await createConnection(req.userId, body.toUserId, body.eventId);
+    const result = await createConnection(req.userId, body.toUserId, eventId);
     if (result === null) {
       return reply.status(404).send({ error: "One or both users not found" });
     }
@@ -74,15 +84,15 @@ export async function connectionRoutes(app: FastifyInstance) {
     // Connecting at an event: broadcast the fresh graph to live viewers and
     // hand back one of the event's icebreakers for the post-scan screen.
     let icebreaker: string | null = null;
-    if (body.eventId) {
+    if (eventId) {
       // Fresh snapshot must include the edge just created — bust the cache.
-      invalidateEventGraph(body.eventId);
-      const graph = await getEventGraph(body.eventId);
-      broadcast(body.eventId, { type: "graph", eventId: body.eventId, ...graph });
+      invalidateEventGraph(eventId);
+      const graph = await getEventGraph(eventId);
+      broadcast(eventId, { type: "graph", eventId, ...graph });
       const { data: event } = await supabase
         .from("events")
         .select("icebreakers")
-        .eq("id", body.eventId)
+        .eq("id", eventId)
         .single();
       icebreaker = pickIcebreaker(event?.icebreakers);
     }
