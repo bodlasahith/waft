@@ -9,7 +9,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import * as AppleAuthentication from "expo-apple-authentication";
 import { colors, radii } from "../theme";
 import { AppButton } from "../components/UI";
 import { GoogleButton } from "../components/GoogleButton";
@@ -21,6 +20,20 @@ import { getHasPassword } from "../passwordFlag";
 import { setPendingAppleName } from "../appleName";
 
 WebBrowser.maybeCompleteAuthSession();
+
+// Load the native Apple module defensively. This screen's JS can reach a
+// binary built before expo-apple-authentication existed (an OTA landing on an
+// older build, e.g. build 5). A static `import` there crashes the entire JS
+// bundle at load, forcing expo-updates to roll back to the embedded build —
+// so nothing new ever appears. Requiring it in a try/catch lets the bundle
+// load fine on such a binary and simply omit the Apple button.
+const AppleAuthentication: typeof import("expo-apple-authentication") | null = (() => {
+  try {
+    return require("expo-apple-authentication");
+  } catch {
+    return null;
+  }
+})();
 
 type Step = "email" | "code" | "password";
 
@@ -79,12 +92,9 @@ export function SignInScreen() {
   const [appleAvailable, setAppleAvailable] = useState(false);
   useEffect(() => {
     getHasPassword().then(setHasPassword);
-    // Guarded: this JS may run via OTA on a binary that predates the native
-    // Apple module (e.g. build 4). isAvailableAsync would then throw/reject —
-    // treat that as "unavailable" and just hide the button rather than crash
-    // the sign-in screen. The button itself is gated on appleAvailable, so it
-    // never renders (and never instantiates the native view) in that case.
-    if (Platform.OS === "ios") {
+    // Only probe availability when the native module actually loaded (see the
+    // guarded require above); .catch covers any runtime rejection.
+    if (Platform.OS === "ios" && AppleAuthentication) {
       Promise.resolve()
         .then(() => AppleAuthentication.isAvailableAsync())
         .then(setAppleAvailable)
@@ -96,6 +106,7 @@ export function SignInScreen() {
   // token we hand to Supabase. Apple only includes the name on the *first*
   // sign-in, so stash it for silent onboarding (see appleName.ts).
   async function signInWithApple() {
+    if (!AppleAuthentication) return;
     setBusy(true);
     setError(null);
     try {
@@ -303,7 +314,7 @@ export function SignInScreen() {
       {step !== "password" && (
         <>
           <View style={styles.divider} />
-          {appleAvailable && (
+          {appleAvailable && AppleAuthentication && (
             <AppleAuthentication.AppleAuthenticationButton
               buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
               buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
