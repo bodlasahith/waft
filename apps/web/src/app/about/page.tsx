@@ -29,29 +29,40 @@ export default function Home() {
             <p>The problem isn't meeting people.</p>
 
             <p>Everyone simply lives on different platforms.</p>
+
+            <ol>
+              <li> - Some people live on LinkedIn.</li>
+              <li> - Others primarily use Instagram or TikTok.</li>
+              <li> - Developers often spend their time on X or GitHub.</li>
+              <li> - Some are gamers that run servers Discord.</li>
+              <li> - Others are private or simply not online (Phone-only, Telegram).</li>
+              <li> - And a great number are just oldheads (like Facebook).</li>
+            </ol>
+
+            <p>  The list goes on. Even if two people have several platforms in common, finding the "right" one in the middle goes something like this.</p>
           </div>
 
           <div className="vapor-card mt-14 p-8 max-w-2xl mx-auto">
             <div className="space-y-4 font-mono text-sm sm:text-base">
-              <p>"What's your Instagram?"</p>
+              <p>"Hey well it was really nice talking to you! Oh by the way, you got an IG?"</p>
 
               <p className="text-[var(--muted)]">
-                I have one... but I never really use it.
+                I do have one... but I never really use it though.
               </p>
 
               <p>"LinkedIn?"</p>
 
               <p className="text-[var(--muted)]">
-                I check it like once a month.
+                Dude I only check it like once a month. Also, bro we're 2 21-year-old tech bros, why do we need to share Linkedins I ain't gonna DM you there.
               </p>
 
-              <p>"Okay... what about X?"</p>
+              <p>"Okay...damn. You got an X?"</p>
 
               <p className="text-[var(--muted)]">
-                Yeah! I'm on Tech Twitter all the time.
+                Oh yeah! I'm on Tech Twitter all the time!
               </p>
 
-              <p>"Sweet... wait... I honestly forgot my username."</p>
+              <p>"Bet... wait shit I lowkey forgot my username, lemme check real quick..."</p>
             </div>
           </div>
 
@@ -59,14 +70,11 @@ export default function Home() {
             <p>
               Eventually you exchange <em>something</em>.
             </p>
-
             <p>But the momentum is gone.</p>
-
             <p>And a week later...</p>
 
             <p className="text-white font-medium">
-              You barely remember who they were, where you met, or why you
-              wanted to stay connected.
+              Unless you REALLY hit it off, you barely remember who they were, where you met, or why you wanted to stay connected.
             </p>
           </div>
         </section>
