@@ -7,6 +7,9 @@ export function Footer() {
         <Link href="/" className="link-muted">
           Waft
         </Link>
+        <Link href="/about" className="link-muted">
+          About
+        </Link>
         <Link href="/privacy" className="link-muted">
           Privacy
         </Link>
