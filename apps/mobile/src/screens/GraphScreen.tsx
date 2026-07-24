@@ -148,6 +148,8 @@ export function GraphScreen() {
   const [graph, setGraph] = useState<{ nodes: Node[]; edges: Edge[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
+  const [depth, setDepth] = useState(2);
+  const [loading, setLoading] = useState(false);
 
   // Tapping a node pops its linked socials out as orbiting satellite badges
   // instead of a bottom sheet — the socials are part of the graph too.
@@ -247,26 +249,49 @@ export function GraphScreen() {
   }
 
   const load = useCallback(async () => {
+    setLoading(true);
     try {
-      const [me, g] = await Promise.all([api.me(), api.myGraph()]);
-      setGraph({
-        nodes: [
-          {
-            id: me.id,
-            name: me.name,
-            distance: 0,
-            avatarColor: me.avatar?.color,
-            avatarShape: me.avatar?.shape,
-          },
-          ...g.nodes,
-        ],
-        edges: g.edges,
-      });
-      setError(null);
+      const [me, g] = await Promise.all([api.me(), api.myGraph(depth)]);
+      if (g.nodes.length === 0 && g.edges.length === 0) {
+        setGraph({
+          nodes: [
+            {
+              id: me.id,
+              name: me.name,
+              distance: 0,
+              avatarColor: me.avatar?.color,
+              avatarShape: me.avatar?.shape,
+            },
+          ],
+          edges: [],
+        });
+        setError(
+          depth === 1
+            ? "No direct connections yet."
+            : `No connections found within ${depth} hops.`
+        );
+      } else {
+        setGraph({
+          nodes: [
+            {
+              id: me.id,
+              name: me.name,
+              distance: 0,
+              avatarColor: me.avatar?.color,
+              avatarShape: me.avatar?.shape,
+            },
+            ...g.nodes,
+          ],
+          edges: g.edges,
+        });
+        setError(null);
+      }
     } catch (e: any) {
       setError(e?.status === 401 ? "Sign in to see your network." : "Couldn't load your network.");
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }, [depth]);
 
   useEffect(() => {
     load();
@@ -288,7 +313,7 @@ export function GraphScreen() {
   }
 
   const { width, height } = Dimensions.get("window");
-  const svgHeight = height - 230;
+  const svgHeight = height - 270;
 
   const positions = useMemo(
     () => (graph ? computeLayout(graph.nodes, graph.edges, width, svgHeight) : null),
@@ -327,6 +352,22 @@ export function GraphScreen() {
     return (
       <View style={styles.center}>
         <Text style={styles.muted}>{error}</Text>
+        <View style={styles.depthControl}>
+          <Text style={styles.depthLabel}>Depth: {depth}</Text>
+          <View style={styles.depthSlider}>
+            {[1, 2, 3].map((d) => (
+              <Pressable
+                key={d}
+                style={[styles.depthButton, d === depth && styles.depthButtonActive]}
+                onPress={() => setDepth(d)}
+              >
+                <Text style={[styles.depthButtonText, d === depth && styles.depthButtonTextActive]}>
+                  {d}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
       </View>
     );
   }
@@ -337,7 +378,7 @@ export function GraphScreen() {
       </View>
     );
   }
-  if (graph.nodes.length === 1) {
+  if (graph.nodes.length === 1 && !error) {
     return (
       <View style={styles.center}>
         <Text style={styles.emptyTitle}>Just you so far</Text>
@@ -499,6 +540,28 @@ export function GraphScreen() {
         </Pressable>
       )}
 
+      <View style={styles.depthControl}>
+        <Text style={styles.depthLabel}>Depth: {depth}</Text>
+        <View style={styles.depthSlider}>
+          {[1, 2, 3].map((d) => (
+            <Pressable
+              key={d}
+              style={[styles.depthButton, d === depth && styles.depthButtonActive]}
+              onPress={() => setDepth(d)}
+            >
+              <Text style={[styles.depthButtonText, d === depth && styles.depthButtonTextActive]}>
+                {d}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+        {loading && <ActivityIndicator size="small" style={{ marginLeft: 10 }} />}
+      </View>
+
+      {error && (
+        <Text style={[styles.muted, { marginTop: 4 }]}>{error}</Text>
+      )}
+
       <Text style={styles.hint}>
         {graph.nodes.filter((n) => n.distance === 1).length} direct ·{" "}
         {graph.nodes.filter((n) => n.distance > 1).length} extended ·{" "}
@@ -594,4 +657,29 @@ const styles = StyleSheet.create({
   socialPlatform: { fontWeight: "600", textTransform: "capitalize", color: theme.text },
   socialHandle: { color: theme.accent },
   close: { color: theme.textMuted, textAlign: "center", paddingTop: 12 },
+  depthControl: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+    gap: 10,
+  },
+  depthLabel: { color: theme.textMuted, fontSize: 13, fontWeight: "600" },
+  depthSlider: { flexDirection: "row", gap: 6 },
+  depthButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.surface,
+    borderWidth: 1,
+    borderColor: theme.border,
+  },
+  depthButtonActive: {
+    backgroundColor: theme.accent,
+    borderColor: theme.accent,
+  },
+  depthButtonText: { color: theme.textMuted, fontSize: 14, fontWeight: "600" },
+  depthButtonTextActive: { color: "#fff" },
 });
