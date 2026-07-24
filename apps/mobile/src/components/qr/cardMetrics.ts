@@ -34,6 +34,8 @@ export function useCardMetrics() {
 
             titleSize: cardWidth * 0.052,
 
+            titlePadding: cardWidth * 0.022,
+
             bodySize: cardWidth * 0.037,
 
             nameSize: cardWidth * 0.072,

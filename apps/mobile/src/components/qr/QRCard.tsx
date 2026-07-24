@@ -19,9 +19,15 @@ import { AnimatedGradient } from "./AnimatedGradient";
 import { GlassOverlay } from "./GlassOverlay";
 import { SpecularHighlight } from "./SpecularHighlight";
 import { AmbientParticles } from "./AmbientParticles";
+import { HolographicOverlay } from "./HolographicOverlay";
+import { AnimatedSection } from "./AnimatedSection";
+import { FloatingQRTile } from "./FloatingQRTile";
+import { SpecularSweep } from "./SpecularSweep";
 
 import { useCardAnimation } from "./useCardAnimation";
 import { useCardMetrics } from "./cardMetrics";
+import { useCardMotion } from "./useCardMotion";
+import { useCardReveal } from "./useCardReveal";
 
 function StyledAvatar({
     profile,
@@ -61,7 +67,9 @@ export function QRCard({
     onEditSocials,
 }: Props) {
     const metrics = useCardMetrics();
+    const motion = useCardMotion();
     const anim = useCardAnimation();
+    const reveal = useCardReveal();
 
     const styles = StyleSheet.create({
         backgroundLayers: {
@@ -161,6 +169,8 @@ export function QRCard({
 
             fontSize: metrics.titleSize,
 
+            paddingTop: metrics.titlePadding,
+
         },
 
         body: {
@@ -243,6 +253,8 @@ export function QRCard({
                     <AmbientParticles
                         width={metrics.cardWidth}
                         height={metrics.cardHeight}
+                        tiltX={motion.tiltX}
+                        tiltY={motion.tiltY}
                         seed={profile.card_code}
                     />
                     <GraphBackground
@@ -259,90 +271,97 @@ export function QRCard({
 
                     {/* soft glow */}
                     <GlassOverlay />
+                    <HolographicOverlay
+                        tiltX={motion.tiltX}
+                        tiltY={motion.tiltY}
+                    />
                     <SpecularHighlight style={anim.specularStyle} color={profile.avatar?.color} />
                 </View>
 
+                <SpecularSweep />
                 <View style={styles.content}>
                     {/* Header */}
 
-                    <Pressable
-                        style={styles.header}
-                        onPress={onEditAvatar}
-                    >
-                        <View style={styles.avatarWrapper}>
-                            <StyledAvatar profile={profile} />
-                        </View>
+                    <AnimatedSection progress={reveal.header}>
+                        <Pressable
+                            style={styles.header}
+                            onPress={onEditAvatar}
+                        >
+                            <View style={styles.avatarWrapper}>
+                                <StyledAvatar profile={profile} />
+                            </View>
 
-                        <View>
+                            <View>
 
-                            <Text style={styles.name}>
-                                {profile.name}
-                            </Text>
+                                <Text style={styles.name}>
+                                    {profile.name}
+                                </Text>
 
-                            <Text style={styles.subtitle}>
-                                Your Waft identity
-                            </Text>
+                                <Text style={styles.subtitle}>
+                                    Your Waft identity
+                                </Text>
 
-                        </View>
+                            </View>
 
-                    </Pressable>
+                        </Pressable>
+                    </AnimatedSection>
 
                     {/* QR */}
+                    
+                    <AnimatedSection progress={reveal.qr}>
+                            
+                        <FloatingQRTile progress={reveal.qr}>
+                            <StyledQRCode
+                                value={`${CARD_ORIGIN}/c/${profile.card_code}`}
+                                initial={profile.name.charAt(0)}
+                                avatar={profile.avatar}
+                            />
+                        </FloatingQRTile>
 
-                    <Animated.View
-                        style={[
-                            styles.qrTile,
-                            anim.qrStyle,
-                        ]}
-                    >
-
-                        <StyledQRCode
-                            value={`${CARD_ORIGIN}/c/${profile.card_code}`}
-                            initial={profile.name.charAt(0)}
-                            avatar={profile.avatar}
-                        />
-
-                    </Animated.View>
+                    </AnimatedSection>
 
                     {/* Description */}
 
-                    <Text style={styles.title}>
-                        Scan to connect instantly
-                    </Text>
+                    <AnimatedSection progress={reveal.description}>
+                        <Text style={styles.title}>
+                            Scan to connect instantly
+                        </Text>
 
-                    <Text style={styles.body}>
-                        Share your verified social graph
-                        with one scan.
-                    </Text>
+                        <Text style={styles.body}>
+                            Share your verified social graph with one scan.
+                        </Text>
+                    </AnimatedSection>
 
                     {/* Footer */}
 
-                    <View style={styles.footer}>
+                    <AnimatedSection progress={reveal.footer}>
+                        <View style={styles.footer}>
 
-                        <Pressable
-                            onPress={onEditSocials}
-                        >
-                            <Text style={styles.link}>
+                            <Pressable
+                                onPress={onEditSocials}
+                            >
+                                <Text style={styles.link}>
 
-                                {profile.social_links.length}
-                                {" "}
-                                linked profiles
+                                    {profile.social_links.length}
+                                    {" "}
+                                    linked platforms
 
-                            </Text>
+                                </Text>
 
-                        </Pressable>
+                            </Pressable>
 
-                        <Pressable
-                            onPress={onEditAvatar}
-                        >
+                            <Pressable
+                                onPress={onEditAvatar}
+                            >
 
-                            <Text style={styles.link}>
-                                Customize node
-                            </Text>
+                                <Text style={styles.link}>
+                                    Customize node
+                                </Text>
 
-                        </Pressable>
+                            </Pressable>
 
-                    </View>
+                        </View>
+                    </AnimatedSection>
                 </View>
 
             </Animated.View>

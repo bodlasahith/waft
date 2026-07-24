@@ -34,8 +34,8 @@ export const qrTheme = {
   },
 
   graph: {
-    nodeOpacity: 0.08,
-    edgeOpacity: 0.06,
+    nodeOpacity: 0.18,
+    edgeOpacity: 0.08,
 
     nodeRadius: 3,
   },

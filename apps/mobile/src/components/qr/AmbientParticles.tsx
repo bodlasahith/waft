@@ -7,6 +7,7 @@ import Animated, {
   withRepeat,
   withTiming,
   Easing,
+  SharedValue
 } from "react-native-reanimated";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -15,6 +16,8 @@ interface Props {
   width: number;
   height: number;
   seed: string;
+  tiltX: SharedValue<number>;
+  tiltY: SharedValue<number>;
 }
 
 interface Particle {
@@ -24,7 +27,17 @@ interface Particle {
   opacity: number;
   delay: number;
   speed: number;
+  tiltX: SharedValue<number>;
+  tiltY: SharedValue<number>;
 }
+
+const colors = [
+  "#A6C8FF",
+  "#B58CFF",
+  "#6EF3FF",
+  "#FFFFFF",
+  "#E6F4FF",
+];
 
 function hash(str: string) {
   let h = 1779033703;
@@ -51,6 +64,8 @@ export function AmbientParticles({
   width,
   height,
   seed,
+  tiltX,
+  tiltY
 }: Props) {
 
   const particles = useMemo(() => {
@@ -83,7 +98,7 @@ export function AmbientParticles({
       pointerEvents="none"
     >
       {particles.map((p, i) => (
-        <Particle key={i} {...p} />
+        <Particle key={i} {...p} tiltX={tiltX} tiltY={tiltY} />
       ))}
     </Svg>
   );
@@ -96,6 +111,8 @@ function Particle({
   opacity,
   delay,
   speed,
+  tiltX,
+  tiltY,
 }: Particle) {
 
   const progress = useSharedValue(0);
@@ -125,12 +142,12 @@ function Particle({
   }, []);
 
   const animatedProps = useAnimatedProps(() => ({
-
-    cy: y + Math.sin(progress.value * Math.PI * 2) * 8,
-
+    cx: x + tiltY.value * 4,
+    cy: y + Math.sin(progress.value * Math.PI * 2) * 8 + tiltX.value * 4,
     opacity: opacity + progress.value * 0.05,
-
   }));
+
+  const index = Math.floor((x / 10) % colors.length);
 
   return (
 
@@ -142,7 +159,7 @@ function Particle({
 
       r={r}
 
-      fill="white"
+      fill={colors[index % colors.length]}
 
     />
 
