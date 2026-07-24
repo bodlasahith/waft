@@ -23,8 +23,6 @@ import { AmbientParticles } from "./AmbientParticles";
 import { useCardAnimation } from "./useCardAnimation";
 import { useCardMetrics } from "./cardMetrics";
 
-const metrics = useCardMetrics();
-
 function StyledAvatar({
     profile,
 }: {
@@ -62,6 +60,7 @@ export function QRCard({
     onEditAvatar,
     onEditSocials,
 }: Props) {
+    const metrics = useCardMetrics();
     const anim = useCardAnimation();
 
     const styles = StyleSheet.create({
