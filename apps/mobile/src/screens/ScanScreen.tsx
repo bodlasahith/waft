@@ -7,11 +7,31 @@ import { api, ApiError } from "../api";
 import { CARD_ORIGIN } from "../config";
 import { getActiveEvent, setActiveEvent } from "../eventContext";
 
+import { ScanOverlay } from "../components/scan";
+import { ConnectionAnimation } from "../components/scan";
+
 type ScanState =
-  | { kind: "scanning" }
-  | { kind: "busy" }
-  | { kind: "done"; message: string; icebreaker?: string }
-  | { kind: "error"; message: string };
+  | {
+      kind: "scanning";
+    }
+  | {
+      kind: "processing";
+    }
+  | {
+      kind: "connection";
+      card: Awaited<ReturnType<typeof api.card>>;
+      alreadyConnected: boolean;
+      icebreaker?: string;
+    }
+  | {
+      kind: "event";
+      event: Awaited<ReturnType<typeof api.eventByCode>>;
+      icebreaker?: string;
+    }
+  | {
+      kind: "error";
+      message: string;
+    };
 
 /**
  * Waft QR payloads are web URLs so native cameras work without the app:
@@ -47,7 +67,7 @@ export function ScanScreen() {
       setState({ kind: "error", message: "Not a Waft code." });
       return;
     }
-    setState({ kind: "busy" });
+    setState({ kind: "processing" });
     try {
       if (parsed.type === "card") {
         const activeEvent = getActiveEvent();
@@ -55,21 +75,21 @@ export function ScanScreen() {
         const result = await api.connect(card.id, activeEvent?.id);
         const suffix = activeEvent ? ` (at ${activeEvent.name})` : "";
         setState({
-          kind: "done",
-          message:
-            result.status === "already_connected"
-              ? `You already share a waft with ${card.name}!${suffix}`
-              : `Connected with ${card.name}!${suffix}`,
-          icebreaker: result.icebreaker,
+          kind:"connection",
+          card,
+          alreadyConnected: result.status==="already_connected",
+          icebreaker:
+          result.icebreaker,
         });
       } else {
         const event = await api.eventByCode(parsed.code);
         const result = await api.checkin(event.id);
         setActiveEvent({ id: event.id, name: event.name });
         setState({
-          kind: "done",
-          message: `Checked into ${event.name}!`,
-          icebreaker: result.icebreaker,
+          kind:"event",
+          event,
+          icebreaker:
+          result.icebreaker,
         });
       }
     } catch (e: any) {
@@ -88,21 +108,6 @@ export function ScanScreen() {
     }
   }
 
-  if (state.kind === "done" || state.kind === "error") {
-    return (
-      <View style={styles.center}>
-        <Text style={state.kind === "error" ? styles.error : styles.success}>{state.message}</Text>
-        {state.kind === "done" && state.icebreaker && (
-          <View style={styles.icebreakerBox}>
-            <Text style={styles.icebreakerLabel}>Break the ice</Text>
-            <Text style={styles.icebreakerText}>{state.icebreaker}</Text>
-          </View>
-        )}
-        <AppButton title="Scan again" variant="ghost" onPress={() => setState({ kind: "scanning" })} />
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
       <CameraView
@@ -112,9 +117,62 @@ export function ScanScreen() {
           state.kind === "scanning" ? ({ data }) => handleScan(data) : undefined
         }
       />
+      <ScanOverlay
+
+          visible={
+
+              state.kind==="connection" ||
+
+              state.kind==="event"
+
+          }
+
+      >
+
+          {state.kind==="connection" && (
+
+              <ConnectionAnimation
+
+                  me={{
+
+                      color:"#6E7DFF",
+
+                      initial:"Y",
+
+                  }}
+
+                  them={{
+
+                      color:
+
+                          state.card.avatar?.color ??
+
+                          "#6E7DFF",
+
+                      shape:
+
+                          state.card.avatar?.shape,
+
+                      initial:
+
+                          state.card.name.charAt(0),
+
+                  }}
+
+                  alreadyConnected={
+
+                      state.alreadyConnected
+
+                  }
+
+              />
+
+          )}
+
+      </ScanOverlay>
       <View style={styles.overlay}>
         <Text style={styles.overlayText}>
-          {state.kind === "busy" ? "Connecting…" : "Point at a Waft QR code"}
+          {state.kind === "processing" ? "Connecting…" : "Point at a Waft QR code"}
         </Text>
       </View>
     </View>
