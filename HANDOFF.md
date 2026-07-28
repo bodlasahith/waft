@@ -5,7 +5,7 @@
 > actions" sections whenever you're about to switch machines. Everything here is
 > derivable from the repo — it's a *pointer map*, not a second source of truth.
 
-**Last updated:** 2026-07-27 · **Branch:** `main` · **Latest pushed commit:** see `git log --oneline -1`
+**Last updated:** 2026-07-27 (TestFlight button wired; tree clean) · **Branch:** `main` · **Latest pushed commit:** see `git log --oneline -1`
 
 ---
 
@@ -33,25 +33,23 @@ So the current mode is **customer discovery, not feature-building.**
 - Safety net: 26-test vitest suite in `packages/api` (`npm test`) + live RLS codified in `infra/schema.sql`
 - Roadmap parked: `eventId→eventIds`, pre-fill-socials (consented OAuth not scraping),
   post-validation profile slice, age-assurance for 18+/21+ events, 4 GPT-consult ideas
+- **TestFlight URL live on getwaft.app** — `NEXT_PUBLIC_TESTFLIGHT_URL` set in Vercel (Production +
+  Preview) + redeployed; the card/landing "Get Waft" button now points at the install page (verified inlined)
 
 ## 3. In flight / uncommitted (⚠️ won't travel via git until committed)
 
-Run `git status` on arrival. As of this writing, these were **uncommitted** — decide per file
-before switching, or they're lost on the other machine:
-- `apps/mobile/src/components/qr/useCardAnimation.ts` — your active mobile QR-card animation work
-  (likely the gyro/holographic tilt). **Commit before switching if you want it on the other laptop.**
-- `eas.json` — currently **empty (0 bytes)**; ignore or delete.
-- `README.md` — your edits (YC-demo marked done, expanded push-notification copy) live here alongside
-  parked roadmap items. Commit to carry them over.
+**Working tree is currently CLEAN — everything is committed and pushed to `main`.** Still, always run
+`git status` on arrival; if anything shows up, decide per file before switching or it's lost on the
+other machine. (Resolved since last handoff: `useCardAnimation.ts` committed — tilt now sourced from
+`useCardMotion`; stray empty `eas.json` deleted; README edits + parked roadmap items committed.)
 
 ## 4. Immediate next actions
 
 - [ ] Await Nate's reply re: Pear breakfast sim; prep with `docs/customer-discovery.md`
 - [ ] Run the discovery conversations (Pear + Luma hosts from `docs/gtm-outreach.md`)
-- [ ] Set `NEXT_PUBLIC_TESTFLIGHT_URL=https://testflight.apple.com/join/WeqhVkZm` in Vercel + redeploy
-      (card "Get Waft" button) — still outstanding
-- [ ] App Store review still pending (submitted Sat) — check status
+- [ ] App Store review pending (submitted Sat) — Sahith is checking App Store Connect directly
 - [ ] Post-validation: decide host-vs-individual, then pull the ranked roadmap slice
+- [x] TestFlight "Get Waft" button wired (Vercel env + redeploy, live on getwaft.app)
 
 ## 5. Setting up the other laptop
 
@@ -67,6 +65,8 @@ DISCORD/TELEGRAM tokens. Mobile `.env`: EXPO_PUBLIC_* .
 
 **Dev commands** (from root): `npm run dev:api` · `npm run dev:web` · `npm run dev:mobile`
 **Tests:** `cd packages/api && npm test`
+**Vercel CLI** (optional, for env/deploy): `npx vercel link --project waft-web --cwd apps/web` — this
+machine is already linked (creates a gitignored `apps/web/.env.local` OIDC token; doesn't travel).
 **Note:** the office network blocks Neo4j Aura port 7687 — run graph-touching work Railway-side or
 off that network (see `[[waft-auth-network-constraints]]`).
 
