@@ -7,13 +7,13 @@ import {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
-import { useDeviceTilt } from "./useDeviceTilt";
+// import { useDeviceTilt } from "./useDeviceTilt";
 import { useCardMotion } from "./useCardMotion";
 
 export function useCardAnimation() {
   const entrance = useSharedValue(0);
   const breathe = useSharedValue(0);
-  const tilt = useDeviceTilt();
+  // const tilt = useDeviceTilt();
   const motion = useCardMotion();
 
   useEffect(() => {
