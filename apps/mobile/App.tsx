@@ -44,10 +44,35 @@ const TABS = [
 type TabKey = (typeof TABS)[number]["key"];
 type Profile = "loading" | "missing" | "ready";
 
+// Placeholder name for the rare OAuth case where no real name is available
+// (Apple only returns a name on the first authorization, and private-relay
+// emails have no usable local-part). Better than blocking an Apple user on a
+// required-name screen (App Store Guideline 4) — they can fix it in Settings.
+const FALLBACK_NAME = "New Waftie";
+
+// Turn an email local-part into a plausible display name
+// ("sahith.bodla@x.com" → "Sahith Bodla"). Returns "" for opaque locals (e.g.
+// Apple private-relay hashes) so we never invent a nonsense name.
+function nameFromEmail(email?: string | null): string {
+  const local = (email ?? "").split("@")[0] ?? "";
+  if (!local || /^[0-9a-f]{8,}$/i.test(local)) return "";
+  return local
+    .replace(/[._+-]+/g, " ")
+    .replace(/\d+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
 function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const [profile, setProfile] = useState<Profile>("loading");
+  // Pre-fills the onboarding name field (email sign-ins, or the rare OAuth
+  // fallback) so it's never an empty required box.
+  const [onboardName, setOnboardName] = useState("");
   const [tab, setTab] = useState<TabKey>("card");
   const [showSettings, setShowSettings] = useState(false);
 
@@ -85,20 +110,36 @@ function App() {
         setProfile("ready");
       } catch (e) {
         if (e instanceof ApiError && e.status === 404) {
-          // OAuth providers give us a display name — register silently and
-          // skip onboarding; email sign-ins get asked for a name. Google puts
-          // it in user_metadata; Apple only hands it back once at sign-in, so
-          // it's stashed there (takePendingAppleName).
-          const metaName = session.user.user_metadata?.full_name || takePendingAppleName();
-          if (typeof metaName === "string" && metaName.trim()) {
+          // OAuth providers vouch for identity, so we must never make the user
+          // re-enter a name they already gave (App Store Guideline 4 / Sign in
+          // with Apple). Google puts the name in user_metadata; Apple hands it
+          // back only on the FIRST authorization (stashed via
+          // takePendingAppleName). When neither is present for an OAuth user we
+          // derive a name and register silently rather than showing the prompt.
+          // Only email/OTP sign-ins (no verified name) get the one-field
+          // onboarding screen.
+          const provider = session.user.app_metadata?.provider;
+          const isOAuth = provider === "apple" || provider === "google";
+          const provided = session.user.user_metadata?.full_name || takePendingAppleName();
+          const derived = nameFromEmail(session.user.email);
+          const name =
+            typeof provided === "string" && provided.trim()
+              ? provided.trim()
+              : isOAuth
+                ? derived || FALLBACK_NAME
+                : "";
+          if (name) {
             try {
-              await api.register(metaName.trim(), session.user.user_metadata?.avatar_url);
+              await api.register(name, session.user.user_metadata?.avatar_url);
               setProfile("ready");
               return;
             } catch {
-              // fall through to manual onboarding
+              // Registration itself failed (e.g. API unreachable) — not a name
+              // problem. Fall through; onboarding pre-fills the derived name so
+              // even here an OAuth user never faces an empty required field.
             }
           }
+          setOnboardName(derived);
           setProfile("missing");
         }
         // Non-404 (API down etc.): stay in loading; screens surface errors.
@@ -129,7 +170,7 @@ function App() {
     return (
       <SafeAreaView style={styles.root}>
         <StatusBar style="light" />
-        <OnboardingScreen onDone={() => setProfile("ready")} />
+        <OnboardingScreen initialName={onboardName} onDone={() => setProfile("ready")} />
       </SafeAreaView>
     );
   }

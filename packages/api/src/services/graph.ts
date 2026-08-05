@@ -27,6 +27,37 @@ export async function setPersonAvatar(userId: string, color: string, shape: stri
 }
 
 /**
+ * Rename the graph node. A best-effort mirror of the Postgres name — callers
+ * treat a failure as non-fatal so a paused/slow graph store never blocks a
+ * rename (the source of truth is Postgres).
+ */
+export async function renamePersonNode(userId: string, name: string) {
+  const session = getDriver().session();
+  try {
+    await session.run(
+      `MATCH (p:Person {id: $userId})
+       SET p.name = $name, p.updatedAt = datetime()`,
+      { userId, name }
+    );
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Trivial round-trip to keep the (auto-pausing) graph store warm and to report
+ * its liveness on the health endpoint. Throws if the store is unreachable.
+ */
+export async function pingGraph(): Promise<void> {
+  const session = getDriver().session();
+  try {
+    await session.run("RETURN 1 AS ok");
+  } finally {
+    await session.close();
+  }
+}
+
+/**
  * Returns null if either person doesn't exist yet. Rescanning an existing
  * connection is a no-op on strength — scanning is a one-time handshake;
  * strength will grow from real interactions (profile taps, explicit social

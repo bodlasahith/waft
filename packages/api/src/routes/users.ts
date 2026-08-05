@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase.js";
 import {
   createPersonNode,
   setPersonAvatar,
+  renamePersonNode,
   areConnected,
   shareAnEvent,
   deletePersonNode,
@@ -109,6 +110,33 @@ export async function userRoutes(app: FastifyInstance) {
     return reply.send({ avatar });
   });
 
+  // Rename the display name. OAuth sign-ins (esp. Sign in with Apple, which
+  // only returns a name on the very first authorization) can land with an
+  // auto-derived name; this lets the user correct it without touching photo,
+  // avatar, or card_code. Postgres is the source of truth; the graph node is
+  // mirrored best-effort so a paused store never blocks the rename.
+  app.put("/users/me/name", { preHandler: requireAuth }, async (req, reply) => {
+    const { name } = z
+      .object({ name: z.string().trim().min(1).max(100) })
+      .parse(req.body);
+
+    const { data, error } = await supabase
+      .from("users")
+      .update({ name })
+      .eq("id", req.userId)
+      .select()
+      .single();
+
+    if (error) return reply.status(500).send({ error: error.message });
+
+    try {
+      await renamePersonNode(req.userId, name);
+    } catch (err) {
+      req.log.warn({ err }, "rename graph mirror deferred (store unavailable)");
+    }
+    return reply.send(data);
+  });
+
   app.post("/users/me/socials", { preHandler: requireAuth }, async (req, reply) => {
     const body = addSocialSchema.parse(req.body);
 
@@ -183,10 +211,13 @@ export async function userRoutes(app: FastifyInstance) {
       return reply.status(400).send({ error: "token_missing_email" });
     }
 
-    // Graph node first: if it fails, no row is written and the client's next
-    // /users/me still 404s, so registration retries cleanly. (Row first would
-    // strand a profile with no graph node — connections to it 404 forever.)
-    await createPersonNode(req.userId, body.name, body.photoUrl);
+    // Postgres row first — that's all sign-in/onboarding needs (the card is
+    // served entirely from Postgres). The graph node is created best-effort
+    // just below, so a paused/slow graph store (Aura Free auto-pauses on
+    // inactivity) can never block a user from logging in. A node that fails to
+    // write here is self-healed on the first connect (see routes/connections.ts:
+    // createConnection null → backfill both nodes from Postgres → retry), so
+    // "row without a graph node" never becomes a permanent 404.
 
     // Preserve card_code across re-registrations — a blind upsert would
     // regenerate it and invalidate already-shared/printed QR codes.
@@ -209,6 +240,15 @@ export async function userRoutes(app: FastifyInstance) {
       .single();
 
     if (error) return reply.status(500).send({ error: error.message });
+
+    // Mirror into the graph store. Best-effort: the row above is the source of
+    // truth for login, and createPersonNode is an idempotent MERGE, so a miss
+    // here is harmless and recoverable (self-healed on connect).
+    try {
+      await createPersonNode(req.userId, body.name, body.photoUrl);
+    } catch (err) {
+      req.log.warn({ err }, "graph node deferred (store unavailable at register)");
+    }
 
     // Fulfill any invite connections queued before this account existed:
     // someone viewing this person's web card entered their email and asked to

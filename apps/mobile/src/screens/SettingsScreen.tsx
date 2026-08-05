@@ -13,6 +13,13 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Display name — editable here so an auto-derived name (e.g. after Sign in
+  // with Apple, which returns a name only on the first authorization) can be
+  // corrected without re-onboarding.
+  const [name, setName] = useState("");
+  const [nameBusy, setNameBusy] = useState(false);
+  const [nameSaved, setNameSaved] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
   // Typed confirmation — deleting your whole graph deserves more friction
   // than tapping through an alert.
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -22,7 +29,25 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
 
   useEffect(() => {
     getHasPassword().then(setHasPassword);
+    api
+      .me()
+      .then((p) => setName(p.name))
+      .catch(() => {});
   }, []);
+
+  async function saveName() {
+    setNameBusy(true);
+    setNameError(null);
+    setNameSaved(false);
+    try {
+      await api.rename(name.trim());
+      setNameSaved(true);
+    } catch {
+      setNameError("Couldn't update your name — try again.");
+    } finally {
+      setNameBusy(false);
+    }
+  }
 
   async function deleteAccount() {
     setDeleteBusy(true);
@@ -62,6 +87,29 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
         <Pressable onPress={onClose}>
           <Text style={styles.done}>Done</Text>
         </Pressable>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Display name</Text>
+        <Text style={styles.sectionHint}>The name shown on your card and in the graph.</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Your name"
+          placeholderTextColor={colors.textFaint}
+          value={name}
+          onChangeText={(t) => {
+            setName(t);
+            setNameSaved(false);
+          }}
+        />
+        <AppButton
+          title="Save name"
+          onPress={saveName}
+          disabled={name.trim().length === 0}
+          busy={nameBusy}
+        />
+        {nameSaved && <Text style={styles.saved}>Saved.</Text>}
+        {nameError && <Text style={styles.error}>{nameError}</Text>}
       </View>
 
       <View style={styles.section}>

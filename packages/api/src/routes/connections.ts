@@ -2,6 +2,8 @@ import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import {
   createConnection,
+  createPersonNode,
+  setPersonAvatar,
   getEventGraph,
   getNetworkGraph,
   hasAttendedEvent,
@@ -16,6 +18,25 @@ const connectSchema = z.object({
   toUserId: z.string().uuid(),
   eventId: z.string().uuid().optional(),
 });
+
+// Backfill a graph node from its Postgres row. Registration writes the row
+// first and the node best-effort (so a paused graph store can't block login),
+// which means a node can be briefly absent. We MERGE it back from the source
+// of truth before creating an edge. Returns false only when no Postgres row
+// exists — a genuinely unknown user, which stays a 404.
+async function ensurePersonNode(userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("users")
+    .select("name, photo_url, avatar")
+    .eq("id", userId)
+    .single();
+  if (!data) return false;
+  await createPersonNode(userId, data.name, data.photo_url ?? undefined);
+  if (data.avatar?.color && data.avatar?.shape) {
+    await setPersonAvatar(userId, data.avatar.color, data.avatar.shape);
+  }
+  return true;
+}
 
 const pendingSchema = z.object({
   cardCode: z.string().min(1).max(64),
@@ -76,7 +97,19 @@ export async function connectionRoutes(app: FastifyInstance) {
       }
     }
 
-    const result = await createConnection(req.userId, body.toUserId, eventId);
+    let result = await createConnection(req.userId, body.toUserId, eventId);
+    if (result === null) {
+      // A node may be missing if either user registered while the graph store
+      // was paused (row written, node deferred). Backfill both from Postgres
+      // and retry once before treating this as a real "user not found".
+      const [callerOk, targetOk] = await Promise.all([
+        ensurePersonNode(req.userId),
+        ensurePersonNode(body.toUserId),
+      ]);
+      if (callerOk && targetOk) {
+        result = await createConnection(req.userId, body.toUserId, eventId);
+      }
+    }
     if (result === null) {
       return reply.status(404).send({ error: "One or both users not found" });
     }

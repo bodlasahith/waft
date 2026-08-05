@@ -12,8 +12,14 @@ import { markHasPassword } from "../passwordFlag";
  * later in Settings). Everything else is added progressively. The
  * "20-second signup".
  */
-export function OnboardingScreen({ onDone }: { onDone: () => void }) {
-  const [name, setName] = useState("");
+export function OnboardingScreen({
+  onDone,
+  initialName = "",
+}: {
+  onDone: () => void;
+  initialName?: string;
+}) {
+  const [name, setName] = useState(initialName);
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

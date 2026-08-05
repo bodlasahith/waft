@@ -74,6 +74,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ name, photoUrl }),
     }),
+  rename: (name: string) =>
+    request<MyProfile>("/users/me/name", {
+      method: "PUT",
+      body: JSON.stringify({ name }),
+    }),
   card: (cardCode: string) => request<PublicCard>(`/cards/${cardCode}`),
   addSocial: (platform: string, handle: string, url?: string, visibility?: string) =>
     request<unknown>("/users/me/socials", {

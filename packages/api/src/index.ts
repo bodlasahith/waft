@@ -12,7 +12,7 @@ import { groupRoutes } from "./routes/groups.js";
 import { feedbackRoutes } from "./routes/feedback.js";
 import { closeDriver } from "./lib/neo4j.js";
 import { subscribe } from "./lib/liveEvents.js";
-import { getEventGraph } from "./services/graph.js";
+import { getEventGraph, pingGraph } from "./services/graph.js";
 
 // trustProxy so req.ip is the real client (Railway's edge sets
 // X-Forwarded-For) — without it every request looks like it comes from the
@@ -96,7 +96,7 @@ await app.register(cors, {
 await app.register(rateLimit, {
   max: 200,
   timeWindow: "1 minute",
-  allowList: (req: FastifyRequest) => req.url === "/health",
+  allowList: (req: FastifyRequest) => req.url.startsWith("/health"),
   keyGenerator: (req: FastifyRequest) => {
     const auth = req.headers.authorization;
     if (auth?.startsWith("Bearer ")) {
@@ -136,18 +136,48 @@ app.get("/events/:eventId/live", { websocket: true }, async (socket, req) => {
 
 app.get("/health", async () => ({ status: "ok" }));
 
+// Graph-store liveness. Separate from /health (which must stay green for
+// Railway's healthcheck even if Aura is momentarily unreachable) so an uptime
+// monitor / Railway cron can both verify AND warm the graph store on a
+// schedule. 503 when the store is down so a monitor can alert.
+app.get("/health/db", async (_req, reply) => {
+  try {
+    await pingGraph();
+    return { status: "ok", graph: "up" };
+  } catch (err) {
+    app.log.warn({ err }, "graph store unreachable on /health/db");
+    return reply.status(503).send({ status: "degraded", graph: "down" });
+  }
+});
+
+// Keep the graph store warm. Aura Free auto-pauses after a stretch of
+// inactivity; a paused instance makes the first sign-up after an idle period
+// fail (registration used to write a Person node synchronously — now
+// best-effort — and connects still need it). This always-on API pings it on a
+// schedule regardless of user traffic, so the store never idles into a pause.
+// Interval is well under Aura's idle threshold; unref'd so it never holds the
+// process open during shutdown.
+const WARM_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6h
+const warmGraph = () =>
+  pingGraph().catch((err) => app.log.warn({ err }, "graph keep-warm ping failed"));
+const warmTimer = setInterval(warmGraph, WARM_INTERVAL_MS);
+warmTimer.unref();
+
 const port = Number(process.env.PORT) || 3001;
 
 try {
   await app.listen({ port, host: "0.0.0.0" });
   console.log(`Waft API running on port ${port}`);
+  void warmGraph(); // wake the store immediately on boot, then on the interval
 } catch (err) {
   app.log.error(err);
+  clearInterval(warmTimer);
   await closeDriver();
   process.exit(1);
 }
 
 process.on("SIGTERM", async () => {
+  clearInterval(warmTimer);
   await closeDriver();
   await app.close();
 });
