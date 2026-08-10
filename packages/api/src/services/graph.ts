@@ -71,12 +71,22 @@ export async function createConnection(
   const session = getDriver().session();
   try {
     const result = await session.run(
+      // An edge accumulates EVERY event it was scanned at (r.eventIds), not one
+      // last-write-wins slot. Scanning at event B used to overwrite event A's
+      // tag, silently dropping the edge from A's wall; appending keeps it on
+      // both. Empty list = met "in the wild" (no event). Dedup so a rescan at
+      // the same event is idempotent. (Legacy edges may still carry a scalar
+      // r.eventId — reads tolerate it; we never write the scalar anymore.)
       `MATCH (a:Person {id: $fromUserId}), (b:Person {id: $toUserId})
        OPTIONAL MATCH (a)-[existing:WAFT]-(b)
        WITH a, b, existing IS NOT NULL AS already
        MERGE (a)-[r:WAFT]-(b)
-       ON CREATE SET r.createdAt = datetime(), r.strength = 1
-       SET r.eventId = coalesce($eventId, r.eventId)
+       ON CREATE SET r.createdAt = datetime(), r.strength = 1, r.eventIds = []
+       SET r.eventIds = CASE
+             WHEN $eventId IS NULL THEN coalesce(r.eventIds, [])
+             WHEN $eventId IN coalesce(r.eventIds, []) THEN r.eventIds
+             ELSE coalesce(r.eventIds, []) + $eventId
+           END
        RETURN already, r.strength AS strength`,
       { fromUserId, toUserId, eventId: eventId ?? null }
     );
@@ -114,16 +124,23 @@ export async function getNetworkGraph(userId: string, depth: number = 2) {
       `MATCH (a:Person)-[r:WAFT]-(b:Person)
        WHERE a.id IN $ids AND b.id IN $ids AND a.id < b.id
        RETURN a.id AS source, b.id AS target, coalesce(r.strength, 1) AS strength,
-              toString(r.createdAt) AS createdAt, r.eventId AS eventId`,
+              toString(r.createdAt) AS createdAt,
+              coalesce(r.eventIds, CASE WHEN r.eventId IS NULL THEN [] ELSE [r.eventId] END) AS eventIds`,
       { ids }
     );
-    const edges = edgeResult.records.map((r) => ({
-      source: r.get("source"),
-      target: r.get("target"),
-      strength: r.get("strength").toNumber(),
-      createdAt: r.get("createdAt"),
-      eventId: r.get("eventId"),
-    }));
+    const edges = edgeResult.records.map((r) => {
+      const eventIds = (r.get("eventIds") as string[]) ?? [];
+      return {
+        source: r.get("source"),
+        target: r.get("target"),
+        strength: r.get("strength").toNumber(),
+        createdAt: r.get("createdAt"),
+        eventIds,
+        // Kept for the frozen mobile binary (build 13), which reads a scalar
+        // edge.eventId to label an edge "an event" vs "in the wild".
+        eventId: eventIds[0] ?? null,
+      };
+    });
 
     return { nodes, edges };
   } finally {
@@ -180,16 +197,17 @@ async function queryEventGraph(eventId: string): Promise<EventGraph> {
       });
     }
 
-    // Edges are connections MADE AT this event (eventId matches). Checking in
-    // only adds you as a node — you link to someone only by actually meeting
-    // and scanning them here. So the wall shows the networking that happened
-    // at the event, not pre-existing relationships. A mutual made elsewhere
-    // (e.g. an auto-connect via a card scan) stays in personal networks and
-    // appears here only if the two also connect at the event.
+    // Edges are connections MADE AT this event — the edge's eventIds contains
+    // this event. Checking in only adds you as a node; you link to someone only
+    // by actually meeting and scanning them here. So the wall shows the
+    // networking that happened at the event, not pre-existing relationships. A
+    // mutual made elsewhere stays in personal networks and appears here only if
+    // the two also connect at the event. The `OR r.eventId = $eventId` clause
+    // keeps legacy scalar-tagged edges visible without a migration.
     // (a.id < b.id dedupes the undirected pair.)
     const result = await session.run(
-      `MATCH (a:Person)-[r:WAFT {eventId: $eventId}]-(b:Person)
-       WHERE a.id < b.id
+      `MATCH (a:Person)-[r:WAFT]-(b:Person)
+       WHERE a.id < b.id AND ($eventId IN coalesce(r.eventIds, []) OR r.eventId = $eventId)
        RETURN a.id AS source, a.name AS sourceName,
               b.id AS target, b.name AS targetName, coalesce(r.strength, 1) AS strength`,
       { eventId }
@@ -254,8 +272,8 @@ export async function getEventTimeline(eventId: string): Promise<EventTimeline> 
     }
 
     const result = await session.run(
-      `MATCH (a:Person)-[r:WAFT {eventId: $eventId}]-(b:Person)
-       WHERE a.id < b.id
+      `MATCH (a:Person)-[r:WAFT]-(b:Person)
+       WHERE a.id < b.id AND ($eventId IN coalesce(r.eventIds, []) OR r.eventId = $eventId)
        RETURN a.id AS source, a.name AS sourceName,
               b.id AS target, b.name AS targetName,
               coalesce(r.strength, 1) AS strength, toString(r.createdAt) AS createdAt`,
@@ -337,7 +355,7 @@ export async function getEventConnections(userId: string, eventId: string) {
   try {
     const result = await session.run(
       `MATCH (:Person {id: $userId})-[r:WAFT]-(other:Person)
-       WHERE r.eventId = $eventId
+       WHERE $eventId IN coalesce(r.eventIds, []) OR r.eventId = $eventId
        RETURN other.id AS id, other.name AS name,
               other.avatarColor AS avatarColor, other.avatarShape AS avatarShape`,
       { userId, eventId }

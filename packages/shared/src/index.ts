@@ -66,7 +66,12 @@ export interface GraphEdge {
   source: string;
   target: string;
   strength: number;
+  // Every event this edge was made at (empty = met "in the wild"). eventId /
+  // eventName are the first of each, retained for older clients.
+  eventIds?: string[];
+  eventNames?: string[];
   eventId?: string;
+  eventName?: string;
 }
 
 export interface EventInfo {

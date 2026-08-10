@@ -191,8 +191,10 @@ async function seed() {
       await session.run(
         `MATCH (a:Person {id: $aId}), (b:Person {id: $bId})
          MERGE (a)-[r:WAFT]-(b)
-         ON CREATE SET r.strength = 1
-         SET r.eventId = $eventId, r.createdAt = datetime($createdAt)`,
+         ON CREATE SET r.strength = 1, r.eventIds = []
+         SET r.eventIds = CASE WHEN $eventId IN coalesce(r.eventIds, []) THEN r.eventIds
+                               ELSE coalesce(r.eventIds, []) + $eventId END,
+             r.createdAt = datetime($createdAt)`,
         {
           aId: people[e.a].id,
           bId: people[e.b].id,

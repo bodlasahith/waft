@@ -144,16 +144,23 @@ export async function connectionRoutes(app: FastifyInstance) {
     const depth = Number((req.query as any).depth) || 2;
     const graph = await getNetworkGraph(req.userId, Math.max(1, Math.min(depth, 4)));
 
-    // Resolve event names so edge details can say where a waft happened.
-    const eventIds = [...new Set(graph.edges.map((e) => e.eventId).filter(Boolean))];
-    if (eventIds.length > 0) {
+    // Resolve event names so edge details can say where a waft happened. An
+    // edge can belong to multiple events now (eventIds), so resolve them all:
+    // eventNames[] carries every one; eventName stays the first, for the frozen
+    // mobile binary that reads a single name.
+    const allIds = [...new Set(graph.edges.flatMap((e) => e.eventIds))];
+    if (allIds.length > 0) {
       const { data: events } = await supabase
         .from("events")
         .select("id, name")
-        .in("id", eventIds);
+        .in("id", allIds);
       const names = new Map((events ?? []).map((e) => [e.id, e.name]));
-      for (const edge of graph.edges as (typeof graph.edges[number] & { eventName?: string })[]) {
-        if (edge.eventId) edge.eventName = names.get(edge.eventId);
+      for (const edge of graph.edges as (typeof graph.edges[number] & {
+        eventName?: string;
+        eventNames?: string[];
+      })[]) {
+        edge.eventNames = edge.eventIds.map((id) => names.get(id)).filter(Boolean) as string[];
+        edge.eventName = edge.eventNames[0];
       }
     }
     return reply.send(graph);
