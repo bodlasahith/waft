@@ -211,6 +211,88 @@ async function queryEventGraph(eventId: string): Promise<EventGraph> {
   }
 }
 
+type EventTimeline = {
+  nodes: {
+    id: string;
+    name: string;
+    avatarColor?: string;
+    avatarShape?: string;
+    // ISO 8601 — when this person first appears on the wall (their check-in,
+    // or their earliest connection here if they never scanned the event QR).
+    t: string;
+  }[];
+  edges: { source: string; target: string; strength: number; t: string }[];
+};
+
+/**
+ * Full event graph WITH timestamps, for Event Replay. Same nodes/edges as
+ * getEventGraph, but each carries when it came into being (check-in time /
+ * connection time) so the client can scrub the room from empty to full. This
+ * is a pure read over data that already exists — check-ins stamp
+ * ATTENDED.checkedInAt and connections stamp WAFT.createdAt — so replay costs
+ * no extra writes. Not cached: it's fetched once per replay session, not on the
+ * live wall's hot reconnect path.
+ */
+export async function getEventTimeline(eventId: string): Promise<EventTimeline> {
+  const session = getDriver().session();
+  try {
+    const attendees = await session.run(
+      `MATCH (p:Person)-[a:ATTENDED]->(:Event {id: $eventId})
+       RETURN p.id AS id, p.name AS name, p.avatarColor AS avatarColor,
+              p.avatarShape AS avatarShape, toString(a.checkedInAt) AS checkedInAt`,
+      { eventId }
+    );
+    const nodes = new Map<string, EventTimeline["nodes"][number]>();
+    for (const r of attendees.records) {
+      nodes.set(r.get("id"), {
+        id: r.get("id"),
+        name: r.get("name"),
+        avatarColor: r.get("avatarColor") ?? undefined,
+        avatarShape: r.get("avatarShape") ?? undefined,
+        t: r.get("checkedInAt"),
+      });
+    }
+
+    const result = await session.run(
+      `MATCH (a:Person)-[r:WAFT {eventId: $eventId}]-(b:Person)
+       WHERE a.id < b.id
+       RETURN a.id AS source, a.name AS sourceName,
+              b.id AS target, b.name AS targetName,
+              coalesce(r.strength, 1) AS strength, toString(r.createdAt) AS createdAt`,
+      { eventId }
+    );
+    const edges: EventTimeline["edges"] = [];
+    for (const rec of result.records) {
+      const source = rec.get("source");
+      const target = rec.get("target");
+      const createdAt = rec.get("createdAt");
+      // An endpoint that connected here but never checked in still belongs on
+      // the wall; it first appears at its earliest connection time.
+      for (const [id, nameKey] of [
+        [source, "sourceName"],
+        [target, "targetName"],
+      ] as const) {
+        const existing = nodes.get(id);
+        if (!existing) {
+          nodes.set(id, { id, name: rec.get(nameKey), t: createdAt });
+        } else if (existing.t == null || (createdAt && createdAt < existing.t)) {
+          existing.t = createdAt;
+        }
+      }
+      edges.push({
+        source,
+        target,
+        strength: rec.get("strength")?.toNumber?.() ?? 1,
+        t: createdAt,
+      });
+    }
+
+    return { nodes: [...nodes.values()], edges };
+  } finally {
+    await session.close();
+  }
+}
+
 /**
  * Returns the subset of candidateIds directly connected to userId.
  * Group routes use this so callers can't harvest handles/phone numbers of

@@ -129,6 +129,26 @@ export default function EventGraph({ nodes, edges, highlights = {} }: Props) {
     if (!graph) return;
     const now = performance.now();
 
+    // Reconcile to exactly the nodes/edges in props. The live wall only ever
+    // grows, so on that path the removal branch below is a no-op and behavior
+    // is unchanged; Replay scrubbing (which can shrink the set as you drag
+    // back in time) needs stale elements dropped so the graph shows the room
+    // exactly as it stood at time t. Remove before adding.
+    const wantNodes = new Set(nodes.map((n) => n.id));
+    const wantEdges = new Set(edges.map((e) => `${e.source}-${e.target}`));
+    for (const id of graph.nodes()) {
+      if (!wantNodes.has(id)) {
+        graph.dropNode(id); // graphology drops incident edges with the node
+        nodeBirth.current.delete(id);
+      }
+    }
+    for (const key of graph.edges()) {
+      if (!wantEdges.has(key) && graph.hasEdge(key)) {
+        graph.dropEdge(key);
+        edgeBirth.current.delete(key);
+      }
+    }
+
     for (const node of nodes) {
       if (!graph.hasNode(node.id)) {
         graph.addNode(node.id, {

@@ -5,6 +5,7 @@ import {
   getAttendedEventIds,
   getEventConnections,
   getEventGraph,
+  getEventTimeline,
   invalidateEventGraph,
 } from "../services/graph.js";
 import { generateIcebreakers, pickIcebreaker } from "../services/icebreakers.js";
@@ -171,5 +172,30 @@ export async function eventRoutes(app: FastifyInstance) {
     }
     const graph = await getEventGraph(eventId);
     return reply.send(graph);
+  });
+
+  // Event Replay: the full graph with per-node/per-edge timestamps plus the
+  // event's time bounds, so the wall can scrub from an empty room to the fully
+  // connected one. Same public-exposure gate as /graph — an expired wall isn't
+  // a permanent public attendee list. (A host-authenticated replay of a past,
+  // expired event is the natural follow-up; this covers the live window.)
+  app.get("/events/:eventId/timeline", async (req, reply) => {
+    const { eventId } = req.params as { eventId: string };
+    const { data: event } = await supabase
+      .from("events")
+      .select("name, starts_at, ends_at")
+      .eq("id", eventId)
+      .single();
+    if (!event) return reply.status(404).send({ error: "event_not_found" });
+    if (isWallExpired(event.ends_at, event.starts_at)) {
+      return reply.status(410).send({ error: "wall_expired" });
+    }
+    const timeline = await getEventTimeline(eventId);
+    return reply.send({
+      name: event.name,
+      startsAt: event.starts_at,
+      endsAt: event.ends_at,
+      ...timeline,
+    });
   });
 }
