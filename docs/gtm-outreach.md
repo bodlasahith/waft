@@ -1,10 +1,18 @@
 # Waft — Host Outreach Kit
 
-> **Mode matters.** Until the Pear demo produces a real artifact (a screenshot/recording of
-> a connected-room graph + one organizer reaction), you are in **discovery mode, not selling
-> mode.** Lead every conversation with "help me understand how your attendees connect today,"
-> not "here's my app." The moment you have the Pear artifact, switch the templates below from
-> *learn* to *offer*. Don't burn your best rooms on your weakest pitch.
+> **Mode matters.** Two gears: **learn** (understand how the host's attendees connect today) and
+> **offer** (switch on the wall for their event). The unlock between them is a real **artifact** —
+> a ~20s screen-recording of **Event Replay**: an event's network forming from an empty room to a
+> fully-connected one, live leaderboard moving as it fills. Lead cold with *learn* ("help me
+> understand how your attendees connect today"); the moment a host leans in, send the replay clip
+> and *offer*. Don't burn your best rooms on your weakest pitch.
+>
+> **Pear Prime didn't run — the artifact no longer depends on it.** Generate it yourself from the
+> demo event: `npx tsx --env-file=../../.env packages/api/scripts/seed-demo-event.ts` (run
+> off the office network — it blocks Aura's 7687 — or Railway-side), then open
+> `getwaft.app/e/demoreplay` → **↺ Replay** → **▶** and record. It seeds a ~35-person
+> curated-dinner-sized room, which is Waft's exact ICP — so the clip sells the right-sized event,
+> not the 6k-person YC wall the kit flags as illegible. `--cleanup` removes it when you're done.
 
 ## The ICP (who to target — and who to skip)
 
@@ -46,31 +54,39 @@ Tier 2 — **the sweet spot: intimate curated dinners** (30–150, full-room ado
 > actually do this well. Could I ask you 3 quick questions about how you help attendees connect
 > today? Not selling anything — genuinely just learning. 10 min, whenever's easy.
 
-### B. Offer-mode: the wall as a free add-on (after Pear artifact) — do things that don't scale
+### B. Offer-mode: the wall as a free add-on (once you have the replay clip) — do things that don't scale
 > Hi [name] — I run **Waft**, a live networking layer for events. Attendees scan one QR, instantly
 > trade whatever socials they actually use, and the room's connections appear on a live graph on
-> screen. [At [Pear/prior event] it looked like this → artifact.]
+> screen — with AI icebreakers themed to your event.
+>
+> Here's a 20-second look at a room connecting → [replay clip]. It plays back the network forming
+> from empty to full; live, that happens on a projected wall as people arrive.
 >
 > Would you be open to switching it on for [their event] as a free add-on? Zero setup for you —
 > a QR on the tables + any screen for the wall. Totally opt-in for attendees. I'd love to make
 > your next event's networking the thing people remember.
 
-### C. Cold email to a community (org-level, after some proof)
+### C. Cold email to a community (org-level, once you have the replay clip)
 > Subject: A live networking layer for [community]'s events
 >
 > Hi [name], [community] is exactly the kind of room Waft is built for — [N] people who came to
 > meet each other. Waft turns that into one scan → instant contact exchange → a live graph of the
-> room on screen, plus AI icebreakers themed to your event. One integration = every event you run.
-> Could I show you a 60-second clip / run it free at your next one? [artifact link]
+> room on screen, plus AI icebreakers themed to your event.
+>
+> Here's a 20-second replay of a room connecting → [replay clip]. One integration = every event
+> you run. Could I run it free at your next one?
+
+> **The [replay clip] link:** upload your recording (Loom / YouTube-unlisted / a hosted MP4) and
+> paste that URL. Keep it to the ~20s empty→full arc + the leaderboard — that's the whole hook.
 
 ## Tracking
 
 | Host / community | Platform | Contact | Mode (learn/offer) | Sent | Reply | Outcome |
 |---|---|---|---|---|---|---|
-| Pear VC (Nate) | direct | email thread | offer (Prime Day sim) | 2026-07 | pending | — |
-| Bay Area Founders Club | Luma | — | learn | — | — | — |
-| Founders Bay | Luma | — | learn | — | — | — |
-| Tech2table | Luma | — | learn | — | — | — |
+| Pear VC (Nate) | direct | email thread | offer (Prime Day sim) | 2026-07 | no reply | **lapsed — demo didn't run; artifact now from Replay instead** |
+| Bay Area Founders Club | Luma | — | offer (draft ready) | — | — | — |
+| Founders Bay | Luma | — | offer (draft ready) | — | — | — |
+| Tech2table | Luma | — | offer (draft ready) | — | — | — |
 
 ## The one metric that matters
 
