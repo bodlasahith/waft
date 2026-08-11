@@ -95,10 +95,10 @@ No raw emails exist on Luma — use the site contact form / a `hello@`·`info@` 
 | 5 | P2 | **Bay Area Founders Club** | SF/Bay | Curated founder/VC dinners, 50k+ members | `luma.com/bayareafoundersclub` | ✅ offer+learn |
 | 6 | P2 | **Founders Bay** | SF/Bay | Weekly curated AI-founder events | `foundersbay.com`, `luma.com/foundersbay` | ✅ offer+learn |
 | 7 | P2 | **Tech2table** | SF/Bay | Small curated founder/investor dinners (stated policy) | `luma.com` (find calendar) | ✅ offer+learn |
-| 8 | P2 | **Frontier Tower SF** | SF | 16-floor frontier-tech hub → steady event stream from one relationship | `frontiertower.io/apply` | — |
+| 8 | P2 | **Frontier Tower SF** | SF | 16-floor frontier-tech hub → steady event stream from one relationship | `frontiertower.io/apply` | ✅ offer |
 | 9 | P2 | **[SF] HackerSquad** | SF | Builder-first community, recurring build/speaker nights | Luma calendar (drill) | — |
-| 10 | P2 | **9Zero** | Seattle | Climate Innovation Hub; Founder Peer Group Meetups (small, curated) | Luma calendar (drill) | — |
-| 11 | P2 | **New Tech Northwest** | Seattle | "New Tech Seattle," recurring monthly meetup (~60+) | Luma calendar (drill) | — |
+| 10 | P2 | **9Zero** | Seattle | Climate Innovation Hub; Founder Peer Group Meetups (small, curated) | `9zero.com`, `luma.com/9ZeroSeattle`, LinkedIn `9zero-climate`, IG `@9zero_climatehub` | ✅ offer |
+| 11 | P2 | **New Tech Northwest** | Seattle | "New Tech Seattle," recurring monthly meetup (~60+) | `newtechnorthwest.com`, `luma.com/newtech`, LinkedIn `company/2845745` | ✅ offer |
 | 12 | P3 | **Big Brain Lectures – Bay Area** | SF/Bay | Recurring lecture series in curated spaces | Luma calendar (drill) | — |
 | 13 | P3 | **Build with Claude** (w/ Provectus) | SF | Recurring Claude Code workshops, small/hands-on | Luma event (drill) | — |
 | 14 | P3 | **thinkspace SEATTLE** | Seattle | Coworking/incubator; founder workshops | Luma calendar (drill) | — |
@@ -106,9 +106,11 @@ No raw emails exist on Luma — use the site contact form / a `hello@`·`info@` 
 | 16 | P3 | **Founders on Tap** | SF/Bay | Recurring founder-networking host (YC afterparty) | Luma calendar (drill) | — |
 | — | skip | Bond AI (130k), SF Hardware Meetup (10.5k) | SF/Bay | Recurring but events likely exceed the wall's legible size (>~300) | `bondcommunity.ai` | — |
 
-**Next actions on this list:** drill P2 contacts (#4, 8, 9, 10, 11) → write offer drafts; the P1 three are
-drafted and only need the recorded [replay clip] URL + a recipient from the contact column. Also line up
-**SF Tech Week (Oct 5–11)** hosts as they publish.
+**Drafted so far (offer, in Gmail):** #1 Hacker Dojo, #2 SF Founder Dinner, #3 SURF Incubator, #5 Bay Area
+Founders Club, #6 Founders Bay, #7 Tech2table, #8 Frontier Tower, #10 9Zero, #11 New Tech Northwest — 9
+targets. **Still to drill/draft:** #4 Startup Walk & Talk, #9 [SF] HackerSquad, #12–16 (thinkspace's Luma
+event page wouldn't load — retry later). All drafts need the recorded **[replay clip]** URL + a recipient
+from the contact column before sending. Also line up **SF Tech Week (Oct 5–11)** hosts as they publish.
 
 ## Tracking
 
