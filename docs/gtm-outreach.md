@@ -79,6 +79,37 @@ Tier 2 — **the sweet spot: intimate curated dinners** (30–150, full-room ado
 > **The [replay clip] link:** upload your recording (Loom / YouTube-unlisted / a hosted MP4) and
 > paste that URL. Keep it to the ~20s empty→full arc + the leaderboard — that's the whole hook.
 
+## Master target list (prioritized — the working email list)
+
+Ordered by priority. **P1** = email first (ICP-perfect and/or warm, contact in hand, draft written).
+**P2** = strong recurring hosts, contact known or one drill away. **P3** = secondary/larger/niche.
+Contact = the public channel to reach the host (org site's contact page, or Luma "Contact the Host").
+No raw emails exist on Luma — use the site contact form / a `hello@`·`info@` on the org site.
+
+| # | Priority | Organizer | Metro | Why it fits (ICP) | Contact | Draft |
+|---|---|---|---|---|---|---|
+| 1 | **P1** | **Hacker Dojo** | SF/Bay | Recurring host, 218 events; founder pitch + mixer. **Warm** (Sahith attended). Aug-12 Founders Pitch night `luma.com/m0eu7bw9` | `hackerdojo.org`, X `@hackerdojo`, `luma.com/user/Hacker_Dojo` | ✅ offer |
+| 2 | **P1** | **SF Founder Dinner** (Karen Sheffield / Pachamama Ventures) | SF | Curated founder dinner, sold out (demand proven) — Tech2table-class | `pachamamavc.com`, X `@kar_n_twitts` | ✅ offer |
+| 3 | **P1** | **SURF Incubator** | Seattle | Recurring weekly "Startups in Action" mixer | `surfincubator.com`, IG/LinkedIn `@surfincubator`, `luma.com/surfincubator` | ✅ offer |
+| 4 | P2 | **Startup Walk & Talk @ Green Lake** | Seattle | "Founders & Investors Only" — small, curated → ICP-perfect | Luma event → Contact the Host (drill) | — |
+| 5 | P2 | **Bay Area Founders Club** | SF/Bay | Curated founder/VC dinners, 50k+ members | `luma.com/bayareafoundersclub` | ✅ offer+learn |
+| 6 | P2 | **Founders Bay** | SF/Bay | Weekly curated AI-founder events | `foundersbay.com`, `luma.com/foundersbay` | ✅ offer+learn |
+| 7 | P2 | **Tech2table** | SF/Bay | Small curated founder/investor dinners (stated policy) | `luma.com` (find calendar) | ✅ offer+learn |
+| 8 | P2 | **Frontier Tower SF** | SF | 16-floor frontier-tech hub → steady event stream from one relationship | `frontiertower.io/apply` | — |
+| 9 | P2 | **[SF] HackerSquad** | SF | Builder-first community, recurring build/speaker nights | Luma calendar (drill) | — |
+| 10 | P2 | **9Zero** | Seattle | Climate Innovation Hub; Founder Peer Group Meetups (small, curated) | Luma calendar (drill) | — |
+| 11 | P2 | **New Tech Northwest** | Seattle | "New Tech Seattle," recurring monthly meetup (~60+) | Luma calendar (drill) | — |
+| 12 | P3 | **Big Brain Lectures – Bay Area** | SF/Bay | Recurring lecture series in curated spaces | Luma calendar (drill) | — |
+| 13 | P3 | **Build with Claude** (w/ Provectus) | SF | Recurring Claude Code workshops, small/hands-on | Luma event (drill) | — |
+| 14 | P3 | **thinkspace SEATTLE** | Seattle | Coworking/incubator; founder workshops | Luma calendar (drill) | — |
+| 15 | P3 | **tiat** | SF | Art × technology recurring calendar (niche) | Luma calendar (drill) | — |
+| 16 | P3 | **Founders on Tap** | SF/Bay | Recurring founder-networking host (YC afterparty) | Luma calendar (drill) | — |
+| — | skip | Bond AI (130k), SF Hardware Meetup (10.5k) | SF/Bay | Recurring but events likely exceed the wall's legible size (>~300) | `bondcommunity.ai` | — |
+
+**Next actions on this list:** drill P2 contacts (#4, 8, 9, 10, 11) → write offer drafts; the P1 three are
+drafted and only need the recorded [replay clip] URL + a recipient from the contact column. Also line up
+**SF Tech Week (Oct 5–11)** hosts as they publish.
+
 ## Tracking
 
 | Host / community | Platform | Contact | Mode (learn/offer) | Sent | Reply | Outcome |
