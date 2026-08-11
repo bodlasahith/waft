@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Linking, StyleSheet, Text, View } from "react-native";
 import { colors, radii } from "../theme";
 import { AppButton } from "../components/UI";
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -53,10 +53,23 @@ export function ScanScreen() {
   if (!permission) return <View style={styles.center} />;
 
   if (!permission.granted) {
+    // Apple 5.1.1(iv): the button that triggers the OS permission prompt must
+    // not use "Allow"-style wording that pre-empts the system dialog — use a
+    // neutral "Continue". Once the user has denied and iOS won't re-prompt
+    // (canAskAgain === false), the button here can't do anything, so point
+    // them to Settings instead of a dead end.
+    const canPrompt = permission.canAskAgain;
     return (
       <View style={styles.center}>
-        <Text style={styles.muted}>Waft needs the camera to scan QR codes.</Text>
-        <AppButton title="Allow camera" onPress={requestPermission} />
+        <Text style={styles.muted}>
+          {canPrompt
+            ? "Waft uses the camera to scan QR codes and connect with people you meet."
+            : "Camera access is off. Enable it for Waft in Settings to scan QR codes."}
+        </Text>
+        <AppButton
+          title={canPrompt ? "Continue" : "Open Settings"}
+          onPress={canPrompt ? requestPermission : () => Linking.openSettings()}
+        />
       </View>
     );
   }
