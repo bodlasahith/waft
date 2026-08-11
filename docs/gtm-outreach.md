@@ -113,7 +113,8 @@ Contact for all of these = their **Luma host/calendar page** ("Contact the Host"
 
 **San Francisco / Bay Area** (`luma.com/sf`):
 - **SF Founder Dinner** — Karen Sheffield / Pachamama Ventures (VC). Curated founder dinner, **ICP-perfect**
-  (sold out — demand proven). A Tech2table-class target.
+  (sold out — demand proven). A Tech2table-class target. Contact: `pachamamavc.com`, X `@kar_n_twitts`,
+  `luma.com/user/usr-zdaRMmEO6PcpV7C`. (Co-hosts: Mariane Bekker, Puya Vossoughi; Mercury sponsors.)
 - **[SF] HackerSquad** (ex-[SF] Builders Collective) — builder-first community, recurring speaker/build nights.
 - **Frontier Tower SF** (`frontiertower.io/apply`) — 16-floor frontier-tech hub hosting many events; a venue
   relationship = a steady event stream.
@@ -125,7 +126,8 @@ Contact for all of these = their **Luma host/calendar page** ("Contact the Host"
 
 **Seattle** (`luma.com/tech`, geolocated there):
 - **Startup Walk & Talk @ Green Lake** — "Founders & Investors Only." Small + curated → **ICP-perfect**.
-- **SURF Incubator** — "Wednesday Startups in Action Social," recurring weekly mixer.
+- **SURF Incubator** — "Wednesday Startups in Action Social," recurring weekly mixer. Contact:
+  `surfincubator.com`, IG `@surfincubator`, LinkedIn `company/surf-incubator`, `luma.com/surfincubator`.
 - **9Zero** (Climate Innovation Hub) — Founder Peer Group Meetup, small curated group.
 - **thinkspace SEATTLE** — recurring founder workshops (GTM Strategy Basics).
 - **New Tech Northwest** — "New Tech Seattle," recurring monthly meetup (~60+).
