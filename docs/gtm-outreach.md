@@ -87,6 +87,52 @@ Tier 2 — **the sweet spot: intimate curated dinners** (30–150, full-room ado
 | Bay Area Founders Club | Luma | — | offer (draft ready) | — | — | — |
 | Founders Bay | Luma | — | offer (draft ready) | — | — | — |
 | Tech2table | Luma | — | offer (draft ready) | — | — | — |
+| **Hacker Dojo** | Luma | `hackerdojo.org` (org site → public contact), X `@hackerdojo`, `luma.com/user/Hacker_Dojo` | offer (warm — Sahith invited to their events) | — | — | recurring host, **218 events**; ICP-perfect (Startups Mix & Pitch, Founders Pitch & Startup Networking) |
+| Founders on Tap | Luma | (find handle — YC afterparty host) | offer | — | — | recurring founder-networking host |
+
+### Warm targets from Sahith's own Luma (triaged 2026-08-10)
+
+**Reality check on "getting organizer emails": Luma does not expose them.** A host is
+reachable via (1) the in-app **"Contact the Host"** button and (2) their **public host page**
+(`luma.com/user/<handle>`), which links their site + socials. So outreach = a named host + their
+public business contact, not a scraped address list. The strongest fit from the account:
+
+- **Hacker Dojo** (`luma.com/user/Hacker_Dojo`, `hackerdojo.org`) — a Silicon Valley community space,
+  **218 events hosted**, running exactly Waft's rooms (founder pitch + open mixer). Sahith has been
+  invited to theirs (warm). **Live upcoming ICP target: "Bay Area Founders Pitch & Startup Networking",
+  Wed Aug 12 → `luma.com/m0eu7bw9`.** Best first move: reach out re: running the wall at that event,
+  via hackerdojo.org's contact or their Luma "Contact the Host".
+- Most of the rest of the account is YC-Startup-School-weekend afterparties (Jul 25–26): large, one-off,
+  wrong-ICP (600–2K attendees, illegible walls). Skip those; mine the recurring hosts instead.
+
+#### Luma `/tech` + city-page sweep (2026-08-10) — recurring ICP hosts, both metros
+
+Contact for all of these = their **Luma host/calendar page** ("Contact the Host") + any linked site/socials
+(no raw emails on Luma). Prioritize **recurring** hosts — one yes = many rooms. Filter out the big ones
+(>~300 → illegible wall).
+
+**San Francisco / Bay Area** (`luma.com/sf`):
+- **SF Founder Dinner** — Karen Sheffield / Pachamama Ventures (VC). Curated founder dinner, **ICP-perfect**
+  (sold out — demand proven). A Tech2table-class target.
+- **[SF] HackerSquad** (ex-[SF] Builders Collective) — builder-first community, recurring speaker/build nights.
+- **Frontier Tower SF** (`frontiertower.io/apply`) — 16-floor frontier-tech hub hosting many events; a venue
+  relationship = a steady event stream.
+- **Big Brain Lectures – Bay Area** — recurring lecture series in curated spaces.
+- **Build with Claude** (w/ Provectus) — recurring Claude Code workshops @ Embarcadero (small, hands-on).
+- **tiat** — art × technology recurring calendar (niche but curated).
+- Larger community calendars (lower priority — events may exceed the wall's legible size): **Bond AI** (130k
+  members, `bondcommunity.ai`), **SF Hardware Meetup** (10.5k, monthly).
+
+**Seattle** (`luma.com/tech`, geolocated there):
+- **Startup Walk & Talk @ Green Lake** — "Founders & Investors Only." Small + curated → **ICP-perfect**.
+- **SURF Incubator** — "Wednesday Startups in Action Social," recurring weekly mixer.
+- **9Zero** (Climate Innovation Hub) — Founder Peer Group Meetup, small curated group.
+- **thinkspace SEATTLE** — recurring founder workshops (GTM Strategy Basics).
+- **New Tech Northwest** — "New Tech Seattle," recurring monthly meetup (~60+).
+
+**Also on `/tech`:** the **Tech Week** umbrellas are the highest-density hunting grounds — **SF Tech Week
+Oct 5–11** (hundreds of individually-hosted events; "Launching Soon"), Grand Rapids (Sep 14–19), Austin
+(Oct 26–30). Line these up ahead of time (kit already flags SF Tech Week).
 
 ## The one metric that matters
 
