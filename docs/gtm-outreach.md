@@ -112,6 +112,21 @@ targets. **Still to drill/draft:** #4 Startup Walk & Talk, #9 [SF] HackerSquad, 
 event page wouldn't load — retry later). All drafts need the recorded **[replay clip]** URL + a recipient
 from the contact column before sending. Also line up **SF Tech Week (Oct 5–11)** hosts as they publish.
 
+### Send channels (drilled from org sites, 2026-08-12)
+
+**Direct email (send the offer draft here):**
+- **9Zero** → `seattle@9zero.com` (Seattle team; `teamsf@9zero.com` for SF)
+- **SURF Incubator** → `booking@surfincubator.com` (handles events/bookings)
+- **Frontier Tower** → `support@frontiertower.io`
+
+**No public email — use the channel (offer draft becomes a short DM / form message):**
+- **Hacker Dojo** → their **"Request an Event" Google form** (they explicitly take event requests), or DM X `@hackerdojo`. Warm angle still applies (Sahith attended).
+- **Pachamama / SF Founder Dinner** → reach Karen Sheffield via X `@kar_n_twitts` or LinkedIn `company/pachamamaventures` (no general email).
+- **Founders Bay** → founder **Mariane Bekker** via LinkedIn `in/marianebekker` / X `@marianebekker`, or Luma "Contact the Host" on `luma.com/foundersbay`.
+- **New Tech Northwest** → site blocks scraping; reach organizer **Jim Newkirk** (`linkedin.com/in/jim-newkirk-88337b`) or Luma "Contact the Host" on `luma.com/newtech`.
+
+For the DM/form channels, trim the offer email to ~2 sentences + the replay-clip link (long emails read as spam in a DM).
+
 ## Tracking
 
 | Host / community | Platform | Contact | Mode (learn/offer) | Sent | Reply | Outcome |
