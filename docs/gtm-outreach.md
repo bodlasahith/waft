@@ -181,12 +181,14 @@ from the contact column before sending. Also line up **SF Tech Week (Oct 5–11)
 - **9Zero** → `seattle@9zero.com` (Seattle team; `teamsf@9zero.com` for SF)
 - **SURF Incubator** → `booking@surfincubator.com` (handles events/bookings)
 - **Frontier Tower** → `support@frontiertower.io`
+- **Bay Area Founders Club** → `contact@bayareafoundersclub.com` (their /contact form is literally "how you'd like to collaborate with BFC"; founder Dr. Paul Fang)
+- **Tech2table** → `hello@jointech2table.com` (founder David Lam)
 
 **No public email — use the channel (offer draft becomes a short DM / form message):**
 - **Hacker Dojo** → their **"Request an Event" Google form** (they explicitly take event requests), or DM X `@hackerdojo`. Warm angle still applies (Sahith attended).
 - **Pachamama / SF Founder Dinner** → reach Karen Sheffield via X `@kar_n_twitts` or LinkedIn `company/pachamamaventures` (no general email).
 - **Founders Bay** → founder **Mariane Bekker** via LinkedIn `in/marianebekker` / X `@marianebekker`, or Luma "Contact the Host" on `luma.com/foundersbay`.
-- **New Tech Northwest** → site blocks scraping; reach organizer **Jim Newkirk** (`linkedin.com/in/jim-newkirk-88337b`) or Luma "Contact the Host" on `luma.com/newtech`.
+- **New Tech Northwest** → site blocks fetch; use their contact page `newtechnorthwest.com/contact-us/`, IG `@newtechnw`, or LinkedIn `company/newtechnorthwest`, or Luma "Contact the Host" on `luma.com/newtech`. (NB: Jim Newkirk is a *presenter*, not the organizer — don't address him.)
 
 For the DM/form channels, trim the offer email to ~2 sentences + the replay-clip link (long emails read as spam in a DM).
 
