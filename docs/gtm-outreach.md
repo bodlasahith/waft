@@ -142,6 +142,20 @@ gets no reply, switch to **LinkedIn/X DM** for touch 3 — multichannel lifts re
 Touch 3 deliberately blends a breakup with the Mom-Test question: it either revives the offer or pivots to
 a discovery conversation (which is worth just as much pre-launch).
 
+### Short DM versions (LinkedIn/X/form channels — 2–3 sentences, clip inline)
+
+**Hacker Dojo** (X `@hackerdojo` / "Request an Event" form):
+> Hey! I've been to a couple Hacker Dojo events (Startups Mix & Pitch, Game Night). I built Waft — guests scan one QR and the room's connections form a live graph on screen, with AI icebreakers. 20-sec look → youtu.be/4ROvp0N1QEE. Could I run it free at the next Founders Pitch night? Zero setup on your end.
+
+**SF Founder Dinner** (Karen Sheffield — X `@kar_n_twitts` / LinkedIn):
+> Hi Karen — saw your SF Founder Dinner sold out. I built Waft: guests scan one QR and the table's connections form a live graph on screen, with AI icebreakers themed to the dinner. 20-sec look → youtu.be/4ROvp0N1QEE. Could I run it free at your next dinner? Zero setup on your end.
+
+**Founders Bay** (Mariane Bekker — LinkedIn `in/marianebekker` / X `@marianebekker`):
+> Hi Mariane — Founders Bay's weekly events are exactly the room Waft is built for. Guests scan one QR and the room's connections form a live graph on screen, with AI icebreakers. 20-sec look → youtu.be/4ROvp0N1QEE. Could I run it free at your next one? Since you run weekly, one setup covers them all.
+
+**New Tech NW** (contact form / IG `@newtechnw` / LinkedIn):
+> Hi! New Tech Seattle is exactly the room Waft is built for — a monthly crowd who show up to meet each other. Guests scan one QR and the room's connections form a live graph on screen, with AI icebreakers. 20-sec look → youtu.be/4ROvp0N1QEE. Could I run it free at an upcoming meetup? Zero setup on your end.
+
 ## Master target list (prioritized — the working email list)
 
 Ordered by priority. **P1** = email first (ICP-perfect and/or warm, contact in hand, draft written).
