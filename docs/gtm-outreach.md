@@ -117,9 +117,29 @@ a SaaS sale), from 2026 benchmarks ([GetReplies](https://getreplies.ai/blog/cold
 - P.S. — happy to show you the 2-minute version first, no commitment.
 - P.S. — you keep the graph after — a nice recap to share with attendees.
 
-**Applied so far:** the 3 send-ready drafts (Frontier Tower, 9Zero, SURF Incubator) now use this tight
-copy + curiosity subject + P.S. The remaining offer drafts still use the v1 (longer) copy — propagate the
-template when finalizing them.
+**Applied:** all 9 offer drafts (Hacker Dojo, SF Founder Dinner, SURF Incubator, Bay Area Founders Club,
+Founders Bay, Tech2table, Frontier Tower, 9Zero, New Tech Northwest) now use this tight copy + curiosity
+subject + P.S.
+
+### Follow-up sequence (most replies land here, not on touch 1)
+
+Send follow-ups **in the same email thread** (reply, same subject), 3–5 days apart. If email touch 1–2
+gets no reply, switch to **LinkedIn/X DM** for touch 3 — multichannel lifts reply rate. Stop after touch 3.
+
+**Touch 2 — +3–4 days (short bump):**
+> Hi there — bumping this in case it got buried. Short version: one QR scan turns [their event] into a
+> live connection graph on screen — free, zero setup, opt-in for guests. 20-sec look → [replay clip].
+> Worth a quick try at your next one?
+> — Sahith
+
+**Touch 3 — +4–5 days (soft close + learn pivot):**
+> Hi there — last nudge, then I'll leave you be. Even if the wall isn't a fit, I'd genuinely love to hear
+> how you get [their event]'s guests connecting today — always learning from organizers who do it well.
+> And if you're up for trying it, I'll set the whole thing up so it's zero lift on your end.
+> — Sahith
+
+Touch 3 deliberately blends a breakup with the Mom-Test question: it either revives the offer or pivots to
+a discovery conversation (which is worth just as much pre-launch).
 
 ## Master target list (prioritized — the working email list)
 
