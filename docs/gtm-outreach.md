@@ -195,6 +195,9 @@ For the DM/form channels, trim the offer email to ~2 sentences + the replay-clip
 | Host / community | Platform | Contact | Mode (learn/offer) | Sent | Reply | Outcome |
 |---|---|---|---|---|---|---|
 | Pear VC (Nate) | direct | email thread | offer (Prime Day sim) | 2026-07 | no reply | **lapsed — demo didn't run; artifact now from Replay instead** |
+| **9Zero** | email | seattle@9zero.com | offer | **2026-08-12** | ⏳ pending | touch 2 due ~8/15–16 |
+| **SURF Incubator** | email | booking@surfincubator.com | offer | **2026-08-12** | ⏳ pending | touch 2 due ~8/15–16 |
+| **Frontier Tower** | email | support@frontiertower.io | offer | **2026-08-12** | ⏳ pending | touch 2 due ~8/15–16 |
 | Bay Area Founders Club | Luma | — | offer (draft ready) | — | — | — |
 | Founders Bay | Luma | — | offer (draft ready) | — | — | — |
 | Tech2table | Luma | — | offer (draft ready) | — | — | — |
