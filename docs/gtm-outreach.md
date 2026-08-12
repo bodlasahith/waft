@@ -78,6 +78,7 @@ Tier 2 — **the sweet spot: intimate curated dinners** (30–150, full-room ado
 
 > **The [replay clip] link:** upload your recording (Loom / YouTube-unlisted / a hosted MP4) and
 > paste that URL. Keep it to the ~20s empty→full arc + the leaderboard — that's the whole hook.
+> **Live clip (now embedded in all 9 drafts):** https://youtu.be/4ROvp0N1QEE (YouTube, unlisted).
 
 ## Cold-email playbook (research-backed, 2026)
 
@@ -128,8 +129,8 @@ gets no reply, switch to **LinkedIn/X DM** for touch 3 — multichannel lifts re
 
 **Touch 2 — +3–4 days (short bump):**
 > Hi there — bumping this in case it got buried. Short version: one QR scan turns [their event] into a
-> live connection graph on screen — free, zero setup, opt-in for guests. 20-sec look → [replay clip].
-> Worth a quick try at your next one?
+> live connection graph on screen — free, zero setup, opt-in for guests. 20-sec look →
+> https://youtu.be/4ROvp0N1QEE. Worth a quick try at your next one?
 > — Sahith
 
 **Touch 3 — +4–5 days (soft close + learn pivot):**
