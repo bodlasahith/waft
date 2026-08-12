@@ -79,6 +79,48 @@ Tier 2 — **the sweet spot: intimate curated dinners** (30–150, full-room ado
 > **The [replay clip] link:** upload your recording (Loom / YouTube-unlisted / a hosted MP4) and
 > paste that URL. Keep it to the ~20s empty→full arc + the leaderboard — that's the whole hook.
 
+## Cold-email playbook (research-backed, 2026)
+
+What moves reply rate for *this* motion — offering a free add-on to organizers (a partnership ask, not
+a SaaS sale), from 2026 benchmarks ([GetReplies](https://getreplies.ai/blog/cold-email-templates-2026/),
+[Tomba](https://tomba.io/blog/cold-email-for-business-partnership)):
+- **50–125 words.** Short emails reply ~50% better — cut everything non-essential.
+- **Signal personalization** — name their specific/recurring event in line 1. Signal-based ≈18% reply vs
+  ≈3.4% generic.
+- **Fair trade + one small ask.** Offer value (free wall, zero setup) and ask one low-friction next step
+  ("could I run it free at your next X?"). Don't "sell."
+- **Curiosity subject** — "Watch [their room] connect in real time" beats "A live networking layer for X."
+- **P.S. line** — high-read real estate; reinforce zero-risk.
+- **Follow up: 3–4 touches, 3–5 days apart, multichannel** (email → LinkedIn/X DM). Most replies land on
+  touch 2–3; widen the gaps later.
+
+### Canonical offer template (tight — the new default)
+> Subject: **Watch [their event] connect in real time**
+>
+> Hi there,
+> [Their event] is exactly the room Waft is built for — [one phrase why]. Guests scan one QR, instantly
+> swap whatever socials they use, and the room's connections form a live graph on screen, with AI
+> icebreakers themed to the [event].
+>
+> 20-second look → [replay clip].
+>
+> Could I run it free at an upcoming [event]? Zero setup — a QR on the tables, any screen for the wall,
+> opt-in for guests.
+>
+> — Sahith
+> getwaft.app
+>
+> P.S. — guests join in ~10 seconds, nothing to install.
+
+### P.S. bank (rotate to A/B)
+- P.S. — guests join in ~10 seconds, nothing to install.
+- P.S. — happy to show you the 2-minute version first, no commitment.
+- P.S. — you keep the graph after — a nice recap to share with attendees.
+
+**Applied so far:** the 3 send-ready drafts (Frontier Tower, 9Zero, SURF Incubator) now use this tight
+copy + curiosity subject + P.S. The remaining offer drafts still use the v1 (longer) copy — propagate the
+template when finalizing them.
+
 ## Master target list (prioritized — the working email list)
 
 Ordered by priority. **P1** = email first (ICP-perfect and/or warm, contact in hand, draft written).
