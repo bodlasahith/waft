@@ -217,6 +217,7 @@ For the DM/form channels, trim the offer email to ~2 sentences + the replay-clip
 | Bay Area Founders Club | Luma | — | offer (draft ready) | — | — | — |
 | **Founders Bay** | Luma DM | Contact-Host → Mariane Bekker | offer | **2026-08-12** | ⏳ pending | sent via Luma; touch 2 ~8/15–16 |
 | **New Tech Northwest** | Luma DM | Contact-Host → NTNW / Thomas Kim | offer | **2026-08-12** | ⏳ pending | sent via Luma; touch 2 ~8/15–16 |
+| **SF Founder Dinner** (Pachamama) | Luma DM | Contact-Host → Karen Sheffield | offer | **2026-08-12** | ⏳ pending | sent via Luma; touch 2 ~8/15–16 |
 | Tech2table | Luma | — | offer (draft ready) | — | — | — |
 | **Hacker Dojo** | Luma DM | Contact-Host → Hacker Dojo team | offer (warm — Sahith attended) | **2026-08-12** | ⏳ pending | sent via Luma; recurring host, 219 events; touch 2 ~8/15–16 |
 | Founders on Tap | Luma | (find handle — YC afterparty host) | offer | — | — | recurring founder-networking host |
