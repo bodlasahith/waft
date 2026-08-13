@@ -215,7 +215,8 @@ For the DM/form channels, trim the offer email to ~2 sentences + the replay-clip
 | **SURF Incubator** | email | booking@surfincubator.com | offer | **2026-08-12** | ⏳ pending | touch 2 due ~8/15–16 |
 | **Frontier Tower** | email | support@frontiertower.io | offer | **2026-08-12** | ⏳ pending | touch 2 due ~8/15–16 |
 | Bay Area Founders Club | Luma | — | offer (draft ready) | — | — | — |
-| Founders Bay | Luma | — | offer (draft ready) | — | — | — |
+| **Founders Bay** | Luma DM | Contact-Host → Mariane Bekker | offer | **2026-08-12** | ⏳ pending | sent via Luma; touch 2 ~8/15–16 |
+| **New Tech Northwest** | Luma DM | Contact-Host → NTNW / Thomas Kim | offer | **2026-08-12** | ⏳ pending | sent via Luma; touch 2 ~8/15–16 |
 | Tech2table | Luma | — | offer (draft ready) | — | — | — |
 | **Hacker Dojo** | Luma | `hackerdojo.org` (org site → public contact), X `@hackerdojo`, `luma.com/user/Hacker_Dojo` | offer (warm — Sahith invited to their events) | — | — | recurring host, **218 events**; ICP-perfect (Startups Mix & Pitch, Founders Pitch & Startup Networking) |
 | Founders on Tap | Luma | (find handle — YC afterparty host) | offer | — | — | recurring founder-networking host |
