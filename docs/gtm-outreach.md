@@ -214,11 +214,11 @@ For the DM/form channels, trim the offer email to ~2 sentences + the replay-clip
 | **9Zero** | email | seattle@9zero.com | offer | **2026-08-12** | ⏳ pending | touch 2 due ~8/15–16 |
 | **SURF Incubator** | email | booking@surfincubator.com | offer | **2026-08-12** | ⏳ pending | touch 2 due ~8/15–16 |
 | **Frontier Tower** | email | support@frontiertower.io | offer | **2026-08-12** | ⏳ pending | touch 2 due ~8/15–16 |
-| Bay Area Founders Club | Luma | — | offer (draft ready) | — | — | — |
+| **Bay Area Founders Club** | email | contact@bayareafoundersclub.com | offer | **2026-08-15** | ⏳ pending | touch 2 ~8/18–19 |
 | **Founders Bay** | Luma DM | Contact-Host → Mariane Bekker | offer | **2026-08-12** | ⏳ pending | sent via Luma; touch 2 ~8/15–16 |
 | **New Tech Northwest** | Luma DM | Contact-Host → NTNW / Thomas Kim | offer | **2026-08-12** | ⏳ pending | sent via Luma; touch 2 ~8/15–16 |
 | **SF Founder Dinner** (Pachamama) | Luma DM | Contact-Host → Karen Sheffield | offer | **2026-08-12** | ⏳ pending | sent via Luma; touch 2 ~8/15–16 |
-| Tech2table | Luma | — | offer (draft ready) | — | — | — |
+| **Tech2table** | email | hello@jointech2table.com | offer | **2026-08-15** | ⏳ pending | touch 2 ~8/18–19 |
 | **Hacker Dojo** | Luma DM | Contact-Host → Hacker Dojo team | offer (warm — Sahith attended) | **2026-08-12** | ⏳ pending | sent via Luma; recurring host, 219 events; touch 2 ~8/15–16 |
 | Founders on Tap | Luma | (find handle — YC afterparty host) | offer | — | — | recurring founder-networking host |
 
