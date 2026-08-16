@@ -25,7 +25,9 @@ export function Footer() {
   );
 }
 
-// Where "Get Waft" points. Set NEXT_PUBLIC_TESTFLIGHT_URL in Vercel once the
-// public TestFlight link exists; until then the CTA falls back to the landing
-// page, which explains the app.
-export const getWaftHref = process.env.NEXT_PUBLIC_TESTFLIGHT_URL || "/";
+// Where "Get Waft" points. The app is live on the App Store (build 14 approved
+// 2026-08), so the permanent listing URL is the default. Override with
+// NEXT_PUBLIC_APP_STORE_URL in Vercel if the id ever changes — no code edit
+// needed. (The listing only resolves once the version is actually released.)
+const APP_STORE_URL = "https://apps.apple.com/app/id6792655313";
+export const getWaftHref = process.env.NEXT_PUBLIC_APP_STORE_URL || APP_STORE_URL;

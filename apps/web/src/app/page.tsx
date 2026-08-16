@@ -38,7 +38,7 @@ export default function Home() {
           <div className="reveal reveal-4 mt-9">
             {hasApp ? (
               <a href={getWaftHref} className="btn-primary inline-flex px-7 py-3.5 text-[15px]">
-                Get Waft on TestFlight
+                Get Waft on the App Store
               </a>
             ) : (
               <span className="vapor-card inline-flex items-center gap-2.5 px-5 py-2.5 text-sm text-[var(--muted)]">
