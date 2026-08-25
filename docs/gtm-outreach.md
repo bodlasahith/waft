@@ -156,6 +156,33 @@ a discovery conversation (which is worth just as much pre-launch).
 **New Tech NW** (contact form / IG `@newtechnw` / LinkedIn):
 > Hi! New Tech Seattle is exactly the room Waft is built for — a monthly crowd who show up to meet each other. Guests scan one QR and the room's connections form a live graph on screen, with AI icebreakers. 20-sec look → youtu.be/4ROvp0N1QEE. Could I run it free at an upcoming meetup? Zero setup on your end.
 
+### LinkedIn round (touch 2 — reach the human behind each org; send MANUALLY)
+
+Multichannel lifts reply rate, and LinkedIn reaches the decision-maker (emails went to `contact@`/`hello@`).
+**Manual only — LinkedIn aggressively bans automation, and a personal request from you lands far better.**
+Play: **connection request + note (≤300 chars, NO link** — links tank acceptance), then DM the pitch + clip
+once they accept. You can't DM a non-connection without Premium/InMail. Keep to ~15–20 requests/day.
+
+Targets (the people behind the emailed orgs): **Paul Fang** (Bay Area Founders Club), **David Lam** (Tech2table,
+founder), **Mariane Bekker** (Founders Bay, `in/marianebekker`), **Karen Sheffield** (SF Founder Dinner/Pachamama),
+**Thomas Kim** (New Tech Seattle). Search by name where no confirmed slug.
+
+**Connection notes (≤300 chars, no link):**
+- *Paul Fang:* Hi Paul — I run Waft, a live networking layer for events: one QR scan and the room's connections form a live graph on screen. Bay Area Founders Club dinners are exactly the room it's built for. Would love to connect and show you a 20-sec look — a fun, zero-setup add-on.
+- *David Lam:* Hi David — I run Waft, a live networking layer for events: guests scan one QR and the room's connections form a live graph on screen. Tech2table's curated dinners are the perfect fit. Would love to connect and share a 20-sec look — zero setup on your end.
+- *Mariane Bekker:* Hi Mariane — I reached out via your Luma about Waft (a live networking graph for events) and wanted to connect here too. Founders Bay is exactly the room it's built for. Happy to show a 20-sec look — could be a fun add-on for a weekly event.
+- *Karen Sheffield:* Hi Karen — messaged via your SF Founder Dinner Luma about Waft (live networking graph for events) and wanted to connect here too. A curated founder table is exactly its habitat. Happy to show a 20-sec look — zero setup on your end.
+- *Thomas Kim:* Hi Thomas — reached out via New Tech's Luma about Waft: one QR scan and the room's connections form a live graph on screen. New Tech Seattle is exactly the room it's built for. Would love to connect and show a 20-sec look.
+
+**Post-accept DM (clip goes here):**
+> Thanks for connecting, [name]! Here's the 20-sec look → youtu.be/4ROvp0N1QEE — guests scan one QR and the room's connections form a live graph on screen, with AI icebreakers themed to the event. Could I run it free at an upcoming [their event]? Zero setup on your end — a QR on the tables + any screen. (P.S. — Waft's now live on the App Store.)
+
+### Email touch 2 (bumps — 5 drafts queued in Gmail, subject "Re: …")
+
+Short same-thread bumps for the 5 email targets (9Zero, SURF, Frontier Tower, Bay Area Founders Club, Tech2table).
+⚠️ **These + the App Store link point at the live app — hold sending until the Railway backend is up (see below),**
+or you're driving prospects to a broken product.
+
 ## Master target list (prioritized — the working email list)
 
 Ordered by priority. **P1** = email first (ICP-perfect and/or warm, contact in hand, draft written).
