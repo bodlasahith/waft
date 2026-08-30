@@ -326,6 +326,46 @@ events → worth a connection request on the same play as the org founders above
 **How to reach any new calendar:** open its Luma page → **"Contact the Host"** (same channel that worked for
 the touch-1 Luma DMs). I can send these via the browser with your per-message approval, same as before.
 
+### Broadened LinkedIn organizer pool (2026-08-29) — for reach
+
+Cold DMs get ignored, so we need volume — BUT **LinkedIn free-tier caps personalized-note invites at ~5/month**
+and throttles total invites (~100–200/wk, flagged sooner if spammy). So don't blast notes. Spend the scarce
+note-invites on the ★★★ tier; send **no-note** requests to the rest (doesn't burn the 5/mo note budget) and DM
+after they accept; **Follow + comment** on 3rd-degree folks for impressions without spending an invite. All
+found via ICP keyword searches ("AI events organizer / hackathon host / community builder", SF + Seattle).
+
+**Tier A — spend note-invites here (★★★, mostly 2nd-degree, strong ICP):**
+| Name | Profile | Why | Degree |
+|---|---|---|---|
+| **Daniel Monteverde** | `/in/danielmonteverde/` | Founder @ dinnerHQ — "meet professionals over dinner"; **1st-degree → DM directly, no invite** | 1st ✅ |
+| **Kuzma Ledenev** | `/in/kuzma-ledenev-37b00063/` | "AI Events for founders, investors & engineers in SF Bay Area" — bullseye | 2nd |
+| **TatianaSF** | `/in/tatianasf/` | Founder, HackathonSF; SF ecosystem GTM, 4+ mutuals, 16K | 2nd |
+| **Filip Graniczny** | `/in/filipgraniczny/` | Tech Week @ a16z (hundreds of events) | 2nd |
+| **Mustafa Khan** | `/in/mustafakhan/` | Head of Events @ Clay + Lenny Rachitsky's Summit producer + Daybreaker SF founder | 2nd |
+
+**Tier B — no-note connection request, then DM on accept (★★, 2nd-degree):**
+| Name | Profile | Why |
+|---|---|---|
+| **Aisha Asanova** | `/in/aisha-asanova/` | Founder Community Builder \| AI/ML Program Leader, SF |
+| **Alison Granger Ganansia** | `/in/alison-granger-ganansia/` | "Building Blooming" — event strategy & community growth, SF |
+| **Josue Cruz** | `/in/j-crz/` | DevRel/Community; Outreach Chair @ SF Hacks |
+| **Laura Knaub** | `/in/laura-knaub-0239216/` | Community, Operations & Events Manager, Seattle |
+| **Audrey Yun** | `/in/audsyun/` | Events & Community Mgr @ AI House (Seattle's AI Hub / AI2 Incubator) — Seattle ICP ★★★ but 3rd-deg |
+
+**Tier C — Follow + comment for impressions (3rd-degree / niche):** Catherine Cheng `/in/catherinecheng2022/`
+("I host unforgettable IRL experiences"), Jeremy J. Lynch `/in/jeremyjlynch/` (AI Community Builder / Event
+Innovator), Emily Fang `/in/emilyfang/` (Developer Events @ Workato), Caitlin Maltbie `/in/caitlinmaltbie/`
+(OpenAI Forum events). Plus **Steven Echtman** (ClawCamp / AGI Society SF / SF Tech Week — search by name; 2nd,
+13K) and **Ami Arad** (B2B Executive Dinners founder — search "Ami Arad dinner"; 2nd) — borderline, verify fit.
+
+**Cold connection note (these hosts weren't emailed — adapt per person, ≤300 chars, NO link):**
+> Hi [name] — I run Waft, a live networking layer for events: guests scan one QR and the room's connections
+> form a live graph on screen, with AI icebreakers. [Their event/community] looks exactly like the room it's
+> built for. Would love to connect and show you a 20-sec look — a fun, zero-setup add-on.
+
+Then, once connected (or immediately for 1st-degree Daniel): the **Post-accept DM** above (clip + offer + "live
+on the App Store").
+
 ## The one metric that matters
 
 Not "how many did I email." It's: **which host or attendee leaned forward?** One organizer who
