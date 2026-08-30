@@ -163,9 +163,13 @@ Multichannel lifts reply rate, and LinkedIn reaches the decision-maker (emails w
 Play: **connection request + note (≤300 chars, NO link** — links tank acceptance), then DM the pitch + clip
 once they accept. You can't DM a non-connection without Premium/InMail. Keep to ~15–20 requests/day.
 
-Targets (the people behind the emailed orgs): **Paul Fang** (Bay Area Founders Club), **David Lam** (Tech2table,
-founder), **Mariane Bekker** (Founders Bay, `in/marianebekker`), **Karen Sheffield** (SF Founder Dinner/Pachamama),
-**Thomas Kim** (New Tech Seattle). Search by name where no confirmed slug.
+Targets (the people behind the emailed orgs) — **all profile URLs confirmed via LinkedIn search 2026-08-29;
+all are 2nd-degree with shared mutuals, so a connection request + note will land** (send from your account):
+- **Dr. Paul Fang** (Bay Area Founders Club) → `linkedin.com/in/paul-fang-phd/` — "Founder @ Bay Area Founders Club (100K+)", Los Altos, 13+ mutuals, 20K followers.
+- **David Lam** (Tech2table founder) → `linkedin.com/in/davidlam07/` — now also Co-Founder/CEO at Abacor (NYC-based); still lists Tech2Table. 10K followers.
+- **Mariane Bekker** (Founders Bay) → `linkedin.com/in/marianebekker/` — "Founder & Investor @ Founders Bay - 250k community" / Head of DevRel @ You.com, SF, 5 mutuals, 30K followers. (Slug confirmed.)
+- **Karen Sheffield, MBA** (SF Founder Dinner / Pachamama) → `linkedin.com/in/karen-sheffield/` — "Founder & Managing Partner at Pachamama Ventures", SF Bay, 18K followers.
+- **New Tech Northwest** — organizer NOT confirmable on LinkedIn (the "Thomas Kim" guess didn't verify; a generic search returned noise). Reach via org channels instead: `newtechnorthwest.com/contact-us/`, IG `@newtechnw`, or Luma "Contact the Host" on `luma.com/newtech`. Don't address a specific name until confirmed.
 
 **Connection notes (≤300 chars, no link):**
 - *Paul Fang:* Hi Paul — I run Waft, a live networking layer for events: one QR scan and the room's connections form a live graph on screen. Bay Area Founders Club dinners are exactly the room it's built for. Would love to connect and show you a 20-sec look — a fun, zero-setup add-on.
@@ -294,6 +298,33 @@ Contact for all of these = their **Luma host/calendar page** ("Contact the Host"
 **Also on `/tech`:** the **Tech Week** umbrellas are the highest-density hunting grounds — **SF Tech Week
 Oct 5–11** (hundreds of individually-hosted events; "Launching Soon"), Grand Rapids (Sep 14–19), Austin
 (Oct 26–30). Line these up ahead of time (kit already flags SF Tech Week).
+
+## New targets — Luma `/ai` + LinkedIn discovery run (2026-08-29)
+
+The `/sf` "popular" feed is noise (yoga, journaling, nightlife). **Luma `/ai` is the high-signal surface** —
+its **Popular Calendars** are *recurring communities* (one host relationship = many rooms), which beats any
+one-off event. New recurring-host targets, best-fit first. Contact route for all = each calendar's Luma page
+→ **"Contact the Host"** (no raw emails on Luma), plus the org site/socials noted.
+
+| Target | Luma / link | Why it fits (ICP) | Fit | Contact route |
+|---|---|---|---|---|
+| **Llama Lounge** — SF AI Startup Series | `luma.com/llamalounge` | SF AI-startup **demo series** (since Apr 2023) — demos + networking, curated | ★★★ strong | Luma Contact-Host; find organizer on site |
+| **GenAI Collective** ("The AI Collective") | `luma.com/genai-collective` | 200k+ community **with local SF chapter mixers** — target the SF chapter events (skip the mega ones) | ★★★ strong (chapter-level) | Luma Contact-Host on SF chapter events |
+| **AICamp** (Guava Voice AI Hackathon host) | event `luma.com/678a9u02`, venue "House of AI" | Recurring AI **build nights / meetups**, 150+ RSVPs — big reach, networking-forward | ★★☆ | Luma Contact-Host; `aicamp.ai` |
+| **Latent.Space** (swyx / Shawn Wang) | `luma.com/ls` | Paper Club + "AI in Action" meetups — smaller sessions fit; **swyx is very reachable on X** | ★★☆ (meetups, not confs) | X `@swyx`; Luma Contact-Host |
+| **Sundai Club / RSI House** | `sundai.club`, `rsihouse.ai`, event `luma.com/7cacs0ez` | Harvard/MIT AI hacker community, **every Sunday** in SF (130+ hacks). Builder-heavy (heads-down) but weekly intros/team-formation = contact exchange | ★★☆ builder-focused | Hosts: Serge `@sergeicu`, Sean Klein `@its_sean_klein`; sundai.club |
+
+**Also-rans seen (lower priority):** Air Street events (`luma.com/airstreet` — VC-run, likely large), OpenClaw
+Meetups (`luma.com/claw`), Claude Community Events (`luma.com/claudecommunity`). Weekend `/ai` feed was
+hackathon-heavy (Himalaya Robotics `/qa11srwr`, Halluminate Research Rave `/2yoy4m46`) — hacks are too
+soon/heads-down to pitch a specific instance; mine the **recurring calendar** behind each instead.
+
+**New person target (LinkedIn):** **Steven Echtman** — "AI Ecosystem / DevRel / Community Leader; Founder
+ClawCamp; SF Chapter Lead, AGI Society; SF Tech Week", SF, 13K followers, 2nd-degree. Runs SF AI community
+events → worth a connection request on the same play as the org founders above.
+
+**How to reach any new calendar:** open its Luma page → **"Contact the Host"** (same channel that worked for
+the touch-1 Luma DMs). I can send these via the browser with your per-message approval, same as before.
 
 ## The one metric that matters
 
