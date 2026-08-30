@@ -344,6 +344,11 @@ found via ICP keyword searches ("AI events organizer / hackathon host / communit
 | **Filip Graniczny** | `/in/filipgraniczny/` | Tech Week @ a16z (hundreds of events) | 2nd |
 | **Mustafa Khan** | `/in/mustafakhan/` | Head of Events @ Clay + Lenny Rachitsky's Summit producer + Daybreaker SF founder | 2nd |
 
+**✅ Tier A SENT 2026-08-30** (via browser, Sahith clicked each send): Daniel Monteverde — **direct DM** (warm; he'd
+messaged Sahith in Mar 2025, so replied in-thread with clip + offer). Kuzma Ledenev, TatianaSF, Filip Graniczny,
+Mustafa Khan — **connection-request + note** (all show "Pending"). That's **4 of ~5 monthly note-invites used**
+(1 in reserve). Next: watch for accepts → send the post-accept DM (clip + offer + "live on the App Store").
+
 **Tier B — no-note connection request, then DM on accept (★★, 2nd-degree):**
 | Name | Profile | Why |
 |---|---|---|
