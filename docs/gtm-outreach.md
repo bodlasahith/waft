@@ -358,6 +358,21 @@ Mustafa Khan — **connection-request + note** (all show "Pending"). That's **4 
 | **Laura Knaub** | `/in/laura-knaub-0239216/` | Community, Operations & Events Manager, Seattle |
 | **Audrey Yun** | `/in/audsyun/` | Events & Community Mgr @ AI House (Seattle's AI Hub / AI2 Incubator) — Seattle ICP ★★★ but 3rd-deg |
 
+**✅ Tier B SENT 2026-08-30** (all no-note, all "Pending"): Aisha Asanova, Alison Granger Ganansia, Josue Cruz,
+Laura Knaub, Audrey Yun. Two notes on these: **Laura Knaub is 9Zero's Community/Events Manager** — directly
+reinforces the #10 9Zero email target (she's the person who runs their events). **Audrey Yun is at AI House
+Seattle** but only 3rd-degree; her 2nd-degree colleagues **Jacob Colker** (AI House cofounder/MD) and **Taylor
+Soper** (Dir. of Community & Programming @ AI House) are stronger next targets — go through them.
+
+**Tatiana (HackathonSF) — engaged 2026-08-30.** Her connection-note reply was a **templated auto-promo** for her
+own event **"Startup Pitch Night SF" (B4SF.com)** with a Luma RSVP link (not a personal reply; invite still shows
+Pending). Replied in-thread: RSVP'd + pivoted to offering the Waft wall at an upcoming Pitch Night + clip. B4SF /
+Startup Pitch Night SF is a genuine ICP room — **track it as a live thread.**
+
+**More targets spotted this session (add next round):** **Jacob Colker** & **Taylor Soper** (AI House Seattle, both
+2nd) · **Matthew Joehnk** (9Zero cofounder) · **Bahara Mehry** (President, SF Hacks — 2nd) · **Cyril Attia**
+("Organizing Tech Events in SF" — 2nd) · **Steven Echtman** (ClawCamp / AGI Society SF, from earlier).
+
 **Tier C — Follow + comment for impressions (3rd-degree / niche):** Catherine Cheng `/in/catherinecheng2022/`
 ("I host unforgettable IRL experiences"), Jeremy J. Lynch `/in/jeremyjlynch/` (AI Community Builder / Event
 Innovator), Emily Fang `/in/emilyfang/` (Developer Events @ Workato), Caitlin Maltbie `/in/caitlinmaltbie/`
