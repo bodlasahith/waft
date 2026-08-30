@@ -247,10 +247,11 @@ For the DM/form channels, trim the offer email to ~2 sentences + the replay-clip
 | **Frontier Tower** | email | support@frontiertower.io | offer | **2026-08-12** | ⏳ pending | touch 2 due ~8/15–16 |
 | **Bay Area Founders Club** | email | contact@bayareafoundersclub.com | offer | **2026-08-15** | ⏳ pending | touch 2 ~8/18–19 |
 | **Founders Bay** | Luma DM | Contact-Host → Mariane Bekker | offer | **2026-08-12** | ⏳ pending | sent via Luma; touch 2 ~8/15–16 |
-| **New Tech Northwest** | Luma DM | Contact-Host → NTNW / Thomas Kim | offer | **2026-08-12** | ⏳ pending | sent via Luma; touch 2 ~8/15–16 |
+| **New Tech Northwest** | Luma DM | Contact-Host → NTNW / Thomas Kim | offer | **2026-08-12** | ⏳ pending | **touch 2 sent 2026-08-30** via Contact-Host on the Sep 15 "New Tech Seattle" meetup (Thomas Kim confirmed as co-host) |
 | **SF Founder Dinner** (Pachamama) | Luma DM | Contact-Host → Karen Sheffield | offer | **2026-08-12** | ⏳ pending | sent via Luma; touch 2 ~8/15–16 |
 | **Tech2table** | email | hello@jointech2table.com | offer | **2026-08-15** | ⏳ pending | touch 2 ~8/18–19 |
-| **Hacker Dojo** | Luma DM | Contact-Host → Hacker Dojo team | offer (warm — Sahith attended) | **2026-08-12** | ⏳ pending | sent via Luma; recurring host, 219 events; touch 2 ~8/15–16 |
+| **Hacker Dojo** | Luma DM | Contact-Host → Hacker Dojo team | offer (warm — Sahith attended) | **2026-08-12** | ⏳ pending | **touch 2 sent 2026-08-30** via Contact-Host on the Sep 1 "Bay Area Founder Networking & Startup Workshop" (co-hosted w/ StartupA2Z / satish govindappa, 93 going — perfect ICP) |
+| **StartupA2Z** (satish govindappa) | Luma DM | Contact-Host (Sep 1 founder-networking event) | offer | **2026-08-30** | ⏳ pending | reached via the co-hosted Hacker Dojo event; net-new host worth tracking separately |
 | Founders on Tap | Luma | (find handle — YC afterparty host) | offer | — | — | recurring founder-networking host |
 
 ### Warm targets from Sahith's own Luma (triaged 2026-08-10)
