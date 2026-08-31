@@ -183,9 +183,15 @@ all are 2nd-degree with shared mutuals, so a connection request + note will land
 
 ### Email touch 2 (bumps — 5 drafts queued in Gmail, subject "Re: …")
 
-Short same-thread bumps for the 5 email targets (9Zero, SURF, Frontier Tower, Bay Area Founders Club, Tech2table).
-⚠️ **These + the App Store link point at the live app — hold sending until the Railway backend is up (see below),**
-or you're driving prospects to a broken product.
+Short bumps for the 5 email targets (9Zero, SURF, Frontier Tower, Bay Area Founders Club, Tech2table).
+**Refreshed 2026-08-30** to lead with the App Store launch (genuine trigger event > generic "bumping this"):
+> Hi — quick reason to resurface this: Waft just went live on the App Store. Same idea as my earlier note — one
+> QR scan turns [their event] into a live connection graph on the screen, free and zero-setup for you, opt-in for
+> guests. 20-sec look → youtu.be/4ROvp0N1QEE. Worth a quick try at an upcoming one? — Sahith  P.S. — takes ~10 sec
+> for guests to join, nothing to install.
+
+✅ **Cleared to send** — Railway backend is live (Hobby plan, `/health/db` green). Drafts are standalone (own
+threads, "Re:" subjects), so they send as fresh follow-ups, not in-thread replies — copy reads correctly either way.
 
 ## Master target list (prioritized — the working email list)
 
