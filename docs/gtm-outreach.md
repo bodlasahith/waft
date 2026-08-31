@@ -253,7 +253,7 @@ For the DM/form channels, trim the offer email to ~2 sentences + the replay-clip
 | **Frontier Tower** | email | support@frontiertower.io | offer | **2026-08-12** | ⏳ pending | touch 2 due ~8/15–16 |
 | **Bay Area Founders Club** | email | contact@bayareafoundersclub.com | offer | **2026-08-15** | ⏳ pending | touch 2 ~8/18–19 |
 | **Founders Bay** | Luma DM | Contact-Host → Mariane Bekker | offer | **2026-08-12** | ⏳ pending | sent via Luma; touch 2 ~8/15–16 |
-| **New Tech Northwest** | Luma DM | Contact-Host → NTNW / Thomas Kim | offer | **2026-08-12** | ⏳ pending | **touch 2 sent 2026-08-30** via Contact-Host on the Sep 15 "New Tech Seattle" meetup (Thomas Kim confirmed as co-host) |
+| **New Tech Northwest** | Luma DM → email | Contact-Host → **Brett** (`brett@newtechnorthwest.com`) | offer | **2026-08-12** → touch 2 **2026-08-30** | **REPLIED — declined 2026-08-30** | Brett (the real organizer, NOT Thomas Kim who's a co-host) replied via email: gracious "congrats on the launch, not a fit for our community." **Closed — do not re-pitch.** Keep warm for a possible future format change. |
 | **SF Founder Dinner** (Pachamama) | Luma DM | Contact-Host → Karen Sheffield | offer | **2026-08-12** | ⏳ pending | sent via Luma; touch 2 ~8/15–16 |
 | **Tech2table** | email | hello@jointech2table.com | offer | **2026-08-15** | ⏳ pending | touch 2 ~8/18–19 |
 | **Hacker Dojo** | Luma DM | Contact-Host → Hacker Dojo team | offer (warm — Sahith attended) | **2026-08-12** | ⏳ pending | **touch 2 sent 2026-08-30** via Contact-Host on the Sep 1 "Bay Area Founder Networking & Startup Workshop" (co-hosted w/ StartupA2Z / satish govindappa, 93 going — perfect ICP) |
@@ -370,10 +370,12 @@ reinforces the #10 9Zero email target (she's the person who runs their events). 
 Seattle** but only 3rd-degree; her 2nd-degree colleagues **Jacob Colker** (AI House cofounder/MD) and **Taylor
 Soper** (Dir. of Community & Programming @ AI House) are stronger next targets — go through them.
 
-**Tatiana (HackathonSF) — engaged 2026-08-30.** Her connection-note reply was a **templated auto-promo** for her
-own event **"Startup Pitch Night SF" (B4SF.com)** with a Luma RSVP link (not a personal reply; invite still shows
-Pending). Replied in-thread: RSVP'd + pivoted to offering the Waft wall at an upcoming Pitch Night + clip. B4SF /
-Startup Pitch Night SF is a genuine ICP room — **track it as a live thread.**
+**Tatiana (HackathonSF) — it's a qualification BOT, downgrade.** 2026-08-30 her connection-note reply was a
+templated auto-promo for **"Startup Pitch Night SF" (B4SF.com)**. Replied RSVP + Waft offer. Her 2026-08-30 follow-up
+(1:20 PM) **ignored the Waft offer** and sent a startup-*stage* questionnaire (Idea→Series A+) — i.e. it's qualifying
+Sahith as a **founder to pitch/apply at her event**, not evaluating Waft as a vendor. **Low signal for Waft sales.**
+Plan: answer briefly + hard-redirect to the actual ask (run Waft's wall at a Pitch Night); if the bot loops again
+without a human, drop it. Don't get funneled into being a pitch-night applicant.
 
 **More targets spotted this session (add next round):** **Jacob Colker** & **Taylor Soper** (AI House Seattle, both
 2nd) · **Matthew Joehnk** (9Zero cofounder) · **Bahara Mehry** (President, SF Hacks — 2nd) · **Cyril Attia**
