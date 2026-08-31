@@ -376,6 +376,8 @@ templated auto-promo for **"Startup Pitch Night SF" (B4SF.com)**. Replied RSVP +
 Sahith as a **founder to pitch/apply at her event**, not evaluating Waft as a vendor. **Low signal for Waft sales.**
 Plan: answer briefly + hard-redirect to the actual ask (run Waft's wall at a Pitch Night); if the bot loops again
 without a human, drop it. Don't get funneled into being a pitch-night applicant.
+**2026-08-31: replied** — answered "stage 4 (MVP + early users, just launched)" + hard redirect ("not pitching,
+I'd love to run Waft *for* your event"). Watching for a human vs. another bot loop. If it loops → drop.
 
 **More targets spotted this session (add next round):** **Jacob Colker** & **Taylor Soper** (AI House Seattle, both
 2nd) · **Matthew Joehnk** (9Zero cofounder) · **Bahara Mehry** (President, SF Hacks — 2nd) · **Cyril Attia**
