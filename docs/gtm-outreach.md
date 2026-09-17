@@ -171,6 +171,12 @@ all are 2nd-degree with shared mutuals, so a connection request + note will land
 - **Karen Sheffield, MBA** (SF Founder Dinner / Pachamama) → `linkedin.com/in/karen-sheffield/` — "Founder & Managing Partner at Pachamama Ventures", SF Bay, 18K followers.
 - **New Tech Northwest** — organizer NOT confirmable on LinkedIn (the "Thomas Kim" guess didn't verify; a generic search returned noise). Reach via org channels instead: `newtechnorthwest.com/contact-us/`, IG `@newtechnw`, or Luma "Contact the Host" on `luma.com/newtech`. Don't address a specific name until confirmed.
 
+**✅ ALL 4 KIT-HOST NOTES SENT 2026-09-15** (via browser, Sahith clicked each send; Sep note-budget reset):
+Paul Fang, David Lam, Mariane Bekker (Pending confirmed), Karen Sheffield (Pending confirmed) — all
+connection-request + note. That's **4 of ~5 Sep note-invites used** (1 in reserve). New Tech NW skipped
+(organizer unconfirmable + Brett already declined). Next: watch for accepts → post-accept DM (clip + offer
++ "live on the App Store"). NB: the extension dropped mid-send on David 2026-09-04; re-sent cleanly 9/15.
+
 **Connection notes (≤300 chars, no link):**
 - *Paul Fang:* Hi Paul — I run Waft, a live networking layer for events: one QR scan and the room's connections form a live graph on screen. Bay Area Founders Club dinners are exactly the room it's built for. Would love to connect and show you a 20-sec look — a fun, zero-setup add-on.
 - *David Lam:* Hi David — I run Waft, a live networking layer for events: guests scan one QR and the room's connections form a live graph on screen. Tech2table's curated dinners are the perfect fit. Would love to connect and share a 20-sec look — zero setup on your end.
