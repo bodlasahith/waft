@@ -11,5 +11,6 @@ build/
 *.log
 .DS_Store
 ios/
+graphify-out/
 # claude-council runtime cache (analysis preserved in docs/)
 .claude/council-cache/

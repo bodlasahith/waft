@@ -403,6 +403,71 @@ Innovator), Emily Fang `/in/emilyfang/` (Developer Events @ Workato), Caitlin Ma
 Then, once connected (or immediately for 1st-degree Daniel): the **Post-accept DM** above (clip + offer + "live
 on the App Store").
 
+## Channel strategy — beyond LinkedIn (2026-09-24)
+
+**The reframe:** 1:1 LinkedIn notes are the lowest-leverage motion and waste Waft's biggest asset —
+**the product is visual**. A room turning into a live graph on screen is its own ad. Judge every
+channel on one of two jobs: **(A) show the magic** (1:many awareness) or **(B) find event hosts**
+(the buyer). LinkedIn DMs do neither well.
+
+| Channel | Job | Fit | Why |
+|---|---|---|---|
+| **Luma** | Find hosts | ★★★★★ | A directory of the exact ICP — every event page names the organizer. Mariane & Karen came from here. Proven; just under-mined. |
+| **X / Tech Twitter** | Show magic | ★★★★☆ | Founders + organizers + build-in-public. The 20-sec clip is a scroll-stopper. Turns the 1:1 pitch into 1:many; organizers DM you. |
+| **Product Hunt / Show HN** | Both (spike) | ★★★★☆ | Uncashed launch moment: "live on the App Store." One-time credibility + reaches makers who run meetups. |
+| **Reddit** | Show magic | ★★★☆☆ | r/eventprofs (real organizers); r/InternetIsBeautiful / r/dataisbeautiful for the graph visual. Punishes overt promo — content, not pitches. |
+| **Instagram / TikTok Reels** | Show magic | ★★★☆☆ | Product is native to vertical video; venues/organizers live on IG. Strong for awareness, weak for direct host conversion. |
+
+Also worth adding: **Partiful** (younger host base, same play as Luma), **Hacker News Show HN**
+(audience literally runs events).
+
+**Recommendation:** the fastest traction loop for a visual product isn't more cold outreach — it's
+getting Waft into a few real events (even self-run), filming the graph forming, and letting that
+footage become the content engine across X / Reels / Reddit. Channels are just distribution for the clip.
+
+### X launch thread (build-in-public) — first motion, chosen 2026-09-24
+
+Two rules baked in: **Tweet 1 must stand alone** (most never expand a thread), and **upload the MP4
+natively** — X suppresses external links and native video autoplays. Links go in the last tweet / a
+reply, never Tweet 1.
+
+**Tweet 1 — hook** *(attach demo clip as native video: youtu.be/4ROvp0N1QEE, upload the MP4)*
+> i put one QR code on the screen at an event.
+>
+> 90 seconds later the whole room looked like this 👇
+>
+> every line is a real connection made in that room — live. strangers turning into a map of who-should-meet-who.
+
+**Tweet 2 — problem**
+> every event has the same dead 20 minutes: a room full of people who'd genuinely click, all standing there not knowing who to talk to.
+>
+> name tags and "so what do you do?" don't fix it. you need to *see* the room.
+
+**Tweet 3 — how it works**
+> Waft is one QR guests scan on arrival.
+>
+> as people connect, the graph builds itself on the big screen — clusters form, and it surfaces the non-obvious intro: the founder who should meet the exact investor two tables over.
+
+**Tweet 4 — the AI layer**
+> every connection comes with an AI icebreaker — a real reason those two should talk, not "you both like coffee."
+>
+> zero setup for the host. no app-download wall to get started. guests just scan.
+
+**Tweet 5 — CTA + traction**
+> it's live on the App Store now 👇
+> apps.apple.com/app/id6792655313
+>
+> if you run events — founder dinners, meetups, conferences — i'll set it up at your next one, free. reply or DM.
+>
+> building in public. more soon.
+
+**Alternate Tweet 1 hooks** (A/B across two posts a week apart — the hook is 80% of reach):
+- *Curiosity:* "what does a networking event actually look like as it happens? i built a thing to find out. one QR, and the room draws itself 👇"
+- *Bold claim:* "networking events are broken and it's because nobody can see the room. so i made the room visible. watch 👇"
+
+**Ship checklist:** native MP4 upload · **pin** the thread (permanent demo) · post ~9–11am PT weekday ·
+for 48h after, reply to networking/event threads with the clip (where organizers surface).
+
 ## The one metric that matters
 
 Not "how many did I email." It's: **which host or attendee leaned forward?** One organizer who
