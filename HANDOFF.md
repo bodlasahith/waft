@@ -5,51 +5,61 @@
 > actions" sections whenever you're about to switch machines. Everything here is
 > derivable from the repo — it's a *pointer map*, not a second source of truth.
 
-**Last updated:** 2026-07-27 (TestFlight button wired; tree clean) · **Branch:** `main` · **Latest pushed commit:** see `git log --oneline -1`
+**Last updated:** 2026-10-18 (moved to new laptop; WIP branch merged into `main`) · **Branch:** `main` · **Latest pushed commit:** see `git log --oneline -1`
 
 ---
 
 ## 1. Where we are (strategy)
 
-Post-YC AI Startup School (6k attendees — too big to demo; pitched verbally). A YC
-staffer's advice reframed the priority: **validate the pain before building more.**
-So the current mode is **customer discovery, not feature-building.**
+**Waft is live on the App Store** (since 2026-08-16, `apps.apple.com/app/id6792655313`). The mode
+is still **customer discovery, not feature-building**: validate the pain before building more
+(advice from a YC staffer after AI Startup School).
 
-- **Positioning** (see `[[waft-positioning]]` memory + `docs/GPT_*` ): host/event = acquisition
+- **Positioning** (see `[[waft-positioning]]` memory + `docs/GPT_*`): host/event = acquisition
   **wedge**; individual's portable card + cross-event graph = **moat/retention**. Integrate with
   (don't compete with) Luma/Partiful. ICP = networking events, 30–150 people.
 - **Open question discovery must answer:** target host or individual first? Count *lean-forwards*,
   not politeness.
-- **Next real-world beat:** Pear VC "Prime Day" (Thursday) — emailed Nate to run a live wall/sim at
-  breakfast; the Uber rides + lunch are discovery conversations. Capture the artifact (connected-room
-  graph + one organizer reaction) — it's what makes all later outreach convert.
+- **Host outreach so far** (`docs/gtm-outreach.md`): first wave of 9 offers to SF/Seattle hosts
+  2026-08-12 → 08-15, then follow-ups and LinkedIn notes through 2026-09-15. Only reply: New Tech NW
+  declined (2026-08-30). No other replies as of 2026-10-18, so treat the pending rows as dead.
+- **Pivot (2026-09-24):** stop 1:1 LinkedIn notes. The product is visual, so get Waft into a few
+  real events (even self-run), film the graph forming, and use that footage on X / Reels / Reddit.
+  Luma stays the host-finding channel. The X launch thread is drafted in `docs/gtm-outreach.md`
+  but **not posted yet**.
+- **Paused** 2026-09-26 → 2026-10-18 (no outreach or code work while switching machines).
 
-## 2. What's shipped recently (all on `main`, pushed)
+## 2. What's shipped since the last handoff (all on `main`, pushed)
 
-- Wall animation (force-directed coalesce) on the web event graph
-- Both-attended guard on event connections (`/connections`)
-- Branded QR codes (`demo-assets/generate-qr.mjs`) — scannable-verified, in poster + wallpaper
-- GTM: `docs/gtm-outreach.md` (Luma-first host outreach) + `docs/customer-discovery.md` (Mom Test)
-- Safety net: 26-test vitest suite in `packages/api` (`npm test`) + live RLS codified in `infra/schema.sql`
-- Roadmap parked: `eventId→eventIds`, pre-fill-socials (consented OAuth not scraping),
-  post-validation profile slice, age-assurance for 18+/21+ events, 4 GPT-consult ideas
-- **TestFlight URL live on getwaft.app** — `NEXT_PUBLIC_TESTFLIGHT_URL` set in Vercel (Production +
-  Preview) + redeployed; the card/landing "Get Waft" button now points at the install page (verified inlined)
+- **App Store launch** after three review rounds:
+  - Login decoupled from Neo4j: register writes Postgres first and the graph node best-effort;
+    `/connections` self-heals missing nodes; in-process keep-warm heartbeat + `/health/db` so Aura
+    Free never auto-pauses (`[[appstore-neo4j-login-coupling]]`)
+  - Apple/Google sign-ins never hit the name prompt; rename via `PUT /users/me/name` + Settings
+  - Camera pre-permission button says "Continue" / "Open Settings"; age rating raised instead of
+    building age assurance (`[[appstore-age-rating-camera]]`)
+- **"Get Waft" CTA** on getwaft.app points at the App Store listing (`NEXT_PUBLIC_APP_STORE_URL` override)
+- **Event Replay:** scrub the event wall from empty room to full; demo-event seed script
+- **Edges carry `eventIds` (a set)** instead of a single `eventId`, so cross-event connections
+  survive (previously parked; now done)
+- API test suite: 32 vitest tests in `packages/api` (`npm test`)
+- GTM: host target lists, cold-email playbook, follow-up sequence, channel strategy + X thread draft
 
 ## 3. In flight / uncommitted (⚠️ won't travel via git until committed)
 
-**Working tree is currently CLEAN — everything is committed and pushed to `main`.** Still, always run
-`git status` on arrival; if anything shows up, decide per file before switching or it's lost on the
-other machine. (Resolved since last handoff: `useCardAnimation.ts` committed — tilt now sourced from
-`useCardMotion`; stray empty `eas.json` deleted; README edits + parked roadmap items committed.)
+**Working tree is CLEAN.** `session-2026-09-23-wip` (GTM-doc commits) was fast-forwarded into
+`main` on 2026-10-18; there is no other open branch work. Always run `git status` on arrival.
 
 ## 4. Immediate next actions
 
-- [ ] Await Nate's reply re: Pear breakfast sim; prep with `docs/customer-discovery.md`
-- [ ] Run the discovery conversations (Pear + Luma hosts from `docs/gtm-outreach.md`)
-- [ ] App Store review pending (submitted Sat) — Sahith is checking App Store Connect directly
+- [ ] Post the X launch thread (drafted in `docs/gtm-outreach.md`: native MP4 upload, pin it,
+      weekday 9–11am PT, reply to event threads with the clip for 48h)
+- [ ] Get Waft into 1–3 real events (self-run is fine) and film the graph forming. That footage
+      is the content engine for X / Reels / Reddit.
+- [ ] Keep mining Luma for recurring 30–150-person hosts; offer the free live wall
 - [ ] Post-validation: decide host-vs-individual, then pull the ranked roadmap slice
-- [x] TestFlight "Get Waft" button wired (Vercel env + redeploy, live on getwaft.app)
+- [ ] Durable infra fix when traction justifies it: paid Neo4j tier or the single-Postgres
+      migration in `docs/architecture-review-2026-07.md`
 
 ## 5. Setting up the other laptop
 
@@ -65,8 +75,10 @@ DISCORD/TELEGRAM tokens. Mobile `.env`: EXPO_PUBLIC_* .
 
 **Dev commands** (from root): `npm run dev:api` · `npm run dev:web` · `npm run dev:mobile`
 **Tests:** `cd packages/api && npm test`
-**Vercel CLI** (optional, for env/deploy): `npx vercel link --project waft-web --cwd apps/web` — this
-machine is already linked (creates a gitignored `apps/web/.env.local` OIDC token; doesn't travel).
+**Vercel CLI** (optional, for env/deploy): `npx vercel link --project waft-web --cwd apps/web` — the
+current laptop is **not** linked yet (creates a gitignored `apps/web/.env.local` OIDC token; doesn't travel).
+Mobile `.env` can be derived from the root one: `EXPO_PUBLIC_SUPABASE_URL`/`_ANON_KEY` = root
+`SUPABASE_URL`/`SUPABASE_ANON_KEY`; see `apps/mobile/.env.example` for the rest.
 **Note:** the office network blocks Neo4j Aura port 7687 — run graph-touching work Railway-side or
 off that network (see `[[waft-auth-network-constraints]]`).
 
@@ -77,6 +89,7 @@ off that network (see `[[waft-auth-network-constraints]]`).
 | Product spec + full roadmap | `README.md` |
 | Demo plan / choreography | `DEMO.md` |
 | Deploy URLs, platform quirks | `[[waft-deployment]]` memory |
+| App Store status / review history | `[[appstore-neo4j-login-coupling]]`, `[[appstore-age-rating-camera]]` memories |
 | Positioning / GTM strategy | `[[waft-positioning]]` memory, `docs/gtm-outreach.md` |
 | Discovery questions | `docs/customer-discovery.md` |
 | Architecture review (5-lens) | `docs/architecture-review-2026-07.md` |
