@@ -15,6 +15,7 @@ import { computeGraphStats } from "@waft/shared";
 import { colors as theme } from "../theme";
 import { api } from "../api";
 import { AvatarNode } from "../components/AvatarNode";
+import { DEFAULT_BADGE, PLATFORM_BADGES, socialHref } from "../socials";
 
 interface Node {
   id: string;
@@ -30,42 +31,6 @@ interface Edge {
   createdAt?: string | null;
   eventId?: string | null;
   eventName?: string;
-}
-
-const SOCIAL_URLS: Record<string, string> = {
-  instagram: "https://instagram.com/",
-  linkedin: "https://linkedin.com/in/",
-  github: "https://github.com/",
-  x: "https://x.com/",
-  tiktok: "https://tiktok.com/@",
-  reddit: "https://reddit.com/u/",
-  spotify: "https://open.spotify.com/user/",
-  facebook: "https://facebook.com/",
-  telegram: "https://t.me/",
-};
-
-// Satellite badge styling per platform — brand color + glyph letter.
-const PLATFORM_BADGES: Record<string, { color: string; glyph: string; dark?: boolean }> = {
-  instagram: { color: "#E1306C", glyph: "I" },
-  linkedin: { color: "#0A66C2", glyph: "in" },
-  github: { color: "#24292e", glyph: "G" },
-  x: { color: "#000000", glyph: "𝕏" },
-  discord: { color: "#5865F2", glyph: "D" },
-  spotify: { color: "#1DB954", glyph: "S" },
-  tiktok: { color: "#010101", glyph: "T" },
-  reddit: { color: "#FF4500", glyph: "R" },
-  snapchat: { color: "#FFFC00", glyph: "S", dark: true },
-  facebook: { color: "#1877F2", glyph: "f" },
-  telegram: { color: "#229ED9", glyph: "T" },
-  slack: { color: "#4A154B", glyph: "S" },
-  phone: { color: "#34c77b", glyph: "☎" },
-};
-
-function socialHref(platform: string, handle: string, url?: string): string | null {
-  if (url) return url;
-  if (platform === "phone") return `tel:${handle.replace(/[^+\d]/g, "")}`;
-  const prefix = SOCIAL_URLS[platform];
-  return prefix ? prefix + handle : null;
 }
 
 /**
@@ -265,11 +230,9 @@ export function GraphScreen() {
           ],
           edges: [],
         });
-        setError(
-          depth === 1
-            ? "No direct connections yet."
-            : `No connections found within ${depth} hops.`
-        );
+        // No connections at any depth is the normal first-run state, not an
+        // error — the render below shows the "Just you so far" empty state.
+        setError(null);
       } else {
         setGraph({
           nodes: [
@@ -498,7 +461,7 @@ export function GraphScreen() {
               const dist = (baseR + 34) * expandProgress;
               const x = p.x + dist * Math.cos(angle);
               const y = p.y + dist * Math.sin(angle);
-              const badge = PLATFORM_BADGES[s.platform] ?? { color: "#8a94a8", glyph: "•" };
+              const badge = PLATFORM_BADGES[s.platform] ?? DEFAULT_BADGE;
               const br = 13 * expandProgress;
               const href = socialHref(s.platform, s.handle, s.url);
               return (

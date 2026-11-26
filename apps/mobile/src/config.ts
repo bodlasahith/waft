@@ -1,6 +1,10 @@
 // API endpoint — override for device testing by setting EXPO_PUBLIC_API_URL
 // (a phone on the same network needs your machine's LAN IP, not localhost).
-export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3001";
+// A release build without the env var must still reach production, never a
+// localhost that only exists on a developer's machine.
+export const API_URL =
+  process.env.EXPO_PUBLIC_API_URL ??
+  (__DEV__ ? "http://localhost:3001" : "https://waft-production.up.railway.app");
 
 // Public web origin encoded into QR codes / parsed from scans. Default must
 // match the real domain (getwaft.app) — a mismatched fallback would silently

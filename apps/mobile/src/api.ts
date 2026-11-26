@@ -123,7 +123,7 @@ export const api = {
     }>(`/connections/me/graph?depth=${depth}`),
   userCard: (userId: string) => request<PublicCard>(`/users/${userId}/card`),
   eventByCode: (code: string) =>
-    request<{ id: string; name: string }>(`/events/by-code/${code}`),
+    request<{ id: string; name: string; location?: string | null }>(`/events/by-code/${code}`),
   createEvent: (
     name: string,
     location?: string,

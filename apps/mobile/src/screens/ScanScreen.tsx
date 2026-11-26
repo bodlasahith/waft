@@ -1,37 +1,39 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Linking, StyleSheet, Text, View } from "react-native";
 import { colors, radii } from "../theme";
 import { AppButton } from "../components/UI";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { api, ApiError } from "../api";
+import { api, ApiError, Avatar, PublicCard } from "../api";
 import { CARD_ORIGIN } from "../config";
 import { getActiveEvent, setActiveEvent } from "../eventContext";
-
-import { ScanOverlay } from "../components/scan";
-import { ConnectionAnimation } from "../components/scan";
+import {
+  ConnectionAnimation,
+  EventPreview,
+  ProfilePreview,
+  ScanOverlay,
+} from "../components/scan";
 
 type ScanState =
-  | {
-      kind: "scanning";
-    }
-  | {
-      kind: "processing";
-    }
+  | { kind: "scanning" }
+  | { kind: "processing" }
   | {
       kind: "connection";
-      card: Awaited<ReturnType<typeof api.card>>;
+      card: PublicCard;
       alreadyConnected: boolean;
+      eventName?: string;
       icebreaker?: string;
     }
   | {
       kind: "event";
-      event: Awaited<ReturnType<typeof api.eventByCode>>;
+      event: { id: string; name: string; location?: string | null };
       icebreaker?: string;
     }
-  | {
-      kind: "error";
-      message: string;
-    };
+  | { kind: "error"; message: string };
+
+// How long a scan error stays on screen before the camera resumes, and how
+// long the same rejected code is ignored (the camera reports it every frame).
+const ERROR_RESUME_MS = 2500;
+const REJECT_COOLDOWN_MS = 4000;
 
 /**
  * Waft QR payloads are web URLs so native cameras work without the app:
@@ -46,9 +48,48 @@ function parseWaftUrl(data: string): { type: "card" | "event"; code: string } | 
   return null;
 }
 
+function errorMessage(e: any): string {
+  if (e?.status === 401) return "Sign in to connect.";
+  if (e?.body?.error === "cannot_connect_to_self") return "That's your own card!";
+  if (e?.body?.error === "event_ended") return "This event has ended.";
+  if (e?.body?.error === "not_checked_in") return "Check into the event again, then scan.";
+  if (e instanceof ApiError && e.status === 404) return "That code isn't active anymore.";
+  if (e instanceof ApiError) return "Couldn't connect. Try again in a moment.";
+  return "Couldn't reach Waft. Check your connection.";
+}
+
 export function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [state, setState] = useState<ScanState>({ kind: "scanning" });
+  const [me, setMe] = useState<{ name: string; avatar: Avatar | null } | null>(null);
+  // onBarcodeScanned fires per frame; a ref blocks re-entry before the state
+  // update lands, and remembers the last rejected code so it isn't re-reported.
+  const busy = useRef(false);
+  const lastRejected = useRef<{ data: string; at: number } | null>(null);
+
+  useEffect(() => {
+    api.me().then(
+      (p) => setMe({ name: p.name, avatar: p.avatar }),
+      () => {}
+    );
+  }, []);
+
+  // Errors are transient: show the message, then go back to scanning.
+  useEffect(() => {
+    if (state.kind !== "error") return;
+    const t = setTimeout(() => resume(), ERROR_RESUME_MS);
+    return () => clearTimeout(t);
+  }, [state]);
+
+  function resume() {
+    busy.current = false;
+    setState({ kind: "scanning" });
+  }
+
+  function fail(message: string, data?: string) {
+    if (data) lastRejected.current = { data, at: Date.now() };
+    setState({ kind: "error", message });
+  }
 
   if (!permission) return <View style={styles.center} />;
 
@@ -75,9 +116,16 @@ export function ScanScreen() {
   }
 
   async function handleScan(data: string) {
+    if (busy.current) return;
+    const rejected = lastRejected.current;
+    if (rejected && rejected.data === data && Date.now() - rejected.at < REJECT_COOLDOWN_MS) {
+      return;
+    }
+    busy.current = true;
+
     const parsed = parseWaftUrl(data);
     if (!parsed) {
-      setState({ kind: "error", message: "Not a Waft code." });
+      fail("That's not a Waft code.", data);
       return;
     }
     setState({ kind: "processing" });
@@ -86,108 +134,92 @@ export function ScanScreen() {
         const activeEvent = getActiveEvent();
         const card = await api.card(parsed.code);
         const result = await api.connect(card.id, activeEvent?.id);
-        const suffix = activeEvent ? ` (at ${activeEvent.name})` : "";
+        // Re-read the card now that we're connected: connection-tier socials
+        // were hidden from the pre-connect read. Fall back to what we have.
+        const fullCard = await api.card(parsed.code).catch(() => card);
         setState({
-          kind:"connection",
-          card,
-          alreadyConnected: result.status==="already_connected",
-          icebreaker:
-          result.icebreaker,
+          kind: "connection",
+          card: fullCard,
+          alreadyConnected: result.status === "already_connected",
+          eventName: activeEvent?.name,
+          icebreaker: result.icebreaker,
         });
       } else {
         const event = await api.eventByCode(parsed.code);
         const result = await api.checkin(event.id);
         setActiveEvent({ id: event.id, name: event.name });
-        setState({
-          kind:"event",
-          event,
-          icebreaker:
-          result.icebreaker,
-        });
+        setState({ kind: "event", event, icebreaker: result.icebreaker });
       }
     } catch (e: any) {
-      let message: string;
-      if (e?.status === 401) message = "Sign in to connect.";
-      else if (e?.body?.error === "cannot_connect_to_self") message = "That's your own card!";
-      else if (e?.body?.error === "event_ended") message = "This event has ended.";
-      else if (e?.body?.error === "not_checked_in") message = "Check into the event again, then scan.";
-      else if (e instanceof ApiError) {
-        const detail = (e.body as any)?.error ?? "";
-        message = `Something went wrong (${e.status}${detail ? ` ${detail}` : ""}).`;
-      } else {
-        message = `Something went wrong${e?.message ? ` (${e.message})` : ""}.`;
-      }
-      setState({ kind: "error", message });
+      fail(errorMessage(e), data);
     }
   }
+
+  const subtitle =
+    state.kind === "connection"
+      ? state.alreadyConnected
+        ? "You're already connected"
+        : state.eventName
+          ? `Connected at ${state.eventName}`
+          : "New connection"
+      : undefined;
 
   return (
     <View style={styles.container}>
       <CameraView
         style={StyleSheet.absoluteFill}
         barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-        onBarcodeScanned={
-          state.kind === "scanning" ? ({ data }) => handleScan(data) : undefined
-        }
+        onBarcodeScanned={state.kind === "scanning" ? ({ data }) => handleScan(data) : undefined}
       />
-      <ScanOverlay
-
-          visible={
-
-              state.kind==="connection" ||
-
-              state.kind==="event"
-
-          }
-
-      >
-
-          {state.kind==="connection" && (
-
-              <ConnectionAnimation
-
-                  me={{
-
-                      color:"#6E7DFF",
-
-                      initial:"Y",
-
-                  }}
-
-                  them={{
-
-                      color:
-
-                          state.card.avatar?.color ??
-
-                          "#6E7DFF",
-
-                      shape:
-
-                          state.card.avatar?.shape,
-
-                      initial:
-
-                          state.card.name.charAt(0),
-
-                  }}
-
-                  alreadyConnected={
-
-                      state.alreadyConnected
-
-                  }
-
-              />
-
-          )}
-
+      <ScanOverlay visible={state.kind === "connection" || state.kind === "event"}>
+        {state.kind === "connection" && (
+          <>
+            <ConnectionAnimation
+              me={{
+                color: me?.avatar?.color ?? colors.accent,
+                shape: me?.avatar?.shape,
+                initial: me?.name.charAt(0) ?? "Y",
+              }}
+              them={{
+                color: state.card.avatar?.color ?? colors.accent,
+                shape: state.card.avatar?.shape,
+                initial: state.card.name.charAt(0),
+              }}
+              alreadyConnected={state.alreadyConnected}
+            />
+            <ProfilePreview
+              visible
+              profile={state.card}
+              subtitle={subtitle}
+              icebreaker={state.icebreaker}
+              onDone={resume}
+              delayMs={state.alreadyConnected ? 300 : 1400}
+            />
+          </>
+        )}
+        {state.kind === "event" && (
+          <EventPreview
+            visible
+            eventName={state.event.name}
+            location={state.event.location}
+            icebreaker={state.icebreaker}
+            onDone={resume}
+          />
+        )}
       </ScanOverlay>
-      <View style={styles.overlay}>
-        <Text style={styles.overlayText}>
-          {state.kind === "processing" ? "Connecting…" : "Point at a Waft QR code"}
-        </Text>
-      </View>
+      {(state.kind === "scanning" || state.kind === "processing" || state.kind === "error") && (
+        <View style={styles.overlay}>
+          <Text style={[styles.overlayText, state.kind === "error" && styles.overlayError]}>
+            {state.kind === "processing"
+              ? "Connecting…"
+              : state.kind === "error"
+                ? state.message
+                : getActiveEvent()
+                  ? `Scanning at ${getActiveEvent()!.name}`
+                  : "Point at a Waft QR code"}
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -195,33 +227,16 @@ export function ScanScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 16, padding: 24 },
-  overlay: { position: "absolute", bottom: 48, alignSelf: "center" },
+  overlay: { position: "absolute", bottom: 48, left: 24, right: 24, alignItems: "center" },
   overlayText: {
     color: "#fff",
     backgroundColor: "rgba(0,0,0,0.6)",
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
-    overflow: "hidden",
-  },
-  muted: { color: colors.textMuted, textAlign: "center" },
-  icebreakerBox: {
-    backgroundColor: colors.surface,
     borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 18,
-    gap: 6,
-    marginHorizontal: 8,
+    overflow: "hidden",
+    textAlign: "center",
   },
-  icebreakerLabel: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  icebreakerText: { fontSize: 17, textAlign: "center", fontStyle: "italic", color: colors.text },
-  success: { fontSize: 20, fontWeight: "700", textAlign: "center", color: colors.text },
-  error: { fontSize: 16, color: colors.danger, textAlign: "center" },
+  overlayError: { backgroundColor: "rgba(120,20,30,0.85)" },
+  muted: { color: colors.textMuted, textAlign: "center" },
 });
