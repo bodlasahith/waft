@@ -73,9 +73,16 @@ export async function userRoutes(app: FastifyInstance) {
       .from("users")
       .select("*, social_links(*)")
       .eq("id", req.userId)
-      .single();
+      .maybeSingle();
 
-    if (error) return reply.status(404).send({ error: "User not found" });
+    // Only a genuinely missing row is a 404 — the client treats 404 as "not
+    // registered yet" and re-registers, which would overwrite a renamed
+    // profile if a transient DB error were reported the same way.
+    if (error) {
+      req.log.error({ err: error }, "GET /users/me failed");
+      return reply.status(500).send({ error: "lookup_failed" });
+    }
+    if (!data) return reply.status(404).send({ error: "User not found" });
     return reply.send(data);
   });
 
@@ -221,11 +228,14 @@ export async function userRoutes(app: FastifyInstance) {
 
     // Preserve card_code across re-registrations — a blind upsert would
     // regenerate it and invalidate already-shared/printed QR codes.
-    const { data: existing } = await supabase
+    const { data: existing, error: existingError } = await supabase
       .from("users")
       .select("card_code")
       .eq("id", req.userId)
-      .single();
+      .maybeSingle();
+    // A failed read must not be mistaken for "new user": that would mint a
+    // fresh card_code and break every QR the user already shared.
+    if (existingError) return reply.status(500).send({ error: existingError.message });
 
     const { data, error } = await supabase
       .from("users")

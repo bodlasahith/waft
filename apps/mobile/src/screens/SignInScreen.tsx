@@ -19,6 +19,10 @@ import { supabase } from "../supabase";
 import { getHasPassword } from "../passwordFlag";
 import { setPendingAppleName } from "../appleName";
 
+// OAuth tracing for local debugging only — redirect and authorize URLs must
+// never reach production device logs.
+const debugLog: (...args: unknown[]) => void = __DEV__ ? console.log : () => {};
+
 WebBrowser.maybeCompleteAuthSession();
 
 // Load the native Apple module defensively. This screen's JS can reach a
@@ -65,14 +69,14 @@ async function completeFromRedirect(url: string): Promise<string | null> {
       access_token: accessToken,
       refresh_token: refreshToken,
     });
-    if (error) console.log("[oauth] setSession error:", error.message);
+    if (error) debugLog("[oauth] setSession error:", error.message);
     return error ? error.message : null;
   }
   // PKCE-style ?code= fallback, in case the server ever sends one
   const authCode = extractParam(url, "code");
   if (authCode) {
     const { error } = await supabase.auth.exchangeCodeForSession(authCode);
-    if (error) console.log("[oauth] exchange error:", error.message);
+    if (error) debugLog("[oauth] exchange error:", error.message);
     return error ? error.message : null;
   }
   const errDesc = extractParam(url, "error_description");
@@ -159,7 +163,7 @@ export function SignInScreen() {
   useEffect(() => {
     async function handleUrl(url: string) {
       if (!url.startsWith("waft://")) return;
-      console.log("[oauth] deep-link fallback:", url.slice(0, 60));
+      debugLog("[oauth] deep-link fallback:", url.slice(0, 60));
       WebBrowser.dismissAuthSession();
       await completeFromRedirect(url);
     }
@@ -214,15 +218,15 @@ export function SignInScreen() {
       });
       if (error) throw error;
 
-      console.log("[oauth] redirectTo:", redirectTo);
-      console.log("[oauth] authorize url:", data.url.slice(0, 140));
+      debugLog("[oauth] redirectTo:", redirectTo);
+      debugLog("[oauth] authorize url:", data.url.slice(0, 140));
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-      console.log("[oauth] browser result:", result.type, "url" in result ? result.url : "");
+      debugLog("[oauth] browser result:", result.type, "url" in result ? result.url : "");
       if (result.type === "success") {
         const message = await completeFromRedirect(result.url);
         if (message) throw new Error(`sign-in failed: ${message}`);
       } else {
-        console.log("[oauth] non-success result:", result.type);
+        debugLog("[oauth] non-success result:", result.type);
       }
     } catch (e: any) {
       setError(e.message ?? "Sign-in failed.");

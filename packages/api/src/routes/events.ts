@@ -105,9 +105,13 @@ export async function eventRoutes(app: FastifyInstance) {
       .from("events")
       .select("*")
       .eq("code", code)
-      .single();
+      .maybeSingle();
 
-    if (error) return reply.status(404).send({ error: "Event not found" });
+    if (error) {
+      req.log.error({ err: error }, "event lookup by code failed");
+      return reply.status(500).send({ error: "lookup_failed" });
+    }
+    if (!data) return reply.status(404).send({ error: "Event not found" });
     return reply.send(data);
   });
 

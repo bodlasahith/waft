@@ -36,7 +36,7 @@ export function OnboardingScreen({
       }
       onDone();
     } catch {
-      setError("Couldn't create your profile — is the API running?");
+      setError("Couldn't create your profile. Check your connection and try again.");
       setBusy(false);
     }
   }

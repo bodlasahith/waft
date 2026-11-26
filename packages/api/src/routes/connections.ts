@@ -57,17 +57,24 @@ export async function connectionRoutes(app: FastifyInstance) {
     { config: { rateLimit: { max: 10, timeWindow: "1 minute" } } },
     async (req, reply) => {
       const body = pendingSchema.parse(req.body);
-      const { data: owner } = await supabase
+      const { data: owner, error: ownerError } = await supabase
         .from("users")
         .select("id")
         .eq("card_code", body.cardCode)
-        .single();
+        .maybeSingle();
+      if (ownerError) return reply.status(500).send({ error: "lookup_failed" });
       if (!owner) return reply.status(404).send({ error: "card_not_found" });
 
-      await supabase.from("pending_connections").upsert(
+      // The web page tells the visitor "you're set" on success, so a failed
+      // write has to surface instead of being reported as pending.
+      const { error } = await supabase.from("pending_connections").upsert(
         { from_user_id: owner.id, invitee_email: body.email.trim().toLowerCase() },
         { onConflict: "from_user_id,invitee_email" }
       );
+      if (error) {
+        req.log.error({ err: error }, "pending connection write failed");
+        return reply.status(500).send({ error: "save_failed" });
+      }
       return reply.send({ status: "pending" });
     }
   );
